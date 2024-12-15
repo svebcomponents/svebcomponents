@@ -13,7 +13,7 @@
   },
   "scripts": {
     "dev": "storybook dev -p 6006",
-    "build": "storybook build"
+    "build": "storybook build -o dist"
   },
   "dependencies": {
     "@open-wc/lit-helpers": "0.7.0",
