@@ -1,0 +1,15 @@
+{
+  "name": "vite-config",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./vite.config.js"
+  },
+  "peerDependencies": {
+    "vite": "^6.0.3"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.0.1"
+  }
+}
