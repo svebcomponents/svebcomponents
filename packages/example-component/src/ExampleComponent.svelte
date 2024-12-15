@@ -1,5 +1,6 @@
 <svelte:options
   customElement={{
+    tag: "example-component",
     props: {
       userName: { attribute: "user-name" },
     },
