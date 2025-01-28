@@ -5,9 +5,11 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 export const config = defineConfig({
   build: {
     lib: {
-      fileName: "index",
       formats: ["es"],
-      entry: "src/index.ts",
+      entry: {
+        index: "src/index.ts",
+        "index.server": "src/index.server.ts",
+      },
     },
   },
   plugins: [svelte()],

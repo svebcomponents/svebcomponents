@@ -5,6 +5,6 @@
  * */
 export const config = {
   compilerOptions: {
-    customElement: true,
+    // customElement: true,
   },
 };

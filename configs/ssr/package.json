@@ -1,0 +1,21 @@
+{
+  "name": "ssr",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "devDependencies": {
+    "svelte": "^5.9.0",
+    "typescript-config": "workspace:*",
+    "vitest": "3.0.4"
+  }
+}
