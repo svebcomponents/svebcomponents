@@ -1,6 +1,6 @@
 <svelte:options
-  customElement=\{{
-    tag: "{{kebabCase name}}",
+  customElement={{
+    tag: "hoge-fuga",
     props: {
       userName: { attribute: "user-name" },
     },
