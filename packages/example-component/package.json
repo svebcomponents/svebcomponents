@@ -5,24 +5,29 @@
   "private": true,
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "node": "./dist/index.server.js"
+      "node": "./dist/server/index.js",
+      "import": "./dist/client/index.js"
     }
   },
   "scripts": {
-    "build": "vite build",
+    "build": "rollup -c",
     "lint": "eslint .",
     "check-types": "svelte-check"
   },
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "16.0.0",
+    "@rollup/plugin-typescript": "12.1.2",
     "@sveltejs/vite-plugin-svelte": "^5.0.1",
+    "eslint-config": "workspace:*",
+    "prettier-config": "workspace:*",
+    "rollup": "4.32.0",
+    "rollup-plugin-css-only": "4.5.2",
+    "rollup-plugin-svelte": "7.2.2",
     "svelte": "^5.9.0",
     "svelte-check": "^4.1.1",
-    "vite": "^6.0.3",
+    "svelte-config": "workspace:*",
+    "svelte-preprocess": "6.0.3",
     "typescript-config": "workspace:*",
-    "prettier-config": "workspace:*",
-    "eslint-config": "workspace:*",
-    "vite-config": "workspace:*",
-    "svelte-config": "workspace:*"
+    "vite": "^6.0.3"
   }
 }

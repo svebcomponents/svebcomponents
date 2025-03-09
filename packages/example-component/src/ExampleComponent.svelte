@@ -1,4 +1,5 @@
 <svelte:options
+  css="injected"
   customElement={{
     tag: "example-component",
     props: {
@@ -15,3 +16,10 @@
 </script>
 
 <h1>Hello, {userName}!</h1>
+
+<style>
+  h1 {
+    color: blue;
+    font-family: serif;
+  }
+</style>
