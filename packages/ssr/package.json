@@ -1,0 +1,17 @@
+{
+  "name": "@svebcomponents/ssr",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-svelte": "^2.46.1",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.20.0",
+    "svelte": "^5.9.0",
+    "@lit-labs/ssr": "^3.3.1"
+  }
+}
