@@ -1,64 +1,37 @@
-import {
-  ElementRenderer,
-  type RenderInfo,
-  type RenderResult,
-} from "@lit-labs/ssr";
-import type { Component } from "svelte";
-import { render } from "svelte/server";
+import { customElements } from "@lit-labs/ssr-dom-shim";
+
+import { ElementRendererRegistry } from "./rendererRegistry.js";
 
 // TODO: write a ElementRendererRegistry that can be used inside svelte kit to register a custom element renderer
 // then, implement a component that first sets all attributes and properties and then renders the custom element
 // like this:
-// const renderer = renderers.get(MyElement);
-// const instance = new renderer();
-// instance.setAttribute("foo", "bar");
-// instance.setProperty("baz", "qux");
-// yield `<my-element `;
-// yield* instance.renderAttributes();
-// const shadowContents = instance.renderShadow(renderInfo);
-// if (shadowContents !== undefined) {
-//   yield '<template shadowroot="open">';
-//   yield* shadowContents;
-//   yield '</template>';
 // }
-// yield `</my-element>`;
-// }
-
-export class SvelteCustomElemenRenderer extends ElementRenderer {
-  private readonly attributes: Record<string, string> = {};
-  private readonly properties: Record<string, any> = {};
-
-  override setAttribute(name: string, value: string) {
-    // Browser turns all HTML attributes to lowercase.
-    this.attributes[name.toLowerCase()] = value;
-    // TODO: transform attributes to props as only they can be passed to the svelte ssr renderer
-    // this.properties[name] = convert(value);
+export function* renderCustomElement(
+  tagName: string,
+  attributes: Record<string, any>,
+  props: Record<string, any>,
+  // TODO: think about how to pass in the children...ideally, we would take the second to last yield from render & then render the children from the parent
+  children: string,
+) {
+  const elementClass = customElements.get(tagName);
+  const Renderer = ElementRendererRegistry.get(elementClass);
+  if (!Renderer) {
+    throw new Error(`No renderer found for ${tagName}`);
   }
-
-  override setProperty(name: string, value: any) {
-    this.properties[name] = value;
-    // if necessary "reflect" a property to the attributes
-    // this.setAttribute(name, value);
+  const instance = new Renderer();
+  for (const [key, value] of Object.entries(attributes)) {
+    instance.setAttribute(key, value);
   }
-
-  constructor(
-    private svelteSsrComponent: Component,
-    tagName: string,
-  ) {
-    super(tagName);
+  for (const [key, value] of Object.entries(props)) {
+    instance.setProperty(key, value);
   }
-
-  override *renderAttributes(): RenderResult {
-    for (const [name, value] of Object.entries(this.attributes)) {
-      yield ` ${name}="${value}"`;
-    }
+  yield `<${tagName} `;
+  yield* instance.renderAttributes();
+  const shadowContents = instance.renderShadow();
+  if (shadowContents !== undefined) {
+    yield '<template shadowroot="open">';
+    yield* shadowContents;
+    yield "</template>";
   }
-
-  override *renderShadow(_renderInfo: RenderInfo): RenderResult | undefined {
-    const { body, head } = render(this.svelteSsrComponent, {
-      props: { userName: "test" },
-    });
-    yield head;
-    yield body;
-  }
+  yield `</${tagName}>`;
 }
