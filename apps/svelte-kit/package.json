@@ -14,7 +14,8 @@
 		"lint": "prettier --check . && eslint ."
 	},
 	"dependencies": {
-		"@svebcomponents/example-component": "workspace:*"
+		"@svebcomponents/example-component": "workspace:*",
+		"@svebcomponents/ssr": "workspace:*"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",

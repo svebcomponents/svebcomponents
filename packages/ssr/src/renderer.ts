@@ -6,42 +6,55 @@ import {
 import type { Component } from "svelte";
 import { render } from "svelte/server";
 
+interface SvelteClientCustomElement {
+  new (): SvelteClientCustomElement;
+  attributes: Record<string, string>;
+  attributeChangedCallback: (
+    name: string,
+    oldValue: string,
+    newValue: string,
+  ) => void;
+  ["$$d"]: Record<string, any>;
+  ["$$c"]: Component;
+}
+
 // Base class for svelte custom element renderers
 export class SvelteCustomElementRenderer extends ElementRenderer {
-  private readonly attributes: Record<string, string> = {};
-  private readonly properties: Record<string, any> = {};
+  private readonly svelteClientCustomElement: SvelteClientCustomElement;
 
   constructor(
     private svelteSsrComponent: Component,
+    SvelteClientCustomElementCtor: any,
     tagName: string,
-    // maybe pass in custom element manifest here?
   ) {
     super(tagName);
+    this.svelteClientCustomElement = new SvelteClientCustomElementCtor();
   }
 
   override setAttribute(name: string, value: string) {
     // Browser turns all HTML attributes to lowercase.
-    this.attributes[name.toLowerCase()] = value;
-    // TODO: transform attributes to props as only they can be passed to the svelte ssr renderer
-    // this.properties[name] = convert(value);
-    // the converter information could come from custom element manifest?
+    if (typeof value !== "string") {
+      this.svelteClientCustomElement.$$d[name] = value;
+      // maybe do something to reflect the prop to the attributes, perhaps 'this.$$me' does this out of the box for us?
+      return;
+    }
+    this.svelteClientCustomElement.attributeChangedCallback(name, value, value);
   }
 
   override *renderAttributes(): RenderResult {
-    for (const [name, value] of Object.entries(this.attributes)) {
+    const attributes = this.svelteClientCustomElement.attributes;
+    for (const [name, value] of Object.entries(attributes)) {
       yield ` ${name}="${value}"`;
     }
   }
 
   override setProperty(name: string, value: any) {
-    this.properties[name] = value;
-    // TODO: "reflect" property to the attributes
-    // this.setAttribute(name, value);
+    this.svelteClientCustomElement.$$d[name] = value;
   }
 
   override *renderShadow(_renderInfo: RenderInfo): RenderResult | undefined {
     const { body, head } = render(this.svelteSsrComponent, {
-      props: { userName: "test" },
+      props: this.svelteClientCustomElement.$$d,
     });
     yield head;
     yield body;

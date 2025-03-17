@@ -1,18 +1,14 @@
-import { ElementRenderer as _ElementRenderer } from "@lit-labs/ssr";
-import { HTMLElement } from "@lit-labs/ssr-dom-shim";
+import { ElementRenderer } from "@lit-labs/ssr";
 // add the registry to the global object
 declare const globalThis: {
   [REGISTRY_KEY]: _ElementRendererRegistry;
 };
+declare const HTMLElement: any;
 
 const REGISTRY_KEY: unique symbol = Symbol.for("ElementRendererRegistry");
 
 interface Element {
   prototype: any;
-}
-
-interface ElementRenderer extends _ElementRenderer {
-  new (): InstanceType<ElementRenderer>;
 }
 
 class _ElementRendererRegistry {

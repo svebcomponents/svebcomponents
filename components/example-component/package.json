@@ -5,8 +5,10 @@
   "private": true,
   "exports": {
     ".": {
-      "node": "./dist/server/index.js",
       "import": "./dist/client/index.js"
+    },
+    "./ssr": {
+      "import": "./dist/server/index.js"
     }
   },
   "scripts": {
