@@ -1,4 +1,4 @@
-import { ElementRenderer } from "@lit-labs/ssr";
+import type { ElementRendererCtor } from "./types.js";
 // add the registry to the global object
 declare const globalThis: {
   [REGISTRY_KEY]: _ElementRendererRegistry;
@@ -12,13 +12,13 @@ interface Element {
 }
 
 class _ElementRendererRegistry {
-  private renderers = new Map<Element["prototype"], ElementRenderer>();
+  private renderers = new Map<Element["prototype"], ElementRendererCtor>();
 
-  set(elementBaseClass: Element, renderer: ElementRenderer) {
+  set(elementBaseClass: Element, renderer: ElementRendererCtor) {
     this.renderers.set(elementBaseClass.prototype, renderer);
   }
 
-  get(elementClass: Element): ElementRenderer | null {
+  get(elementClass: Element): ElementRendererCtor | null {
     let targetPrototype = elementClass.prototype;
     do {
       if (this.renderers.has(targetPrototype)) {

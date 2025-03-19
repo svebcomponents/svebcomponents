@@ -19,7 +19,10 @@ interface SvelteClientCustomElement {
 }
 
 // Base class for svelte custom element renderers
-export class SvelteCustomElementRenderer extends ElementRenderer {
+export class SvelteCustomElementRenderer
+  extends ElementRenderer
+  implements ElementRenderer
+{
   private readonly svelteClientCustomElement: SvelteClientCustomElement;
 
   constructor(
