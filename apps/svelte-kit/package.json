@@ -15,8 +15,7 @@
 	},
 	"dependencies": {
 		"@svebcomponents/example-component": "workspace:*",
-		"@svebcomponents/ssr": "workspace:*",
-		"utils": "workspace:*"
+		"@svebcomponents/ssr": "workspace:*"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",

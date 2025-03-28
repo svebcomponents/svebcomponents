@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { ElementRendererRegistry, collectResultSync } from '@svebcomponents/ssr/registry';
 	import type { Snippet } from 'svelte';
 	import { isKebabCase, camelizeKebabCase } from 'utils';
+	import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
+
+	import { ElementRendererRegistry } from '../elementRendererRegistry/rendererRegistry.js';
 
 	interface WebComponentWrapperProps {
 		children: Snippet;

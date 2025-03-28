@@ -1,5 +1,4 @@
-import { ElementRendererRegistry } from '@svebcomponents/ssr/registry';
-import { SvelteCustomElementRenderer } from '@svebcomponents/ssr';
+import { SvelteCustomElementRenderer, ElementRendererRegistry } from '@svebcomponents/ssr';
 import ExampleComponent from '@svebcomponents/example-component/ssr';
 import '@svebcomponents/example-component';
 
