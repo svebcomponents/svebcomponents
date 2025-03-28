@@ -11,6 +11,9 @@
     },
     "./registry": {
       "import": "./dist/src/renderIndex.js"
+    },
+    "./vite-plugin": {
+      "import": "./dist/src/vite-plugin-svebcomponent-ssr.js"
     }
   },
   "devDependencies": {
@@ -19,9 +22,12 @@
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-svelte": "^2.46.1",
+    "estree-walker": "3.0.3",
+    "magic-string": "0.30.17",
     "svelte": "^5.9.0",
     "typescript": "^5.8.2",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "vite": "6.2.3"
   },
   "dependencies": {
     "@lit-labs/ssr-dom-shim": "1.3.0"

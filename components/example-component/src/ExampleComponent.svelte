@@ -16,6 +16,10 @@
 </script>
 
 <h1>Hello, {userName}!</h1>
+<slot>
+  <p>hi</p>
+</slot>
+<hr />
 
 <style>
   h1 {
