@@ -5,7 +5,7 @@ import typescript from "@rollup/plugin-typescript";
 
 import { generateSsrEntryPlugin } from "./pluginGenerateSsrEntry.js";
 
-const rollupConfigSvebcomponentsSsr = (tagName: string) =>
+const rollupConfigSvebcomponentsSsr = () =>
   ({
     input: "src/index.ts",
     output: {
@@ -29,7 +29,7 @@ const rollupConfigSvebcomponentsSsr = (tagName: string) =>
       typescript({
         outDir: "dist/server",
       }),
-      generateSsrEntryPlugin({ tagName }),
+      generateSsrEntryPlugin({}),
     ],
   }) satisfies RollupOptions;
 

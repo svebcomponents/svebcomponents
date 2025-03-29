@@ -14,7 +14,17 @@ interface Element {
 class _ElementRendererRegistry {
   private renderers = new Map<Element["prototype"], ElementRendererCtor>();
 
-  set(elementBaseClass: Element, renderer: ElementRendererCtor) {
+  set(elementBaseClass: Element | string, renderer: ElementRendererCtor) {
+    if (typeof elementBaseClass === "string") {
+      const retrievedElementBaseClass = customElements.get(elementBaseClass);
+      if (!retrievedElementBaseClass) {
+        throw new Error(
+          `Could not access custom element constructor for tag: ${elementBaseClass}`,
+        );
+      }
+      elementBaseClass = retrievedElementBaseClass;
+    }
+    // set the elementBaseClass's constructor as key for renderer
     this.renderers.set(elementBaseClass.prototype, renderer);
   }
 

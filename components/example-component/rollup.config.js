@@ -1,6 +1,4 @@
 import { defineConfig } from "@svebcomponents/build";
 
-const config = defineConfig({
-  tagName: "example-component",
-});
+const config = defineConfig({});
 export default config;

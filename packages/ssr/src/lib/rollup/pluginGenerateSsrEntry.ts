@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import type { Plugin, NormalizedOutputOptions, PluginContext } from "rollup";
 
-const ENTRY_FILE_NAME = "ssr.js";
+const ENTRY_FILE_NAME = "ssr";
 
 /**
  * Generate a custom element SSR entry file for a Svelte component.
@@ -10,7 +10,6 @@ const ENTRY_FILE_NAME = "ssr.js";
  * default clientImportPath: '../client/index.js'
  */
 interface GenerateSsrEntryPluginOptions {
-  tagName: string;
   serverImportPath?: string;
   clientImportPath?: string;
 }
@@ -19,14 +18,9 @@ export function generateSsrEntryPlugin(
   options: GenerateSsrEntryPluginOptions,
 ): Plugin {
   const {
-    tagName,
     serverImportPath = "./index.js",
     clientImportPath = "../client/index.js",
   } = options;
-
-  if (!tagName) {
-    throw new Error("generateSsrEntryPlugin requires a tagName option");
-  }
 
   return {
     name: "generate-ssr-entry",
@@ -42,27 +36,45 @@ export function generateSsrEntryPlugin(
         );
       }
 
-      const ssrFilePath = path.resolve(outputOptions.dir, ENTRY_FILE_NAME);
+      const ssrFilePath = path.resolve(
+        outputOptions.dir,
+        `${ENTRY_FILE_NAME}.js`,
+      );
+      const ssrTypesFilePath = path.resolve(
+        outputOptions.dir,
+        `${ENTRY_FILE_NAME}.d.ts`,
+      );
 
-      const content = `import { SvelteCustomElementRenderer, ElementRendererRegistry } from '@svebcomponents/ssr';
-import SvelteComponent from '${serverImportPath}';
-import '${clientImportPath}';
+      const content = `import { SvelteCustomElementRenderer } from '@svebcomponents/ssr';
+import ServerSvelteComponent from '${serverImportPath}';
+import ClientSvelteComponent from '${clientImportPath}';
 
-const ctor = customElements.get('${tagName}');
+const ctor = ClientSvelteComponent.element;
 if (!ctor) {
-  throw new Error('Could not find custom element constructor for ${tagName}');
+  throw new Error('Could not access custom element constructor');
 }
 class ComponentSpecificSvelteCustomElementRenderer extends SvelteCustomElementRenderer {
   constructor() {
-    super(SvelteComponent, ctor, '${tagName}');
+    super(ServerSvelteComponent, ctor);
   }
 }
 
-ElementRendererRegistry.set(ctor, ComponentSpecificSvelteCustomElementRenderer);
+export default ComponentSpecificSvelteCustomElementRenderer;
+`;
+
+      const typesContent = `import { SvelteCustomElementRenderer } from '@svebcomponents/ssr';
+import ServerSvelteComponent from '${serverImportPath}';
+declare class ComponentSpecificSvelteCustomElementRenderer extends SvelteCustomElementRenderer {
+  constructor();
+}
+export default ComponentSpecificSvelteCustomElementRenderer;
 `;
 
       try {
-        await fs.writeFile(ssrFilePath, content.trim());
+        await Promise.allSettled([
+          fs.writeFile(ssrFilePath, content.trim()),
+          fs.writeFile(ssrTypesFilePath, typesContent.trim()),
+        ]);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         // let rollup know that something went wrong
