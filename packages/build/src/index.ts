@@ -7,7 +7,7 @@ interface DefineConfigOptions {
   ssr?: boolean;
 }
 
-export const defineConfig = (options: DefineConfigOptions) => {
+export const defineConfig = (options: DefineConfigOptions = {}) => {
   const { ssr = true } = options;
 
   const rollupConfig: Array<RollupOptions> = [svebcomponentRollupConfig];
