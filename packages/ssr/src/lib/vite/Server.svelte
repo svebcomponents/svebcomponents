@@ -3,7 +3,7 @@
 	import { isKebabCase, camelizeKebabCase } from 'utils';
 	import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 
-	import { ElementRendererRegistry } from '../elementRendererRegistry/rendererRegistry.js';
+	import { ElementRendererRegistry } from '../runtime/rendererRegistry.js';
 
 	interface WebComponentWrapperProps {
 		children: Snippet;

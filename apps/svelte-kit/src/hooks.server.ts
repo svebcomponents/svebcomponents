@@ -1,5 +1,5 @@
 // add web comoponent shims
-import '$lib/exampleComponentRenderer';
+import '@svebcomponents/example-component/ssr';
 import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {

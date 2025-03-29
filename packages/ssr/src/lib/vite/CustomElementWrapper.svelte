@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
+	import { BROWSER } from 'esm-env';
 	import type { Snippet } from 'svelte';
 
 	import Client from './Client.svelte';
@@ -8,7 +8,7 @@
 	let { children }: { children: Snippet } = $props();
 </script>
 
-{#if browser}
+{#if BROWSER}
 	<Client _tagName="example-component" user-name="test">
 		{@render children()}
 	</Client>

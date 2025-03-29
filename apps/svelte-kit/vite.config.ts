@@ -1,7 +1,7 @@
-import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import { vitePluginSvebcomponentsSsr } from '@svebcomponents/ssr';
+import { sveltekit } from '@sveltejs/kit/vite';
+import svebcomponents from '@svebcomponents/ssr/vite';
 
 export default defineConfig({
-	plugins: [vitePluginSvebcomponentsSsr(), sveltekit()]
+	plugins: [svebcomponents(), sveltekit()]
 });

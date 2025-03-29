@@ -1,3 +1,10 @@
-import { config } from "svelte-config";
+/**
+ * @type {import('@sveltejs').Config}
+ * */
+export const config = {
+  compilerOptions: {
+    customElement: true,
+  },
+};
 
 export default config;

@@ -2,6 +2,6 @@
 	import '@svebcomponents/example-component';
 </script>
 
-<example-component>
+<example-component user-name="hoge">
 	<p>default slot</p>
 </example-component>

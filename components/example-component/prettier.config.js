@@ -1,3 +1,3 @@
-import { config } from "prettier-config/base";
-
-export default config;
+export const config = {
+  plugins: ["prettier-plugin-svelte"],
+};
