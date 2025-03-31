@@ -279,9 +279,6 @@ importers:
       eslint-plugin-svelte:
         specifier: ^3.0.0
         version: 3.3.3(eslint@9.22.0)(svelte@5.13.0)
-      estree-walker:
-        specifier: 3.0.3
-        version: 3.0.3
       magic-string:
         specifier: 0.30.17
         version: 0.30.17
