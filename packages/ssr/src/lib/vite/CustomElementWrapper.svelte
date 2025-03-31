@@ -5,15 +5,11 @@
 	import Client from './Client.svelte';
 	import Server from './Server.svelte';
 
-	let { children }: { children: Snippet } = $props();
+	let props: {_tagName: string, children: Snippet} = $props();
 </script>
 
 {#if BROWSER}
-	<Client _tagName="example-component" user-name="test">
-		{@render children()}
-	</Client>
+	<Client {...props}/>
 {:else}
-	<Server _tagName="example-component" user-name="test">
-		{@render children()}
-	</Server>
+	<Server {...props}/>
 {/if}

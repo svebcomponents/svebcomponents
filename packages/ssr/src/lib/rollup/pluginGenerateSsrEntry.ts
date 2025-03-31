@@ -4,17 +4,17 @@ import type { Plugin, NormalizedOutputOptions, PluginContext } from "rollup";
 
 const ENTRY_FILE_NAME = "ssr";
 
-/**
- * Generate a custom element SSR entry file for a Svelte component.
- * default serverImportPath: '../server/index.js'
- * default clientImportPath: '../client/index.js'
- */
 interface GenerateSsrEntryPluginOptions {
   serverImportPath?: string;
   clientImportPath?: string;
 }
 
-export function generateSsrEntryPlugin(
+/**
+ * Generate a custom element SSR entry file for a Svelte component.
+ * Since the generated file will live at 'dist/server/ssr.js',
+ * the default import paths are set to './index.js' and '../client/index.js' respectively.
+ */
+export function pluginGenerateSsrEntry(
   options: GenerateSsrEntryPluginOptions,
 ): Plugin {
   const {
@@ -23,7 +23,7 @@ export function generateSsrEntryPlugin(
   } = options;
 
   return {
-    name: "generate-ssr-entry",
+    name: "svebcomponents:generate-ssr-entry",
 
     // Since writeBundle runs after all output files have been written, we can generate the SSR entry file here
     async writeBundle(

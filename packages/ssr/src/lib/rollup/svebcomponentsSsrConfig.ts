@@ -3,17 +3,32 @@ import svelte from "rollup-plugin-svelte";
 import resolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
 
-import { generateSsrEntryPlugin } from "./pluginGenerateSsrEntry.js";
+import { pluginGenerateSsrEntry } from "./pluginGenerateSsrEntry.js";
+import { pluginOverrideSvelteSsrSlotImplementation } from "./pluginOverrideSvelteSsrSlotImplementation.js";
 
-const rollupConfigSvebcomponentsSsr = () =>
+interface RollupConfigSvebcomponentsSsrOptions {
+  /**
+   * The entrypoint for the svelte component that is being transformed.
+   */
+  input: string;
+  /**
+   * The file rollup should write the output to.
+   */
+  outDir: string;
+}
+
+const rollupConfigSvebcomponentsSsr = (
+  options: RollupConfigSvebcomponentsSsrOptions,
+) =>
   ({
-    input: "src/index.ts",
+    input: options.input,
     output: {
-      dir: `dist/server`,
-      assetFileNames: "assets/[name]-[hash][extname]",
+      dir: options.outDir,
+      format: "esm",
       sourcemap: true,
     },
     plugins: [
+      pluginOverrideSvelteSsrSlotImplementation(),
       resolve({
         browser: true,
         exportConditions: ["svelte"],
@@ -27,9 +42,9 @@ const rollupConfigSvebcomponentsSsr = () =>
         },
       }),
       typescript({
-        outDir: "dist/server",
+        outDir: options.outDir,
       }),
-      generateSsrEntryPlugin({}),
+      pluginGenerateSsrEntry({}),
     ],
   }) satisfies RollupOptions;
 

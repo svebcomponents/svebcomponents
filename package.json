@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo build",
-    "dev": "turbo dev",
+    "dev": "turbo watch dev",
     "lint": "turbo lint",
     "format": "prettier --write --ignore-unknown ."
   },
@@ -22,3 +22,4 @@
     ]
   }
 }
+

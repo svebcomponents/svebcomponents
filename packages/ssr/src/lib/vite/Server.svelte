@@ -44,9 +44,9 @@
 
 <p>server</p>
 
-{@html `<${tag} ${attributes}>`}
-<template shadowrootmode="open">
-	{@html shadow}
-</template>
-{@render children()}
-{@html `</${tag}>`}
+<svelte:element this={tag}>
+	<template shadowrootmode="open">
+		{@html shadow}
+	</template>
+	{@render children()}
+</svelte:element>

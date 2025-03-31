@@ -19,6 +19,9 @@
 <slot>
   <p>hi</p>
 </slot>
+<slot name="footer" data-slotted>
+  <p>footer</p>
+</slot>
 <hr />
 
 <style>
