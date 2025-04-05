@@ -6,6 +6,7 @@ const VIRTUAL_MODULE_ID =
 const RESOLVED_VIRTUAL_MODULE_ID = "\0" + VIRTUAL_MODULE_ID;
 const SVELTE_INTERNAL_SERVER = "svelte/internal/server";
 
+// Svelte 6 TODO: remove this plugin once slots are no longer transformed
 export function pluginOverrideSvelteSsrSlotImplementation(): Plugin {
   return {
     name: pluginName,
