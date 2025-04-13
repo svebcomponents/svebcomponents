@@ -1,10 +1,10 @@
 {
   "name": "@svebcomponents/eslint-config",
-  "version": "0.0.0",
   "type": "module",
   "private": true,
+  "version": "0.0.0",
   "exports": {
-    "./base": "./base.js"
+    "./base": "./src/base.js"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "8.29.1",

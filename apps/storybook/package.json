@@ -2,14 +2,14 @@
   "name": "storybook",
   "type": "module",
   "devDependencies": {
+    "@svebcomponents/typescript-config": "workspace:*",
     "@chromatic-com/storybook": "3.2.6",
     "@storybook/addon-essentials": "8.6.12",
     "@storybook/blocks": "8.6.12",
     "@storybook/test": "8.6.12",
     "@storybook/web-components": "8.6.12",
     "@storybook/web-components-vite": "8.6.12",
-    "storybook": "8.6.12",
-    "typescript-config": "workspace:*"
+    "storybook": "8.6.12"
   },
   "scripts": {
     "dev": "storybook dev -p 6006",

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { isKebabCase, camelizeKebabCase } from 'utils';
+	import { isKebabCase, camelizeKebabCase, TODO } from 'utils';
 	import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 
 	import { ElementRendererRegistry } from '../runtime/rendererRegistry.js';
@@ -40,6 +40,7 @@
 	// TODO: attributes seem not to be rendered
 	// Attributes should probably be escaped?
 	const attributes = collectResultSync(customElementRenderer.renderAttributes());
+	TODO('implement attribute rendering', attributes);
 </script>
 
 <p>server</p>

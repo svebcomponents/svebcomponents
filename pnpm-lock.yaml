@@ -48,12 +48,12 @@ importers:
       '@storybook/web-components-vite':
         specifier: 8.6.12
         version: 8.6.12(lit@3.3.0)(storybook@8.6.12(prettier@3.5.3))(vite@6.2.6(@types/node@22.14.1))
+      '@svebcomponents/typescript-config':
+        specifier: workspace:*
+        version: link:../../configs/typescript-config
       storybook:
         specifier: 8.6.12
         version: 8.6.12(prettier@3.5.3)
-      typescript-config:
-        specifier: workspace:*
-        version: link:../../configs/typescript-config
 
   apps/svelte-kit:
     dependencies:
@@ -73,6 +73,9 @@ importers:
       '@playwright/test':
         specifier: 1.51.1
         version: 1.51.1
+      '@svebcomponents/typescript-config':
+        specifier: workspace:*
+        version: link:../../configs/typescript-config
       '@sveltejs/adapter-auto':
         specifier: 6.0.0
         version: 6.0.0(@sveltejs/kit@2.20.5(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.26.2)(vite@6.2.6(@types/node@22.14.1)))(svelte@5.26.2)(vite@6.2.6(@types/node@22.14.1)))
@@ -127,6 +130,9 @@ importers:
       '@svebcomponents/ssr':
         specifier: workspace:*
         version: link:../../packages/ssr
+      '@svebcomponents/typescript-config':
+        specifier: workspace:*
+        version: link:../../configs/typescript-config
       prettier:
         specifier: 3.5.3
         version: 3.5.3
@@ -145,9 +151,6 @@ importers:
       svelte-preprocess:
         specifier: 6.0.3
         version: 6.0.3(postcss-load-config@3.1.4(postcss@8.5.3))(postcss@8.5.3)(svelte@5.26.2)(typescript@5.8.3)
-      typescript-config:
-        specifier: workspace:*
-        version: link:../../configs/typescript-config
       vite:
         specifier: 6.2.6
         version: 6.2.6(@types/node@22.14.1)
@@ -155,31 +158,31 @@ importers:
   configs/eslint-config:
     devDependencies:
       '@typescript-eslint/eslint-plugin':
-        specifier: ^8.29.1
+        specifier: 8.29.1
         version: 8.29.1(@typescript-eslint/parser@8.29.1(eslint@9.24.0)(typescript@5.8.3))(eslint@9.24.0)(typescript@5.8.3)
       '@typescript-eslint/parser':
-        specifier: ^8.29.1
+        specifier: 8.29.1
         version: 8.29.1(eslint@9.24.0)(typescript@5.8.3)
       eslint:
-        specifier: ^9.24.0
+        specifier: 9.24.0
         version: 9.24.0
       eslint-config-prettier:
-        specifier: ^10.1.2
+        specifier: 10.1.2
         version: 10.1.2(eslint@9.24.0)
       eslint-plugin-only-warn:
-        specifier: ^1.1.0
+        specifier: 1.1.0
         version: 1.1.0
       eslint-plugin-turbo:
-        specifier: ^2.5.0
+        specifier: 2.5.0
         version: 2.5.0(eslint@9.24.0)(turbo@2.5.0)
       globals:
-        specifier: ^16.0.0
+        specifier: 16.0.0
         version: 16.0.0
       typescript:
-        specifier: ^5.8.3
+        specifier: 5.8.3
         version: 5.8.3
       typescript-eslint:
-        specifier: ^8.29.1
+        specifier: 8.29.1
         version: 8.29.1(eslint@9.24.0)(typescript@5.8.3)
 
   configs/typescript-config:
@@ -200,12 +203,12 @@ importers:
         specifier: ^3.2.1
         version: 3.2.1
     devDependencies:
+      '@svebcomponents/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
       svelte:
         specifier: ^5.9.0
         version: 5.13.0
-      typescript-config:
-        specifier: workspace:*
-        version: link:../typescript-config
 
   packages/build:
     devDependencies:
@@ -221,6 +224,9 @@ importers:
       '@svebcomponents/ssr':
         specifier: workspace:*
         version: link:../ssr
+      '@svebcomponents/typescript-config':
+        specifier: workspace:*
+        version: link:../../configs/typescript-config
       '@types/node':
         specifier: 22.14.1
         version: 22.14.1
@@ -233,9 +239,6 @@ importers:
       typescript:
         specifier: 5.8.3
         version: 5.8.3
-      typescript-config:
-        specifier: workspace:*
-        version: link:../../configs/typescript-config
 
   packages/ssr:
     dependencies:
@@ -264,6 +267,9 @@ importers:
       '@rollup/plugin-virtual':
         specifier: 3.0.2
         version: 3.0.2(rollup@4.40.0)
+      '@svebcomponents/typescript-config':
+        specifier: workspace:*
+        version: link:../../configs/typescript-config
       '@sveltejs/package':
         specifier: 2.3.10
         version: 2.3.10(svelte@5.26.2)(typescript@5.8.3)

@@ -1,5 +1,5 @@
 {
-  "extends": "typescript-config/base",
+  "extends": "@svebcomponents/typescript-config/base",
   "compilerOptions": {
     "outDir": "dist"
   },

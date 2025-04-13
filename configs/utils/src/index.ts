@@ -50,3 +50,7 @@ export const createRenderFunction =
       <${tag} ${spread(kebabizedArgs)}></${tag}>
     `;
   };
+
+export const TODO = (description: string, ...args: any[]) => {
+  console.log(`TODO: ${description}`, ...args);
+};

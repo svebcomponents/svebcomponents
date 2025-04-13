@@ -1,10 +1,11 @@
 {
-  "name": "typescript-config",
-  "version": "0.0.0",
+  "name": "@svebcomponents/typescript-config",
+  "type": "module",
   "private": true,
-  "license": "MIT",
-  "publishConfig": {
-    "access": "public"
+  "version": "0.0.0",
+  "exports": {
+    "./base": "./src/base.json",
+    "./svelte": "./src/svelte.json"
   },
   "devDependencies": {
     "@tsconfig/strictest": "2.0.5",

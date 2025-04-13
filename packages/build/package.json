@@ -17,6 +17,7 @@
     "rollup": "^4.0.0"
   },
   "devDependencies": {
+    "@svebcomponents/typescript-config": "workspace:*",
     "@rollup/plugin-node-resolve": "16.0.1",
     "@rollup/plugin-typescript": "12.1.2",
     "@rollup/plugin-virtual": "3.0.2",
@@ -24,7 +25,6 @@
     "@types/node": "22.14.1",
     "rollup": "4.40.0",
     "rollup-plugin-svelte": "7.2.2",
-    "typescript": "5.8.3",
-    "typescript-config": "workspace:*"
+    "typescript": "5.8.3"
   }
 }

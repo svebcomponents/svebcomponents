@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "svelte": "^5.9.0",
-    "typescript-config": "workspace:*"
+    "@svebcomponents/typescript-config": "workspace:*"
   },
   "dependencies": {
     "@open-wc/lit-helpers": "0.7.0",

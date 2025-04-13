@@ -1,5 +1,5 @@
 import type { Plugin } from "vite";
-import { parse, AST } from "svelte/compiler";
+import { parse, type AST } from "svelte/compiler";
 import { walk } from "zimmerframe";
 import MagicString from "magic-string";
 
@@ -25,7 +25,7 @@ const IMPORT_STATEMENT = `import ${WRAPPER_COMPONENT_NAME} from '${WRAPPER_SOURC
 const transformSlotAttribute = (
   node: AST.RegularElement,
   magicString: MagicString,
-) => {
+): void => {
   const slotAttr = node.attributes.find((attr): attr is AST.Attribute => {
     if (attr.type !== "Attribute") {
       return false;
@@ -35,18 +35,15 @@ const transformSlotAttribute = (
     }
     return true;
   });
-  if (!slotAttr) {
-    return;
-  }
-
-  if (slotAttr.value === true) {
-    return false;
-  }
+  // if no string slot attribute is found, return
+  if (!slotAttr || slotAttr.value === true) return;
 
   // there should never be more than one value for an attribute
   const slotValue = Array.isArray(slotAttr.value)
     ? slotAttr.value[0]
     : slotAttr.value;
+
+  if (!slotValue) return;
 
   const slotValueAssignment =
     slotValue.type === "Text"

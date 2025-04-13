@@ -4,6 +4,7 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo watch dev",
+    "check": "turbo check",
     "lint": "turbo lint",
     "format": "prettier --write --ignore-unknown ."
   },
