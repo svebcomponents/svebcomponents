@@ -72,7 +72,10 @@ function vitePluginSvebcomponentsSsr(): Plugin {
         return null;
       }
 
-      let { instance, fragment } = parse(code, { filename: id, modern: true });
+      const { instance, fragment } = parse(code, {
+        filename: id,
+        modern: true,
+      });
 
       const magicString = new MagicString(code);
       let shouldAddImport = false;

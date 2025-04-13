@@ -1,7 +1,4 @@
 {
   "extends": "@svebcomponents/typescript-config/base",
-  "compilerOptions": {
-    "outDir": "dist"
-  },
   "include": ["src/**/*"]
 }

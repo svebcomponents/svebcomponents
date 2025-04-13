@@ -11,7 +11,7 @@
     "lint:eslint": "eslint .",
     "lint:format": "prettier --check .",
     "fix": "pnpm /^fix:.*/",
-    "fix:lint": "eslint . --fix",
+    "fix:eslint": "eslint . --fix",
     "fix:format": "prettier --write ."
   },
   "exports": {
@@ -24,7 +24,8 @@
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
-    "svelte": "5.26.2"
+    "svelte": "5.26.2",
+    "typescript": "5.8.3"
   },
   "dependencies": {
     "@open-wc/lit-helpers": "0.7.0",

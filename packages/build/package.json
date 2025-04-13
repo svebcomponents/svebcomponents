@@ -11,7 +11,7 @@
     "lint:eslint": "eslint .",
     "lint:format": "prettier --check .",
     "fix": "pnpm /^fix:.*/",
-    "fix:lint": "eslint . --fix",
+    "fix:eslint": "eslint . --fix",
     "fix:format": "prettier --write ."
   },
   "exports": {

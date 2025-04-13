@@ -4,14 +4,15 @@
   "private": true,
   "version": "0.0.0",
   "exports": {
-    "./base": "./src/base.js"
+    "./base": "./src/base.js",
+    "./svelte": "./src/svelte.js"
   },
   "scripts": {
     "lint": "pnpm /^lint:.*/",
     "lint:eslint": "eslint .",
     "lint:format": "prettier --check .",
     "fix": "pnpm /^fix:.*/",
-    "fix:lint": "eslint . --fix",
+    "fix:eslint": "eslint . --fix",
     "fix:format": "prettier --write ."
   },
   "devDependencies": {

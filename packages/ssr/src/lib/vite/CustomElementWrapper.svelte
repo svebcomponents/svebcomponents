@@ -1,15 +1,16 @@
 <script lang="ts">
-	import { BROWSER } from 'esm-env';
-	import type { Snippet } from 'svelte';
+  import { BROWSER } from "esm-env";
+  import type { Snippet } from "svelte";
 
-	import Client from './Client.svelte';
-	import Server from './Server.svelte';
+  import Client from "./Client.svelte";
+  import Server from "./Server.svelte";
 
-	let props: {_tagName: string, children: Snippet} = $props();
+  // eslint-disable-next-line svelte/no-unused-props -- we spread the props, so they are not unused
+  let props: { _tagName: string; children: Snippet } = $props();
 </script>
 
 {#if BROWSER}
-	<Client {...props}/>
+  <Client {...props} />
 {:else}
-	<Server {...props}/>
+  <Server {...props} />
 {/if}

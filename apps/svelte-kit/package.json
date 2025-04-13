@@ -1,46 +1,38 @@
 {
-	"name": "svelte-kit",
-	"private": true,
-	"version": "0.0.1",
-	"type": "module",
-	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build",
-		"prepare": "svelte-kit sync || echo ''",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"test": "pnpm /^test:.*/",
-		"test:e2e": "playwright test",
-		"lint": "pnpm /^lint:.*/",
-		"lint:eslint": "eslint .",
-		"lint:format": "prettier --check .",
-		"fix": "pnpm /^fix:.*/",
-		"fix:lint": "eslint . --fix",
-		"fix:format": "prettier --write ."
-	},
-	"dependencies": {
-		"@svebcomponents/example-component": "workspace:*",
-		"@svebcomponents/ssr": "workspace:*"
-	},
-	"devDependencies": {
-		"@svebcomponents/eslint-config": "workspace:*",
-		"@svebcomponents/prettier-config": "workspace:*",
-		"@svebcomponents/typescript-config": "workspace:*",
-		"@eslint/compat": "1.2.8",
-		"@eslint/js": "9.24.0",
-		"@playwright/test": "1.51.1",
-		"@sveltejs/adapter-auto": "6.0.0",
-		"@sveltejs/kit": "2.20.5",
-		"@sveltejs/vite-plugin-svelte": "5.0.3",
-		"eslint": "9.24.0",
-		"eslint-config-prettier": "10.1.2",
-		"eslint-plugin-svelte": "3.5.1",
-		"globals": "16.0.0",
-		"prettier": "3.5.3",
-		"prettier-plugin-svelte": "3.3.3",
-		"svelte": "5.26.2",
-		"svelte-check": "4.1.6",
-		"typescript": "5.8.3",
-		"typescript-eslint": "8.29.1",
-		"vite": "6.2.6"
-	}
+  "name": "svelte-kit",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "prepare": "svelte-kit sync || echo ''",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "test": "pnpm /^test:.*/",
+    "test:e2e": "playwright test",
+    "lint": "pnpm /^lint:.*/",
+    "lint:eslint": "eslint .",
+    "lint:format": "prettier --check .",
+    "fix": "pnpm /^fix:.*/",
+    "fix:eslint": "eslint . --fix",
+    "fix:format": "prettier --write ."
+  },
+  "dependencies": {
+    "@svebcomponents/example-component": "workspace:*",
+    "@svebcomponents/ssr": "workspace:*"
+  },
+  "devDependencies": {
+    "@svebcomponents/eslint-config": "workspace:*",
+    "@svebcomponents/prettier-config": "workspace:*",
+    "@svebcomponents/typescript-config": "workspace:*",
+    "@playwright/test": "1.51.1",
+    "@sveltejs/adapter-auto": "6.0.0",
+    "@sveltejs/kit": "2.20.5",
+    "@sveltejs/vite-plugin-svelte": "5.0.3",
+    "globals": "16.0.0",
+    "svelte": "5.26.2",
+    "svelte-check": "4.1.6",
+    "typescript": "5.8.3",
+    "vite": "6.2.6"
+  }
 }

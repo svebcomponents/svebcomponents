@@ -8,15 +8,9 @@ importers:
 
   .:
     devDependencies:
-      prettier:
-        specifier: 3.5.3
-        version: 3.5.3
       turbo:
         specifier: 2.5.0
         version: 2.5.0
-      typescript:
-        specifier: 5.8.3
-        version: 5.8.3
 
   apps/storybook:
     dependencies:
@@ -70,12 +64,6 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ssr
     devDependencies:
-      '@eslint/compat':
-        specifier: 1.2.8
-        version: 1.2.8(eslint@9.24.0)
-      '@eslint/js':
-        specifier: 9.24.0
-        version: 9.24.0
       '@playwright/test':
         specifier: 1.51.1
         version: 1.51.1
@@ -97,24 +85,9 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: 5.0.3
         version: 5.0.3(svelte@5.26.2)(vite@6.2.6(@types/node@22.14.1))
-      eslint:
-        specifier: 9.24.0
-        version: 9.24.0
-      eslint-config-prettier:
-        specifier: 10.1.2
-        version: 10.1.2(eslint@9.24.0)
-      eslint-plugin-svelte:
-        specifier: 3.5.1
-        version: 3.5.1(eslint@9.24.0)(svelte@5.26.2)
       globals:
         specifier: 16.0.0
         version: 16.0.0
-      prettier:
-        specifier: 3.5.3
-        version: 3.5.3
-      prettier-plugin-svelte:
-        specifier: 3.3.3
-        version: 3.3.3(prettier@3.5.3)(svelte@5.26.2)
       svelte:
         specifier: 5.26.2
         version: 5.26.2
@@ -124,9 +97,6 @@ importers:
       typescript:
         specifier: 5.8.3
         version: 5.8.3
-      typescript-eslint:
-        specifier: 8.29.1
-        version: 8.29.1(eslint@9.24.0)(typescript@5.8.3)
       vite:
         specifier: 6.2.6
         version: 6.2.6(@types/node@22.14.1)
@@ -139,18 +109,15 @@ importers:
       '@svebcomponents/eslint-config':
         specifier: workspace:*
         version: link:../../configs/eslint-config
+      '@svebcomponents/prettier-config':
+        specifier: workspace:*
+        version: link:../../configs/prettier-config
       '@svebcomponents/ssr':
         specifier: workspace:*
         version: link:../../packages/ssr
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
-      prettier:
-        specifier: 3.5.3
-        version: 3.5.3
-      prettier-plugin-svelte:
-        specifier: 3.3.3
-        version: 3.3.3(prettier@3.5.3)(svelte@5.26.2)
       rollup:
         specifier: 4.40.0
         version: 4.40.0
@@ -160,9 +127,6 @@ importers:
       svelte-check:
         specifier: 4.1.6
         version: 4.1.6(picomatch@4.0.2)(svelte@5.26.2)(typescript@5.8.3)
-      svelte-preprocess:
-        specifier: 6.0.3
-        version: 6.0.3(postcss-load-config@3.1.4(postcss@8.5.3))(postcss@8.5.3)(svelte@5.26.2)(typescript@5.8.3)
       vite:
         specifier: 6.2.6
         version: 6.2.6(@types/node@22.14.1)
@@ -189,13 +153,7 @@ importers:
         version: 8.29.1(eslint@9.24.0)(typescript@5.8.3)
 
   configs/prettier-config:
-    devDependencies:
-      '@svebcomponents/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      prettier:
-        specifier: 3.5.3
-        version: 3.5.3
+    dependencies:
       prettier-plugin-svelte:
         specifier: 3.3.3
         version: 3.3.3(prettier@3.5.3)(svelte@5.26.2)
@@ -254,12 +212,6 @@ importers:
         specifier: 1.2.2
         version: 1.2.2
     devDependencies:
-      '@eslint/compat':
-        specifier: 1.2.8
-        version: 1.2.8(eslint@9.24.0)
-      '@eslint/js':
-        specifier: 9.24.0
-        version: 9.24.0
       '@lit-labs/ssr':
         specifier: 3.3.1
         version: 3.3.1
@@ -293,24 +245,9 @@ importers:
       '@types/node':
         specifier: 22.14.1
         version: 22.14.1
-      eslint:
-        specifier: 9.24.0
-        version: 9.24.0
-      eslint-config-prettier:
-        specifier: 10.1.2
-        version: 10.1.2(eslint@9.24.0)
-      eslint-plugin-svelte:
-        specifier: 3.5.1
-        version: 3.5.1(eslint@9.24.0)(svelte@5.26.2)
       magic-string:
         specifier: 0.30.17
         version: 0.30.17
-      prettier:
-        specifier: 3.5.3
-        version: 3.5.3
-      prettier-plugin-svelte:
-        specifier: 3.3.3
-        version: 3.3.3(prettier@3.5.3)(svelte@5.26.2)
       publint:
         specifier: 0.3.11
         version: 0.3.11
@@ -329,9 +266,6 @@ importers:
       typescript:
         specifier: 5.8.3
         version: 5.8.3
-      typescript-eslint:
-        specifier: 8.29.1
-        version: 8.29.1(eslint@9.24.0)(typescript@5.8.3)
       vite:
         specifier: 6.2.6
         version: 6.2.6(@types/node@22.14.1)
@@ -360,6 +294,9 @@ importers:
       svelte:
         specifier: 5.26.2
         version: 5.26.2
+      typescript:
+        specifier: 5.8.3
+        version: 5.8.3
 
 packages:
 
@@ -547,15 +484,6 @@ packages:
   '@eslint-community/regexpp@4.12.1':
     resolution: {integrity: sha512-CCZCDJuduB9OUkFkY2IgppNZMi2lBQgD2qzwXkEia16cge2pijY/aXi96CJMquDMn3nJdlPV1A5KrJEXwfLNzQ==}
     engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
-
-  '@eslint/compat@1.2.8':
-    resolution: {integrity: sha512-LqCYHdWL/QqKIJuZ/ucMAv8d4luKGs4oCPgpt8mWztQAtPrHfXKQ/XAUc8ljCHAfJCn6SvkpTcGt5Tsh8saowA==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      eslint: ^9.10.0
-    peerDependenciesMeta:
-      eslint:
-        optional: true
 
   '@eslint/config-array@0.20.0':
     resolution: {integrity: sha512-fxlS1kkIjx8+vy2SjuCB94q3htSNrufYTXubwiBFeaQHbH6Ipi43gFJq2zCMt6PHhImH3Xmr0NksKDvchWlpQQ==}
@@ -1257,7 +1185,7 @@ packages:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
 
   concat-map@0.0.1:
-    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
+    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
 
   cookie@0.6.0:
     resolution: {integrity: sha512-U71cyTamuh1CRNCfpGY6to28lxvNwPG4Guz/EVjgf3Jmzv0vlDp1atT9eS5dDjMYHucpHbWns6Lwf3BKz6svdw==}
@@ -2069,43 +1997,6 @@ packages:
       svelte:
         optional: true
 
-  svelte-preprocess@6.0.3:
-    resolution: {integrity: sha512-PLG2k05qHdhmRG7zR/dyo5qKvakhm8IJ+hD2eFRQmMLHp7X3eJnjeupUtvuRpbNiF31RjVw45W+abDwHEmP5OA==}
-    engines: {node: '>= 18.0.0'}
-    peerDependencies:
-      '@babel/core': ^7.10.2
-      coffeescript: ^2.5.1
-      less: ^3.11.3 || ^4.0.0
-      postcss: ^7 || ^8
-      postcss-load-config: '>=3'
-      pug: ^3.0.0
-      sass: ^1.26.8
-      stylus: '>=0.55'
-      sugarss: ^2.0.0 || ^3.0.0 || ^4.0.0
-      svelte: ^4.0.0 || ^5.0.0-next.100 || ^5.0.0
-      typescript: ^5.0.0
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-      coffeescript:
-        optional: true
-      less:
-        optional: true
-      postcss:
-        optional: true
-      postcss-load-config:
-        optional: true
-      pug:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      typescript:
-        optional: true
-
   svelte2tsx@0.7.36:
     resolution: {integrity: sha512-nBlERuCZRwmpebC8m0vDqZ9oaKsqW8frQS2l3zwFQW1voQIkItYtHxh1F5OTZEmE0meDIH6cxU36eIOQVOxlCw==}
     peerDependencies:
@@ -2435,10 +2326,6 @@ snapshots:
       eslint-visitor-keys: 3.4.3
 
   '@eslint-community/regexpp@4.12.1': {}
-
-  '@eslint/compat@1.2.8(eslint@9.24.0)':
-    optionalDependencies:
-      eslint: 9.24.0
 
   '@eslint/config-array@0.20.0':
     dependencies:
@@ -3995,14 +3882,6 @@ snapshots:
       postcss-selector-parser: 7.1.0
     optionalDependencies:
       svelte: 5.26.2
-
-  svelte-preprocess@6.0.3(postcss-load-config@3.1.4(postcss@8.5.3))(postcss@8.5.3)(svelte@5.26.2)(typescript@5.8.3):
-    dependencies:
-      svelte: 5.26.2
-    optionalDependencies:
-      postcss: 8.5.3
-      postcss-load-config: 3.1.4(postcss@8.5.3)
-      typescript: 5.8.3
 
   svelte2tsx@0.7.36(svelte@5.26.2)(typescript@5.8.3):
     dependencies:
