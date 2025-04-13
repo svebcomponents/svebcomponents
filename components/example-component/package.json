@@ -19,7 +19,7 @@
   "devDependencies": {
     "@svebcomponents/build": "workspace:*",
     "@svebcomponents/ssr": "workspace:*",
-    "eslint-config": "workspace:*",
+    "@svebcomponents/eslint-config": "workspace:*",
     "prettier": "3.5.3",
     "prettier-plugin-svelte": "3.3.3",
     "rollup": "4.40.0",
