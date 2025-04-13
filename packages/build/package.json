@@ -21,6 +21,7 @@
     "@rollup/plugin-typescript": "12.1.2",
     "@rollup/plugin-virtual": "3.0.2",
     "@svebcomponents/ssr": "workspace:*",
+    "@svebcomponents/auto-options": "workspace:*",
     "@types/node": "22.13.14",
     "rollup": "4.32.0",
     "rollup-plugin-svelte": "7.2.2",

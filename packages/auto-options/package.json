@@ -1,0 +1,45 @@
+{
+  "name": "@svebcomponents/auto-options",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "format": "prettier --write .",
+    "lint": "prettier --check . && eslint ."
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/**/*.spec.*"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  },
+  "devDependencies": {
+    "@eslint/compat": "^1.2.5",
+    "@eslint/js": "^9.18.0",
+    "@types/estree": "1.0.7",
+    "@types/node": "22.13.14",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "magic-string": "0.30.17",
+    "prettier": "^3.4.2",
+    "publint": "^0.3.2",
+    "rollup": "4.32.0",
+    "svelte": "^5.0.0",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.20.0",
+    "utils": "workspace:*",
+    "vite": "^6.0.0",
+    "zimmerframe": "1.1.2"
+  },
+  "keywords": [
+    "svelte"
+  ]
+}

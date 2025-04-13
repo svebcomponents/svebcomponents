@@ -207,6 +207,57 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
 
+  packages/auto-options:
+    devDependencies:
+      '@eslint/compat':
+        specifier: ^1.2.5
+        version: 1.2.7(eslint@9.22.0)
+      '@eslint/js':
+        specifier: ^9.18.0
+        version: 9.22.0
+      '@types/estree':
+        specifier: 1.0.7
+        version: 1.0.7
+      '@types/node':
+        specifier: 22.13.14
+        version: 22.13.14
+      eslint:
+        specifier: ^9.18.0
+        version: 9.22.0
+      eslint-config-prettier:
+        specifier: ^10.0.1
+        version: 10.1.1(eslint@9.22.0)
+      magic-string:
+        specifier: 0.30.17
+        version: 0.30.17
+      prettier:
+        specifier: ^3.4.2
+        version: 3.5.3
+      publint:
+        specifier: ^0.3.2
+        version: 0.3.9
+      rollup:
+        specifier: 4.32.0
+        version: 4.32.0
+      svelte:
+        specifier: ^5.0.0
+        version: 5.13.0
+      typescript:
+        specifier: ^5.0.0
+        version: 5.5.4
+      typescript-eslint:
+        specifier: ^8.20.0
+        version: 8.26.0(eslint@9.22.0)(typescript@5.5.4)
+      utils:
+        specifier: workspace:*
+        version: link:../../configs/utils
+      vite:
+        specifier: ^6.0.0
+        version: 6.2.3(@types/node@22.13.14)
+      zimmerframe:
+        specifier: 1.1.2
+        version: 1.1.2
+
   packages/build:
     devDependencies:
       '@rollup/plugin-node-resolve':
@@ -218,6 +269,9 @@ importers:
       '@rollup/plugin-virtual':
         specifier: 3.0.2
         version: 3.0.2(rollup@4.32.0)
+      '@svebcomponents/auto-options':
+        specifier: workspace:*
+        version: link:../auto-options
       '@svebcomponents/ssr':
         specifier: workspace:*
         version: link:../ssr
@@ -1152,6 +1206,9 @@ packages:
   '@types/estree@1.0.6':
     resolution: {integrity: sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==}
 
+  '@types/estree@1.0.7':
+    resolution: {integrity: sha512-w28IoSUCJpidD/TGviZwwMJckNESJZXFu7NBZ5YJ4mEUnNraUn9Pm8HSZm/jDF1pDWYKspWE7oVphigUPRakIQ==}
+
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
@@ -1414,10 +1471,6 @@ packages:
   check-error@2.1.1:
     resolution: {integrity: sha512-OAlb+T7V4Op9OwdkjmguYRqncdlx5JiofwOAUkmTF+jNdHwzTaTs4sRAGpzLF3oOz5xAyDGrPgeIDFQmDOTiJw==}
     engines: {node: '>= 16'}
-
-  chokidar@4.0.1:
-    resolution: {integrity: sha512-n8enUVCED/KVRQlab1hr3MVpcVMvxtZjmEa956u+4YijlmQED223XMSYj2tLuKvr4jcCTzNNMpQDUer72MMmzA==}
-    engines: {node: '>= 14.16.0'}
 
   chokidar@4.0.3:
     resolution: {integrity: sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==}
@@ -3368,6 +3421,8 @@ snapshots:
 
   '@types/estree@1.0.6': {}
 
+  '@types/estree@1.0.7': {}
+
   '@types/json-schema@7.0.15': {}
 
   '@types/mdx@2.0.13': {}
@@ -3686,10 +3741,6 @@ snapshots:
 
   check-error@2.1.1: {}
 
-  chokidar@4.0.1:
-    dependencies:
-      readdirp: 4.0.2
-
   chokidar@4.0.3:
     dependencies:
       readdirp: 4.0.2
@@ -3939,7 +3990,7 @@ snapshots:
       '@humanfs/node': 0.16.6
       '@humanwhocodes/module-importer': 1.0.1
       '@humanwhocodes/retry': 0.4.2
-      '@types/estree': 1.0.6
+      '@types/estree': 1.0.7
       '@types/json-schema': 7.0.15
       ajv: 6.12.6
       chalk: 4.1.2
@@ -3983,7 +4034,7 @@ snapshots:
   esrap@1.2.3:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.0
-      '@types/estree': 1.0.6
+      '@types/estree': 1.0.7
 
   esrecurse@4.3.0:
     dependencies:
@@ -4157,7 +4208,7 @@ snapshots:
 
   is-reference@3.0.3:
     dependencies:
-      '@types/estree': 1.0.6
+      '@types/estree': 1.0.7
 
   is-typed-array@1.1.13:
     dependencies:
@@ -4581,7 +4632,7 @@ snapshots:
   svelte-check@4.1.1(picomatch@4.0.2)(svelte@5.13.0)(typescript@5.5.4):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
-      chokidar: 4.0.1
+      chokidar: 4.0.3
       fdir: 6.4.2(picomatch@4.0.2)
       picocolors: 1.1.1
       sade: 1.8.1
@@ -4593,7 +4644,7 @@ snapshots:
   svelte-check@4.1.1(picomatch@4.0.2)(svelte@5.13.0)(typescript@5.8.2):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
-      chokidar: 4.0.1
+      chokidar: 4.0.3
       fdir: 6.4.2(picomatch@4.0.2)
       picocolors: 1.1.1
       sade: 1.8.1
@@ -4632,7 +4683,7 @@ snapshots:
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@jridgewell/sourcemap-codec': 1.5.0
-      '@types/estree': 1.0.6
+      '@types/estree': 1.0.7
       acorn: 8.14.0
       acorn-typescript: 1.4.13(acorn@8.14.0)
       aria-query: 5.3.2
