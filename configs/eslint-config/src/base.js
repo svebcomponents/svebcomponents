@@ -1,17 +1,24 @@
+import prettier from "eslint-config-prettier";
 import js from "@eslint/js";
-import eslintConfigPrettier from "eslint-config-prettier";
-import tseslint from "typescript-eslint";
+import globals from "globals";
+import ts from "typescript-eslint";
 
 /**
  * A shared ESLint configuration for the repository.
  *
  * @type {import("eslint").Linter.Config}
  * */
-export const config = [
+export default ts.config(
   js.configs.recommended,
-  eslintConfigPrettier,
-  ...tseslint.configs.recommended,
+  ...ts.configs.recommended,
+  prettier,
+  {
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.node },
+    },
+    rules: { "no-undef": "off" },
+  },
   {
     ignores: ["dist/**"],
   },
-];
+);

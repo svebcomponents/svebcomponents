@@ -4,8 +4,12 @@
   "scripts": {
     "build": "svelte-package && publint",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "format": "prettier --write .",
-    "lint": "prettier --check . && eslint ."
+    "lint": "pnpm /^lint:.*/",
+    "lint:eslint": "eslint .",
+    "lint:format": "prettier --check .",
+    "fix": "pnpm /^fix:.*/",
+    "fix:lint": "eslint . --fix",
+    "fix:format": "prettier --write ."
   },
   "files": [
     "dist",
@@ -35,6 +39,8 @@
   },
   "devDependencies": {
     "@svebcomponents/typescript-config": "workspace:*",
+    "@svebcomponents/eslint-config": "workspace:*",
+    "@svebcomponents/prettier-config": "workspace:*",
     "@eslint/compat": "1.2.8",
     "@eslint/js": "9.24.0",
     "@lit-labs/ssr": "3.3.1",

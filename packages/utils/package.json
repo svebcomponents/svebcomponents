@@ -4,7 +4,15 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "tsc"
+    "dev": "tsc --watch",
+    "build": "tsc",
+    "check": "tsc --noEmit",
+    "lint": "pnpm /^lint:.*/",
+    "lint:eslint": "eslint .",
+    "lint:format": "prettier --check .",
+    "fix": "pnpm /^fix:.*/",
+    "fix:lint": "eslint . --fix",
+    "fix:format": "prettier --write ."
   },
   "exports": {
     ".": {
@@ -13,6 +21,8 @@
     }
   },
   "devDependencies": {
+    "@svebcomponents/eslint-config": "workspace:*",
+    "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
     "svelte": "5.26.2"
   },

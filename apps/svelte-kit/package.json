@@ -6,20 +6,24 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"format": "prettier --write .",
-		"lint": "prettier --check . && eslint .",
+		"test": "pnpm /^test:.*/",
 		"test:e2e": "playwright test",
-		"test": "npm run test:e2e"
+		"lint": "pnpm /^lint:.*/",
+		"lint:eslint": "eslint .",
+		"lint:format": "prettier --check .",
+		"fix": "pnpm /^fix:.*/",
+		"fix:lint": "eslint . --fix",
+		"fix:format": "prettier --write ."
 	},
 	"dependencies": {
 		"@svebcomponents/example-component": "workspace:*",
 		"@svebcomponents/ssr": "workspace:*"
 	},
 	"devDependencies": {
+		"@svebcomponents/eslint-config": "workspace:*",
+		"@svebcomponents/prettier-config": "workspace:*",
 		"@svebcomponents/typescript-config": "workspace:*",
 		"@eslint/compat": "1.2.8",
 		"@eslint/js": "9.24.0",

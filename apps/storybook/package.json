@@ -13,10 +13,18 @@
   },
   "scripts": {
     "dev": "storybook dev -p 6006",
-    "build": "storybook build -o dist"
+    "build": "storybook build -o dist",
+    "lint": "pnpm /^lint:.*/",
+    "lint:eslint": "eslint .",
+    "lint:format": "prettier --check .",
+    "fix": "pnpm /^fix:.*/",
+    "fix:lint": "eslint . --fix",
+    "fix:format": "prettier --write ."
   },
   "dependencies": {
     "@svebcomponents/example-component": "workspace:*",
+    "@svebcomponents/eslint-config": "workspace:*",
+    "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/utils": "workspace:*",
     "@open-wc/lit-helpers": "0.7.0"
   }

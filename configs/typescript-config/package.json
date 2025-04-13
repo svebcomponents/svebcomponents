@@ -7,7 +7,12 @@
     "./base": "./src/base.json",
     "./svelte": "./src/svelte.json"
   },
+  "scripts": {
+    "lint": "prettier --check .",
+    "fix": "prettier --write ."
+  },
   "devDependencies": {
+    "@svebcomponents/prettier-config": "workspace:*",
     "@tsconfig/strictest": "2.0.5",
     "@tsconfig/svelte": "5.0.4"
   }

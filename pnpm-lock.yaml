@@ -23,9 +23,15 @@ importers:
       '@open-wc/lit-helpers':
         specifier: 0.7.0
         version: 0.7.0(lit@3.3.0)
+      '@svebcomponents/eslint-config':
+        specifier: workspace:*
+        version: link:../../configs/eslint-config
       '@svebcomponents/example-component':
         specifier: workspace:*
         version: link:../../components/example-component
+      '@svebcomponents/prettier-config':
+        specifier: workspace:*
+        version: link:../../configs/prettier-config
       '@svebcomponents/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -73,6 +79,12 @@ importers:
       '@playwright/test':
         specifier: 1.51.1
         version: 1.51.1
+      '@svebcomponents/eslint-config':
+        specifier: workspace:*
+        version: link:../../configs/eslint-config
+      '@svebcomponents/prettier-config':
+        specifier: workspace:*
+        version: link:../../configs/prettier-config
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
@@ -157,36 +169,42 @@ importers:
 
   configs/eslint-config:
     devDependencies:
-      '@typescript-eslint/eslint-plugin':
-        specifier: 8.29.1
-        version: 8.29.1(@typescript-eslint/parser@8.29.1(eslint@9.24.0)(typescript@5.8.3))(eslint@9.24.0)(typescript@5.8.3)
-      '@typescript-eslint/parser':
-        specifier: 8.29.1
-        version: 8.29.1(eslint@9.24.0)(typescript@5.8.3)
+      '@svebcomponents/prettier-config':
+        specifier: workspace:*
+        version: link:../prettier-config
       eslint:
         specifier: 9.24.0
         version: 9.24.0
       eslint-config-prettier:
         specifier: 10.1.2
         version: 10.1.2(eslint@9.24.0)
-      eslint-plugin-only-warn:
-        specifier: 1.1.0
-        version: 1.1.0
-      eslint-plugin-turbo:
-        specifier: 2.5.0
-        version: 2.5.0(eslint@9.24.0)(turbo@2.5.0)
+      eslint-plugin-svelte:
+        specifier: 3.5.1
+        version: 3.5.1(eslint@9.24.0)(svelte@5.26.2)
       globals:
         specifier: 16.0.0
         version: 16.0.0
-      typescript:
-        specifier: 5.8.3
-        version: 5.8.3
       typescript-eslint:
         specifier: 8.29.1
         version: 8.29.1(eslint@9.24.0)(typescript@5.8.3)
 
+  configs/prettier-config:
+    devDependencies:
+      '@svebcomponents/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      prettier:
+        specifier: 3.5.3
+        version: 3.5.3
+      prettier-plugin-svelte:
+        specifier: 3.3.3
+        version: 3.3.3(prettier@3.5.3)(svelte@5.26.2)
+
   configs/typescript-config:
     devDependencies:
+      '@svebcomponents/prettier-config':
+        specifier: workspace:*
+        version: link:../prettier-config
       '@tsconfig/strictest':
         specifier: 2.0.5
         version: 2.0.5
@@ -205,6 +223,12 @@ importers:
       '@rollup/plugin-virtual':
         specifier: 3.0.2
         version: 3.0.2(rollup@4.40.0)
+      '@svebcomponents/eslint-config':
+        specifier: workspace:*
+        version: link:../../configs/eslint-config
+      '@svebcomponents/prettier-config':
+        specifier: workspace:*
+        version: link:../../configs/prettier-config
       '@svebcomponents/ssr':
         specifier: workspace:*
         version: link:../ssr
@@ -251,6 +275,12 @@ importers:
       '@rollup/plugin-virtual':
         specifier: 3.0.2
         version: 3.0.2(rollup@4.40.0)
+      '@svebcomponents/eslint-config':
+        specifier: workspace:*
+        version: link:../../configs/eslint-config
+      '@svebcomponents/prettier-config':
+        specifier: workspace:*
+        version: link:../../configs/prettier-config
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
@@ -318,6 +348,12 @@ importers:
         specifier: 3.3.0
         version: 3.3.0
     devDependencies:
+      '@svebcomponents/eslint-config':
+        specifier: workspace:*
+        version: link:../../configs/eslint-config
+      '@svebcomponents/prettier-config':
+        specifier: workspace:*
+        version: link:../../configs/prettier-config
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
@@ -1290,10 +1326,6 @@ packages:
   dom-accessibility-api@0.6.3:
     resolution: {integrity: sha512-7ZgogeTnjuHbo+ct10G9Ffp0mif17idi0IyWNVA/wcwcm7NPOD/WEHVP3n7n3MhXqxoIYm8d6MuZohYWIZ4T3w==}
 
-  dotenv@16.0.3:
-    resolution: {integrity: sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==}
-    engines: {node: '>=12'}
-
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
@@ -1338,10 +1370,6 @@ packages:
     peerDependencies:
       eslint: '>=7.0.0'
 
-  eslint-plugin-only-warn@1.1.0:
-    resolution: {integrity: sha512-2tktqUAT+Q3hCAU0iSf4xAN1k9zOpjK5WO8104mB0rT/dGhOa09582HN5HlbxNbPRZ0THV7nLGvzugcNOSjzfA==}
-    engines: {node: '>=6'}
-
   eslint-plugin-svelte@3.5.1:
     resolution: {integrity: sha512-Qn1slddZHfqYiDO6IN8/iN3YL+VuHlgYjm30FT+hh0Jf/TX0jeZMTJXQMajFm5f6f6hURi+XO8P+NPYD+T4jkg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -1351,12 +1379,6 @@ packages:
     peerDependenciesMeta:
       svelte:
         optional: true
-
-  eslint-plugin-turbo@2.5.0:
-    resolution: {integrity: sha512-qQk54MrUZv0gnpxV23sccTc+FL3UJ8q7vG7HmXuS2RP8gdjWDwI1CCJTJD8EdRIDjsMxF0xi0AKcMY0CwIlXVg==}
-    peerDependencies:
-      eslint: '>6.6.0'
-      turbo: '>2.0.0'
 
   eslint-scope@8.3.0:
     resolution: {integrity: sha512-pUNxi75F8MJ/GdeKtVLSbYg4ZI34J6C0C7sbL4YOp2exGwen7ZsuBqKzUhXd0qMQ362yET3z+uPwKeg/0C2XCQ==}
@@ -3220,8 +3242,6 @@ snapshots:
 
   dom-accessibility-api@0.6.3: {}
 
-  dotenv@16.0.3: {}
-
   dunder-proto@1.0.1:
     dependencies:
       call-bind-apply-helpers: 1.0.2
@@ -3284,8 +3304,6 @@ snapshots:
     dependencies:
       eslint: 9.24.0
 
-  eslint-plugin-only-warn@1.1.0: {}
-
   eslint-plugin-svelte@3.5.1(eslint@9.24.0)(svelte@5.26.2):
     dependencies:
       '@eslint-community/eslint-utils': 4.6.0(eslint@9.24.0)
@@ -3302,12 +3320,6 @@ snapshots:
       svelte: 5.26.2
     transitivePeerDependencies:
       - ts-node
-
-  eslint-plugin-turbo@2.5.0(eslint@9.24.0)(turbo@2.5.0):
-    dependencies:
-      dotenv: 16.0.3
-      eslint: 9.24.0
-      turbo: 2.5.0
 
   eslint-scope@8.3.0:
     dependencies:
