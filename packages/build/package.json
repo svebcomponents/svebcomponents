@@ -1,0 +1,30 @@
+{
+  "name": "@svebcomponents/build",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "peerDependencies": {
+    "@svebcomponents/ssr": "^0.0.0",
+    "rollup": "^4.0.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "16.0.0",
+    "@rollup/plugin-typescript": "12.1.2",
+    "@rollup/plugin-virtual": "3.0.2",
+    "@svebcomponents/ssr": "workspace:*",
+    "@types/node": "22.13.14",
+    "rollup": "4.32.0",
+    "rollup-plugin-svelte": "7.2.2",
+    "typescript": "^5.0.0",
+    "typescript-config": "workspace:*"
+  }
+}

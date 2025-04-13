@@ -13,6 +13,22 @@ const kebabize = (str: string) =>
   );
 
 /**
+ * A utility to assert whether an input string conforms to kebab-case formatting
+ * Example:
+ * kebab-case → true
+ * word -> true
+ * --css-variable → false
+ * camelCase → false
+ */
+export const isKebabCase = (str: string) => /^([a-z])+(\-[a-z]+)*$/.test(str);
+
+/**
+ * A utility to convert kebab-case to camelCase
+ */
+export const camelizeKebabCase = (str: string) =>
+  str.replace(/-./g, (x) => x[1]!.toUpperCase());
+
+/**
  * A utility to render a web component created with svelte.
  * The arguments it takes are derived from the props of the component & converted to kebab-case at runtime to be passed as attributes
  */
