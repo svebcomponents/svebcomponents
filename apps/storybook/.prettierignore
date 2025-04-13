@@ -4,3 +4,8 @@ pnpm-lock.yaml
 yarn.lock
 bun.lock
 bun.lockb
+
+**/node_modules
+**/dist
+**/build
+**/.svelte-kit

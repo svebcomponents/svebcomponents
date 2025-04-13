@@ -1,3 +1,3 @@
-# `eslint-config`
+# `@svebcomponents/eslint-config`
 
-Internal eslint configs
+Shared ESLint configuration for packages in this monorepo.

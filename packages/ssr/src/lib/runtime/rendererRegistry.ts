@@ -3,12 +3,12 @@ import type { ElementRendererCtor } from "./types.js";
 declare const globalThis: {
   [REGISTRY_KEY]: _ElementRendererRegistry;
 };
-declare const HTMLElement: any;
+declare const HTMLElement: unknown;
 
 const REGISTRY_KEY: unique symbol = Symbol.for("ElementRendererRegistry");
 
 interface Element {
-  prototype: any;
+  prototype: unknown;
 }
 
 class _ElementRendererRegistry {

@@ -2,22 +2,30 @@
   "name": "storybook",
   "type": "module",
   "devDependencies": {
-    "@chromatic-com/storybook": "^3.2.2",
-    "@storybook/addon-essentials": "^8.4.7",
-    "@storybook/blocks": "^8.4.7",
-    "@storybook/test": "^8.4.7",
-    "@storybook/web-components": "^8.4.7",
-    "@storybook/web-components-vite": "^8.4.7",
-    "storybook": "^8.4.7",
-    "typescript-config": "workspace:*"
+    "@svebcomponents/typescript-config": "workspace:*",
+    "@chromatic-com/storybook": "catalog:",
+    "@storybook/addon-essentials": "catalog:",
+    "@storybook/blocks": "catalog:",
+    "@storybook/test": "catalog:",
+    "@storybook/web-components": "catalog:",
+    "@storybook/web-components-vite": "catalog:",
+    "storybook": "catalog:"
   },
   "scripts": {
     "dev": "storybook dev -p 6006",
-    "build": "storybook build -o dist"
+    "build": "storybook build -o dist",
+    "lint": "pnpm /^lint:.*/",
+    "lint:eslint": "eslint .",
+    "lint:format": "prettier --check .",
+    "fix": "pnpm /^fix:.*/",
+    "fix:eslint": "eslint . --fix",
+    "fix:format": "prettier --write ."
   },
   "dependencies": {
-    "@open-wc/lit-helpers": "0.7.0",
-    "utils": "workspace:*",
-    "@svebcomponents/example-component": "workspace:*"
+    "@svebcomponents/example-component": "workspace:*",
+    "@svebcomponents/eslint-config": "workspace:*",
+    "@svebcomponents/prettier-config": "workspace:*",
+    "@svebcomponents/utils": "workspace:*",
+    "@open-wc/lit-helpers": "catalog:"
   }
 }
