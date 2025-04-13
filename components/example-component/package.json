@@ -22,9 +22,9 @@
     "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
-    "rollup": "4.40.0",
-    "svelte": "5.26.2",
-    "svelte-check": "4.1.6",
-    "vite": "6.2.6"
+    "rollup": "catalog:",
+    "svelte": "catalog:",
+    "svelte-check": "catalog:",
+    "vite": "catalog:"
   }
 }

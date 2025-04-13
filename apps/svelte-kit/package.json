@@ -25,14 +25,14 @@
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
-    "@playwright/test": "1.51.1",
-    "@sveltejs/adapter-auto": "6.0.0",
-    "@sveltejs/kit": "2.20.5",
-    "@sveltejs/vite-plugin-svelte": "5.0.3",
-    "globals": "16.0.0",
-    "svelte": "5.26.2",
-    "svelte-check": "4.1.6",
-    "typescript": "5.8.3",
-    "vite": "6.2.6"
+    "@playwright/test": "catalog:",
+    "@sveltejs/adapter-auto": "catalog:",
+    "@sveltejs/kit": "catalog:",
+    "@sveltejs/vite-plugin-svelte": "catalog:",
+    "globals": "catalog:",
+    "svelte": "catalog:",
+    "svelte-check": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
   }
 }

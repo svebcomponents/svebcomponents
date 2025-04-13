@@ -24,11 +24,11 @@
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
-    "svelte": "5.26.2",
-    "typescript": "5.8.3"
+    "svelte": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
-    "@open-wc/lit-helpers": "0.7.0",
-    "lit": "3.3.0"
+    "@open-wc/lit-helpers": "catalog:",
+    "lit": "catalog:"
   }
 }
