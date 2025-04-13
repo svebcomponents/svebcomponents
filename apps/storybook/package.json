@@ -16,8 +16,8 @@
     "build": "storybook build -o dist"
   },
   "dependencies": {
-    "@open-wc/lit-helpers": "0.7.0",
     "@svebcomponents/example-component": "workspace:*",
-    "utils": "workspace:*"
+    "@svebcomponents/utils": "workspace:*",
+    "@open-wc/lit-helpers": "0.7.0"
   }
 }

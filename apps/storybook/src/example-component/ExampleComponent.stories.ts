@@ -1,5 +1,5 @@
 import "@svebcomponents/example-component";
-import { createRenderFunction } from "utils";
+import { createRenderFunction } from "@svebcomponents/utils";
 
 const render = createRenderFunction({
   svelteComponent: {} as any,

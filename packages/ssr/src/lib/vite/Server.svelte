@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { isKebabCase, camelizeKebabCase, TODO } from 'utils';
+	import { isKebabCase, camelizeKebabCase, TODO } from '@svebcomponents/utils';
 	import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 
 	import { ElementRendererRegistry } from '../runtime/rendererRegistry.js';

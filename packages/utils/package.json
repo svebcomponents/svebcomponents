@@ -1,5 +1,5 @@
 {
-  "name": "utils",
+  "name": "@svebcomponents/utils",
   "version": "0.0.0",
   "type": "module",
   "private": true,
@@ -13,11 +13,11 @@
     }
   },
   "devDependencies": {
-    "svelte": "^5.9.0",
-    "@svebcomponents/typescript-config": "workspace:*"
+    "@svebcomponents/typescript-config": "workspace:*",
+    "svelte": "5.26.2"
   },
   "dependencies": {
     "@open-wc/lit-helpers": "0.7.0",
-    "lit": "^3.2.1"
+    "lit": "3.3.0"
   }
 }
