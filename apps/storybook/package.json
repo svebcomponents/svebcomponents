@@ -2,13 +2,13 @@
   "name": "storybook",
   "type": "module",
   "devDependencies": {
-    "@chromatic-com/storybook": "^3.2.2",
-    "@storybook/addon-essentials": "^8.4.7",
-    "@storybook/blocks": "^8.4.7",
-    "@storybook/test": "^8.4.7",
-    "@storybook/web-components": "^8.4.7",
-    "@storybook/web-components-vite": "^8.4.7",
-    "storybook": "^8.4.7",
+    "@chromatic-com/storybook": "3.2.6",
+    "@storybook/addon-essentials": "8.6.12",
+    "@storybook/blocks": "8.6.12",
+    "@storybook/test": "8.6.12",
+    "@storybook/web-components": "8.6.12",
+    "@storybook/web-components-vite": "8.6.12",
+    "storybook": "8.6.12",
     "typescript-config": "workspace:*"
   },
   "scripts": {
@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@open-wc/lit-helpers": "0.7.0",
-    "utils": "workspace:*",
-    "@svebcomponents/example-component": "workspace:*"
+    "@svebcomponents/example-component": "workspace:*",
+    "utils": "workspace:*"
   }
 }

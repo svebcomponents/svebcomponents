@@ -17,14 +17,14 @@
     "rollup": "^4.0.0"
   },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "16.0.0",
+    "@rollup/plugin-node-resolve": "16.0.1",
     "@rollup/plugin-typescript": "12.1.2",
     "@rollup/plugin-virtual": "3.0.2",
     "@svebcomponents/ssr": "workspace:*",
-    "@types/node": "22.13.14",
-    "rollup": "4.32.0",
+    "@types/node": "22.14.1",
+    "rollup": "4.40.0",
     "rollup-plugin-svelte": "7.2.2",
-    "typescript": "^5.0.0",
+    "typescript": "5.8.3",
     "typescript-config": "workspace:*"
   }
 }
