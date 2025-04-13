@@ -3,6 +3,32 @@ import { walk } from "zimmerframe";
 import MagicString from "magic-string";
 import type { VariableDeclarator } from "estree";
 
+// TODO: we have no types for the typescript AST yet, probably should pull in a library to get them
+interface Identifier extends AST.BaseNode {
+  type: "Identifier";
+  name: string;
+}
+
+interface TypeAnnotation {
+  type:
+    | "TSTypeReference"
+    // TODO: this is probably right, but I don't know yet
+    | "TSTypeLiteral";
+  typeName: Identifier;
+}
+
+interface InterfaceBody extends AST.BaseNode {
+  type: "TSInterfaceBody";
+  body: any[];
+}
+
+interface InterfaceDeclaration extends AST.BaseNode {
+  type: "TSInterfaceDeclaration";
+  id: Identifier;
+  typeParmeters: any[];
+  body: InterfaceBody;
+}
+
 // In svelte web component land, even simple things such as exposing props as attributes have to be
 // manually configured using <svelte:options customElement={}/>
 // to help with this, @svebcomponents/auto-options provides a rollup plugin that tries to cover at least the basic use cases
@@ -34,9 +60,11 @@ export const autoOptions = () => {
           attr.value[0].data === "ts",
       );
       let propsDeclaration: VariableDeclarator | undefined;
+      const typeDeclarations: InterfaceDeclaration[] = [];
       walk(instance.content, null, {
-        Program(node, { next }) {
+        Program(node) {
           for (const statement of node.body) {
+            console.log("statement", statement);
             switch (statement.type) {
               case "VariableDeclaration":
                 for (const declaration of statement.declarations) {
@@ -53,6 +81,10 @@ export const autoOptions = () => {
                   propsDeclaration = declaration;
                 }
                 break;
+              // TODO: there are other types of declaring types that we should also support
+              // @ts-ignore -- we don't have types for the typescript AST yet
+              case "TSInterfaceDeclaration":
+                typeDeclarations.push(statement);
             }
           }
         },
@@ -66,32 +98,33 @@ export const autoOptions = () => {
       // if we have types, we want to preferrably use them over what is being destructured
       // since the destructuring might use {...rest} or not destructure at all
       if ("typeAnnotation" in propsDeclaration.id) {
-        // TODO: we have no types for the typescript AST yet, probably should pull in a library to get them
-        const propsAnnotation = propsDeclaration.id.typeAnnotation as {
-          type: "TSTypeReference";
-          typeName: Node;
-        };
-        if (propsAnnotation.type === "TSTypeReference") {
-          // TODO: resolve the type
+        const propsAnnotation = propsDeclaration.id
+          .typeAnnotation as TypeAnnotation;
+        if (
+          propsAnnotation.type === "TSTypeReference" &&
+          propsAnnotation.typeName.type === "Identifier"
+        ) {
+          const resolvedType = typeDeclarations.find(
+            (typeDeclaration) =>
+              typeDeclaration.id.name === propsAnnotation.typeName.name,
+          );
+
+          console.log("resolvedType", resolvedType?.body);
         }
-        console.log(
-          "declaration.id.properties",
-          propsDeclaration.id.typeAnnotation,
-        );
       }
 
       if ("properties" in propsDeclaration.id) {
-        console.log(
-          "declaration.id.properties",
-          propsDeclaration.id.properties,
-        );
+        // console.log(
+        //   "declaration.id.properties",
+        //   propsDeclaration.id.properties,
+        // );
       }
 
       const customElementOptions = options?.attributes.find(
         (attr): attr is AST.Attribute =>
           "name" in attr && attr.name === "customElement",
       );
-      console.log("ce options", customElementOptions?.value);
+      // console.log("ce options", customElementOptions?.value);
 
       const magicString = new MagicString(code);
 
