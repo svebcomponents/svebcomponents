@@ -1,2 +1,2 @@
-import { config } from "@svebcomponents/prettier-config/svelte";
+import { config } from "@svebcomponents/prettier-config/base";
 export default config;

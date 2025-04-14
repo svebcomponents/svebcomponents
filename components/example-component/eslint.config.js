@@ -1,3 +1,3 @@
-import config from "@svebcomponents/eslint-config/base";
+import config from "@svebcomponents/eslint-config/svelte";
 
 export default config;

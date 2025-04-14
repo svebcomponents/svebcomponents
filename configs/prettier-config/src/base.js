@@ -1,3 +1,1 @@
-export const config = {
-  plugins: ["prettier-plugin-svelte"],
-};
+export const config = {};

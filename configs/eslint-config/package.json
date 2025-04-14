@@ -16,11 +16,13 @@
     "fix:format": "prettier --write ."
   },
   "devDependencies": {
+    "@eslint/compat": "1.2.8",
+    "@eslint/js": "catalog:",
     "@svebcomponents/prettier-config": "workspace:*",
     "eslint": "catalog:",
     "eslint-config-prettier": "catalog:",
     "eslint-plugin-svelte": "catalog:",
-    "typescript-eslint": "catalog:",
-    "globals": "catalog:"
+    "globals": "catalog:",
+    "typescript-eslint": "catalog:"
   }
 }
