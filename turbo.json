@@ -3,14 +3,14 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build", "^check"],
+      "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**"]
     },
     "lint": {},
     "fix": {},
     "check": {
-      "dependsOn": ["^check"]
+      "dependsOn": ["^build"]
     },
     "dev": {
       "dependsOn": ["^build"],
