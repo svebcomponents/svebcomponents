@@ -1,18 +1,4 @@
 {
-  "compilerOptions": {
-    "outDir": "./dist",
-    "allowJs": true,
-    "checkJs": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "sourceMap": true,
-    "strict": true,
-    "module": "esnext",
-    "target": "esnext",
-    "declaration": true,
-    "moduleResolution": "bundler"
-  },
-  "include": ["./src/**/*"]
+  "extends": "@svebcomponents/typescript-config/svelte",
+  "include": ["src/**/*"]
 }

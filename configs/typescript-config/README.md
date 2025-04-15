@@ -1,3 +1,3 @@
-# `typescript-config`
+# `@svebcomponents/typescript-config`
 
-Internal typescript configs
+Shared typescript configuration for packages in this monorepo.

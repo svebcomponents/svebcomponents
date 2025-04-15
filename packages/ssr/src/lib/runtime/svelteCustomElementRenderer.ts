@@ -7,14 +7,14 @@ import type { Component } from "svelte";
 import { render } from "svelte/server";
 
 interface SvelteClientCustomElement {
-  new (): SvelteClientCustomElement;
+  new (): Omit<SvelteClientCustomElement, "new">;
   attributes: Record<string, string>;
   attributeChangedCallback: (
     name: string,
     oldValue: string,
     newValue: string,
   ) => void;
-  ["$$d"]: Record<string, any>;
+  ["$$d"]: Record<string, unknown>;
   ["$$c"]: Component;
 }
 
@@ -27,7 +27,9 @@ export class SvelteCustomElementRenderer
 
   constructor(
     private svelteSsrComponent: Component,
-    SvelteClientCustomElementCtor: any,
+    SvelteClientCustomElementCtor: {
+      new (): SvelteClientCustomElement;
+    },
     tagName: string,
   ) {
     super(tagName);
@@ -51,7 +53,7 @@ export class SvelteCustomElementRenderer
     }
   }
 
-  override setProperty(name: string, value: any) {
+  override setProperty(name: string, value: unknown) {
     this.svelteClientCustomElement.$$d[name] = value;
   }
 

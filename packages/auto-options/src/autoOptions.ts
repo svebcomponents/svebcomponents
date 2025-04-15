@@ -1,4 +1,4 @@
-import { parse, AST } from "svelte/compiler";
+import { parse, type AST } from "svelte/compiler";
 import { walk } from "zimmerframe";
 import MagicString from "magic-string";
 import type { VariableDeclarator } from "estree";
@@ -19,12 +19,14 @@ interface TypeAnnotation {
 
 interface InterfaceBody extends AST.BaseNode {
   type: "TSInterfaceBody";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: write a type for this
   body: any[];
 }
 
 interface InterfaceDeclaration extends AST.BaseNode {
   type: "TSInterfaceDeclaration";
   id: Identifier;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: write a type for this
   typeParmeters: any[];
   body: InterfaceBody;
 }
@@ -42,7 +44,7 @@ export const autoOptions = () => {
       if (!id.endsWith(".svelte")) {
         return null;
       }
-      let { instance, options } = parse(code, {
+      const { instance, options } = parse(code, {
         filename: id,
         modern: true,
       });
@@ -56,6 +58,7 @@ export const autoOptions = () => {
       const isTypeScript = instance.attributes.find(
         (attr) =>
           Array.isArray(attr.value) &&
+          attr.value[0] &&
           "data" in attr.value[0] &&
           attr.value[0].data === "ts",
       );
@@ -82,7 +85,7 @@ export const autoOptions = () => {
                 }
                 break;
               // TODO: there are other types of declaring types that we should also support
-              // @ts-ignore -- we don't have types for the typescript AST yet
+              // @ts-expect-error -- we don't have types for the typescript AST yet
               case "TSInterfaceDeclaration":
                 typeDeclarations.push(statement);
             }

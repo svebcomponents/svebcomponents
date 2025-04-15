@@ -4,22 +4,23 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo watch dev",
+    "check": "turbo check",
     "lint": "turbo lint",
-    "format": "prettier --write --ignore-unknown ."
+    "fix": "turbo fix"
   },
   "devDependencies": {
-    "prettier": "^3.2.5",
-    "turbo": "^2.3.3",
-    "typescript": "5.5.4"
+    "turbo": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:"
   },
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.8.0+sha512.0e82714d1b5b43c74610193cb20734897c1d00de89d0e18420aebc5977fa13d780a9cb05734624e81ebd81cc876cd464794850641c48b9544326b5622ca29971",
   "engines": {
     "node": ">=18"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "esbuild"
+      "esbuild",
+      "svelte-preprocess"
     ]
   }
 }
-

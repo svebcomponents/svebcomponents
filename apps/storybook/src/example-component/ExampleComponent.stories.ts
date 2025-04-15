@@ -1,7 +1,8 @@
 import "@svebcomponents/example-component";
-import { createRenderFunction } from "utils";
+import { createRenderFunction } from "@svebcomponents/utils";
 
 const render = createRenderFunction({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: figure out how to correctly type this
   svelteComponent: {} as any,
   customElementTagName: "example-component",
 });

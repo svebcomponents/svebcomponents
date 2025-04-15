@@ -4,7 +4,15 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "tsc"
+    "dev": "tsc --watch",
+    "build": "tsc",
+    "check": "tsc --noEmit",
+    "lint": "pnpm /^lint:.*/",
+    "lint:eslint": "eslint .",
+    "lint:format": "prettier --check .",
+    "fix": "pnpm /^fix:.*/",
+    "fix:eslint": "eslint . --fix",
+    "fix:format": "prettier --write ."
   },
   "exports": {
     ".": {
@@ -17,15 +25,16 @@
     "rollup": "^4.0.0"
   },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "16.0.0",
-    "@rollup/plugin-typescript": "12.1.2",
-    "@rollup/plugin-virtual": "3.0.2",
+    "@svebcomponents/typescript-config": "workspace:*",
+    "@svebcomponents/eslint-config": "workspace:*",
+    "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/ssr": "workspace:*",
-    "@svebcomponents/auto-options": "workspace:*",
-    "@types/node": "22.13.14",
-    "rollup": "4.32.0",
-    "rollup-plugin-svelte": "7.2.2",
-    "typescript": "^5.0.0",
-    "typescript-config": "workspace:*"
+    "@rollup/plugin-node-resolve": "catalog:",
+    "@rollup/plugin-typescript": "catalog:",
+    "@rollup/plugin-virtual": "catalog:",
+    "@types/node": "catalog:",
+    "rollup": "catalog:",
+    "rollup-plugin-svelte": "catalog:",
+    "typescript": "catalog:"
   }
 }

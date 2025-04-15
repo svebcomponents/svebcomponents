@@ -3,8 +3,13 @@
   "version": "0.0.1",
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "format": "prettier --write .",
-    "lint": "prettier --check . && eslint ."
+    "check": "tsc --noEmit",
+    "lint": "pnpm /^lint:.*/",
+    "lint:eslint": "eslint .",
+    "lint:format": "prettier --check .",
+    "fix": "pnpm /^fix:.*/",
+    "fix:eslint": "eslint . --fix",
+    "fix:format": "prettier --write --ignore-unknown ."
   },
   "files": [
     "dist",
@@ -22,22 +27,16 @@
     "svelte": "^5.0.0"
   },
   "devDependencies": {
-    "@eslint/compat": "^1.2.5",
-    "@eslint/js": "^9.18.0",
-    "@types/estree": "1.0.7",
-    "@types/node": "22.13.14",
-    "eslint": "^9.18.0",
-    "eslint-config-prettier": "^10.0.1",
-    "magic-string": "0.30.17",
-    "prettier": "^3.4.2",
-    "publint": "^0.3.2",
-    "rollup": "4.32.0",
-    "svelte": "^5.0.0",
-    "typescript": "^5.0.0",
-    "typescript-eslint": "^8.20.0",
-    "utils": "workspace:*",
-    "vite": "^6.0.0",
-    "zimmerframe": "1.1.2"
+    "@svebcomponents/prettier-config": "workspace:*",
+    "@svebcomponents/eslint-config": "workspace:*",
+    "@svebcomponents/typescript-config": "workspace:*",
+    "@svebcomponents/utils": "workspace:*",
+    "@types/estree": "catalog:",
+    "@types/node": "catalog:",
+    "magic-string": "catalog:",
+    "rollup": "catalog:",
+    "svelte": "catalog:",
+    "zimmerframe": "catalog:"
   },
   "keywords": [
     "svelte"

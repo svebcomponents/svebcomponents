@@ -2,6 +2,7 @@
 
 # svelte
 .svelte-kit
+dist
 
 # Dependencies
 node_modules
