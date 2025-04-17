@@ -1,8 +1,13 @@
 import { parse, type AST } from "svelte/compiler";
 import { walk } from "zimmerframe";
 import MagicString from "magic-string";
-import type { VariableDeclarator } from "estree";
-import type { InterfaceDeclaration, TypeAnnotation } from "./types";
+import type {
+  InferredSvelteOptionProps,
+  InterfaceDeclaration,
+  SvelteOptionProp,
+  TypedVariableDeclarator,
+} from "./types";
+import { inferPropsFromTypes } from "./utils";
 
 // In svelte web component land, even simple things such as exposing props as attributes have to be
 // manually configured using <svelte:options customElement={}/>
@@ -27,20 +32,11 @@ export const autoOptions = () => {
       if (!instance) {
         return null;
       }
-      // TODO: maybe we don't need this
-      const isTypeScript = instance.attributes.find(
-        (attr) =>
-          Array.isArray(attr.value) &&
-          attr.value[0] &&
-          "data" in attr.value[0] &&
-          attr.value[0].data === "ts",
-      );
-      let propsDeclaration: VariableDeclarator | undefined;
+      let propsDeclaration: TypedVariableDeclarator | undefined;
       const typeDeclarations: InterfaceDeclaration[] = [];
       walk(instance.content, null, {
         Program(node) {
           for (const statement of node.body) {
-            console.log("statement", statement);
             switch (statement.type) {
               case "VariableDeclaration":
                 for (const declaration of statement.declarations) {
@@ -54,10 +50,10 @@ export const autoOptions = () => {
                   ) {
                     continue;
                   }
-                  propsDeclaration = declaration;
+                  propsDeclaration = declaration as TypedVariableDeclarator;
                 }
                 break;
-              // TODO: there are other types of declaring types that we should also support
+              // TODO: there are many other types of declaring types that we should also support
               // @ts-expect-error -- we don't have types for the typescript AST yet
               case "TSInterfaceDeclaration":
                 typeDeclarations.push(statement);
@@ -71,23 +67,19 @@ export const autoOptions = () => {
         return null;
       }
 
-      // if we have types, we want to preferrably use them over what is being destructured
-      // since the destructuring might use {...rest} or not destructure at all
-      if ("typeAnnotation" in propsDeclaration.id) {
-        const propsAnnotation = propsDeclaration.id
-          .typeAnnotation as TypeAnnotation;
-        if (
-          propsAnnotation.type === "TSTypeReference" &&
-          propsAnnotation.typeName.type === "Identifier"
-        ) {
-          const resolvedType = typeDeclarations.find(
-            (typeDeclaration) =>
-              typeDeclaration.id.name === propsAnnotation.typeName.name,
-          );
+      // We 'automatically' infer the svelte option props, building up from least valuable to most valuable information
+      // WARNING: This object will be mutated to create the assembled options
+      const inferredProps: InferredSvelteOptionProps = {};
 
-          console.log("resolvedType", resolvedType?.body);
-        }
-      }
+      // 1. Information provided by the user via '<svelte:options>' is the most valuable,
+      // we use what is provided and never overwrite it
+
+      // TODO: iterate over user provided svelte options (if they exist)
+
+      // 2. If the user uses TypeScript & we have types available, they are the next valuable information we can infer
+      // we want to preferrably use them over what is being destructured
+      // since the destructuring might use {...rest} or not destructure at all
+      inferPropsFromTypes(propsDeclaration, typeDeclarations, inferredProps);
 
       if ("properties" in propsDeclaration.id) {
         // console.log(

@@ -39,7 +39,8 @@
     "rollup": "catalog:",
     "svelte": "catalog:",
     "vitest": "catalog:",
-    "zimmerframe": "catalog:"
+    "zimmerframe": "catalog:",
+    "typescript": "catalog:"
   },
   "keywords": [
     "svelte"
