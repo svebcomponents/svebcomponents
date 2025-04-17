@@ -9,7 +9,9 @@
     "lint:format": "prettier --check .",
     "fix": "pnpm /^fix:.*/",
     "fix:eslint": "eslint . --fix",
-    "fix:format": "prettier --write --ignore-unknown ."
+    "fix:format": "prettier --write --ignore-unknown .",
+    "test": "vitest run",
+    "test:dev": "vitest --watch"
   },
   "files": [
     "dist",
@@ -27,8 +29,8 @@
     "svelte": "^5.0.0"
   },
   "devDependencies": {
-    "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/eslint-config": "workspace:*",
+    "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
     "@svebcomponents/utils": "workspace:*",
     "@types/estree": "catalog:",
@@ -36,6 +38,7 @@
     "magic-string": "catalog:",
     "rollup": "catalog:",
     "svelte": "catalog:",
+    "vitest": "catalog:",
     "zimmerframe": "catalog:"
   },
   "keywords": [
