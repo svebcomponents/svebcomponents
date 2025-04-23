@@ -4,14 +4,13 @@ import MagicString from "magic-string";
 import type {
   InferredSvelteOptionProps,
   InterfaceDeclaration,
-  SvelteOptionProp,
   TypedVariableDeclarator,
 } from "./types";
 import {
   inferPropsFromComponentPropDeclaration,
   inferPropsFromSvelteOptions,
   inferPropsFromTypes,
-} from "./utils";
+} from "./inferProps";
 import { injectInferredProps } from "./injectInferredProps";
 
 // In svelte web component land, even simple things such as exposing props as attributes have to be

@@ -41,8 +41,28 @@ interface TSStringKeyword extends AST.BaseNode {
   typeName: Identifier;
 }
 
-interface TypeAnnotation extends AST.BaseNode {
-  typeAnnotation: TSTypeReference | TSStringKeyword;
+interface TSNumberKeyword extends AST.BaseNode {
+  type: "TSNumberKeyword";
+  typeName: Identifier;
+}
+
+interface TSBooleanKeyword extends AST.BaseNode {
+  type: "TSBooleanKeyword";
+  typeName: Identifier;
+}
+
+interface TSArrayType extends AST.BaseNode {
+  type: "TSArrayType";
+  typeName: Identifier;
+}
+
+export interface TypeAnnotation extends AST.BaseNode {
+  typeAnnotation:
+    | TSTypeReference
+    | TSArrayType
+    | TSStringKeyword
+    | TSNumberKeyword
+    | TSBooleanKeyword;
 }
 
 interface PropertySignature extends AST.BaseNode {

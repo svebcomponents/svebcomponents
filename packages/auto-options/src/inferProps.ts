@@ -4,6 +4,7 @@ import type {
   InterfaceDeclaration,
   PrimitiveType,
   TypedVariableDeclarator,
+  TypeAnnotation,
 } from "./types";
 import { kebabize, TODO } from "@svebcomponents/utils";
 
@@ -37,6 +38,36 @@ export const inferPropsFromSvelteOptions = (
   TODO("infer props from svelte options", inferredProps);
 };
 
+const resolvePrimitiveType = ({
+  typeAnnotation,
+}: TypeAnnotation): PrimitiveType | null => {
+  // TODO: there are way to many ways to write simple types in TS.. T.T
+  switch (typeAnnotation.type) {
+    case "TSStringKeyword":
+      return "String";
+    case "TSNumberKeyword":
+      return "Number";
+    case "TSBooleanKeyword":
+      return "Boolean";
+    case "TSArrayType":
+      return "Array";
+    case "TSTypeReference":
+      if (typeAnnotation.typeName.name === "Record") {
+        return "Object";
+      }
+      // TODO: figure out how to best handle a reference here
+      console.log("do a little recursive dance? ", typeAnnotation);
+      return null;
+    default:
+      // TODO: at some point the switch statement should be exhaustive
+      console.log(
+        "found unhandled type while trying to resolve primitive type: ",
+        typeAnnotation,
+      );
+      return null;
+  }
+};
+
 export const inferPropsFromTypes = (
   // WARNING: this object is being mutated
   inferredProps: InferredSvelteOptionProps,
@@ -65,25 +96,14 @@ export const inferPropsFromTypes = (
     }
 
     for (const { typeAnnotation, key } of typedProps) {
-      const type = typeAnnotation.typeAnnotation.type;
+      const type = resolvePrimitiveType(typeAnnotation);
       const propName = key.name;
-      switch (type) {
-        case "TSStringKeyword":
-          enhanceInferredProps(
-            inferredProps,
-            propName,
-            kebabize(propName),
-            "String",
-          );
-          break;
-        case "TSTypeReference":
-          // TODO: figure out how to best handle a reference here
-          console.log("do a little recursive dance?");
-          break;
-        default:
-          // TODO: at some point the switch statement should be exhaustive
-          console.log("found unhandeled type:", type);
-      }
+      enhanceInferredProps(
+        inferredProps,
+        propName,
+        kebabize(propName),
+        type ?? "String",
+      );
     }
   }
 };
@@ -93,5 +113,5 @@ export const inferPropsFromComponentPropDeclaration = (
   inferredProps: InferredSvelteOptionProps,
   propsDeclaration: TypedVariableDeclarator,
 ) => {
-  TODO("infer props from destructuring", inferredProps, propsDeclaration);
+  TODO("infer props from destructuring");
 };
