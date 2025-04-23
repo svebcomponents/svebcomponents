@@ -39,6 +39,7 @@
     "rollup": "catalog:",
     "svelte": "catalog:",
     "vitest": "catalog:",
+    "vite": "catalog:",
     "zimmerframe": "catalog:",
     "typescript": "catalog:"
   },

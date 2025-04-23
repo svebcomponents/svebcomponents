@@ -7,7 +7,12 @@ import type {
   SvelteOptionProp,
   TypedVariableDeclarator,
 } from "./types";
-import { inferPropsFromTypes } from "./utils";
+import {
+  inferPropsFromComponentPropDeclaration,
+  inferPropsFromSvelteOptions,
+  inferPropsFromTypes,
+} from "./utils";
+import { injectInferredProps } from "./injectInferredProps";
 
 // In svelte web component land, even simple things such as exposing props as attributes have to be
 // manually configured using <svelte:options customElement={}/>
@@ -75,26 +80,25 @@ export const autoOptions = () => {
       // we use what is provided and never overwrite it
 
       // TODO: iterate over user provided svelte options (if they exist)
-
-      // 2. If the user uses TypeScript & we have types available, they are the next valuable information we can infer
-      // we want to preferrably use them over what is being destructured
-      // since the destructuring might use {...rest} or not destructure at all
-      inferPropsFromTypes(propsDeclaration, typeDeclarations, inferredProps);
-
-      if ("properties" in propsDeclaration.id) {
-        // console.log(
-        //   "declaration.id.properties",
-        //   propsDeclaration.id.properties,
-        // );
-      }
-
       const customElementOptions = options?.attributes.find(
         (attr): attr is AST.Attribute =>
           "name" in attr && attr.name === "customElement",
       );
-      // console.log("ce options", customElementOptions?.value);
+      if (customElementOptions) {
+        inferPropsFromSvelteOptions(inferredProps, customElementOptions);
+      }
+
+      // 2. If the user uses TypeScript & we have types available, they are the next valuable information we can infer
+      // we want to preferrably use them over what is being destructured
+      // since the destructuring might use {...rest} or not destructure at all
+      inferPropsFromTypes(inferredProps, propsDeclaration, typeDeclarations);
+
+      // 3. Finally, we use prop declaration javascript destructuring to at least infer the props' names
+      inferPropsFromComponentPropDeclaration(inferredProps, propsDeclaration);
 
       const magicString = new MagicString(code);
+
+      injectInferredProps(inferredProps, magicString);
 
       if (!magicString.hasChanged()) {
         return null;

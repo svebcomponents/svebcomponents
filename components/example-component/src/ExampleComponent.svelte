@@ -1,5 +1,4 @@
 <svelte:options
-  css="injected"
   customElement={{
     tag: "example-component",
     props: {

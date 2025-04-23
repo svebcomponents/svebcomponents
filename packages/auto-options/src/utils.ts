@@ -1,16 +1,20 @@
+import type { AST } from "svelte/compiler";
 import type {
   InferredSvelteOptionProps,
   InterfaceDeclaration,
   PrimitiveType,
   TypedVariableDeclarator,
 } from "./types";
+import { kebabize, TODO } from "@svebcomponents/utils";
 
 const enhanceInferredProps = (
   inferredProps: InferredSvelteOptionProps,
   propName: string,
   attributeName?: string,
-  type?: PrimitiveType,
-  isReflected?: boolean,
+  // if the type is omitted, we assume it's a string, because that's the type attribute values have by default
+  type: PrimitiveType = "String",
+  // attributes are reflected by default
+  isReflected: boolean = true,
 ) => {
   // first we check if the propName is already in the inferred props
   const previouslyInferredProp = inferredProps[propName];
@@ -24,11 +28,20 @@ const enhanceInferredProps = (
   }
 };
 
-export const inferPropsFromTypes = (
-  propsDeclaration: TypedVariableDeclarator,
-  typeDeclarations: InterfaceDeclaration[],
+export const inferPropsFromSvelteOptions = (
   // WARNING: this object is being mutated
   inferredProps: InferredSvelteOptionProps,
+  // TODO: write a type to make this a bit stricter
+  customElementOptions?: AST.Attribute,
+) => {
+  TODO("infer props from svelte options", inferredProps);
+};
+
+export const inferPropsFromTypes = (
+  // WARNING: this object is being mutated
+  inferredProps: InferredSvelteOptionProps,
+  propsDeclaration: TypedVariableDeclarator,
+  typeDeclarations: InterfaceDeclaration[],
 ) => {
   // if there are no types we bail early
   if (!("typeAnnotation" in propsDeclaration.id)) {
@@ -56,14 +69,11 @@ export const inferPropsFromTypes = (
       const propName = key.name;
       switch (type) {
         case "TSStringKeyword":
-          // TODO: figure out how to best handle a reference here
-          console.log("mutate with string");
           enhanceInferredProps(
             inferredProps,
             propName,
-            // TODO: kebabize
-            undefined,
-            "string",
+            kebabize(propName),
+            "String",
           );
           break;
         case "TSTypeReference":
@@ -76,4 +86,12 @@ export const inferPropsFromTypes = (
       }
     }
   }
+};
+
+export const inferPropsFromComponentPropDeclaration = (
+  // WARNING: this object is being mutated
+  inferredProps: InferredSvelteOptionProps,
+  propsDeclaration: TypedVariableDeclarator,
+) => {
+  TODO("infer props from destructuring", inferredProps, propsDeclaration);
 };
