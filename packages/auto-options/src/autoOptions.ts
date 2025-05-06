@@ -12,6 +12,7 @@ import {
   inferPropsFromTypes,
 } from "./inferProps";
 import { injectInferredProps } from "./injectInferredProps";
+import { extractSvelteCustomElementOptions } from "./extractSvelteOptionsProps";
 
 // In svelte web component land, even simple things such as exposing props as attributes have to be
 // manually configured using <svelte:options customElement={}/>
@@ -26,7 +27,7 @@ export const autoOptions = () => {
       if (!id.endsWith(".svelte")) {
         return null;
       }
-      const { instance, options } = parse(code, {
+      const { instance, options: svelteOptions } = parse(code, {
         filename: id,
         modern: true,
       });
@@ -40,7 +41,9 @@ export const autoOptions = () => {
       const typeDeclarations: TypeDeclaration[] = [];
       walk(instance.content, null, {
         Program(node) {
-          for (const statement of node.body) {
+          // our AST doesn't have types for TS nodes, so we add them manually
+          type TsNode = (typeof node.body)[number] | TypeDeclaration;
+          for (const statement of node.body as TsNode[]) {
             switch (statement.type) {
               case "VariableDeclaration":
                 for (const declaration of statement.declarations) {
@@ -57,8 +60,6 @@ export const autoOptions = () => {
                   propsDeclaration = declaration as TypedVariableDeclarator;
                 }
                 break;
-              // TODO: support inline types
-              // TODO: then extend our nodes to have the correct declaration types
               case "TSInterfaceDeclaration":
                 typeDeclarations.push(statement);
                 break;
@@ -82,14 +83,10 @@ export const autoOptions = () => {
       // 1. Information provided by the user via '<svelte:options>' is the most valuable,
       // we use what is provided and never overwrite it
 
-      // TODO: iterate over user provided svelte options (if they exist)
-      const customElementOptions = options?.attributes.find(
-        (attr): attr is AST.Attribute =>
-          "name" in attr && attr.name === "customElement",
-      );
-      if (customElementOptions) {
-        inferPropsFromSvelteOptions(inferredProps, customElementOptions);
-      }
+      const customElementOptions =
+        extractSvelteCustomElementOptions(svelteOptions);
+
+      inferPropsFromSvelteOptions(inferredProps, customElementOptions);
 
       // 2. If the user uses TypeScript & we have types available, they are the next valuable information we can infer
       // we want to preferrably use them over what is being destructured
@@ -101,7 +98,7 @@ export const autoOptions = () => {
 
       const magicString = new MagicString(code);
 
-      injectInferredProps(inferredProps, magicString);
+      injectInferredProps(inferredProps, svelteOptions, magicString);
 
       if (!magicString.hasChanged()) {
         return null;

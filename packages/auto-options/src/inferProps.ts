@@ -1,4 +1,3 @@
-import type { AST } from "svelte/compiler";
 import type {
   InferredSvelteOptionProps,
   InterfaceDeclaration,
@@ -8,6 +7,7 @@ import type {
   TypeDeclaration,
 } from "./types";
 import { kebabize, TODO } from "@svebcomponents/utils";
+import type { SvelteOptions } from "./extractSvelteOptionsProps";
 
 const enhanceInferredProps = (
   inferredProps: InferredSvelteOptionProps,
@@ -34,9 +34,9 @@ export const inferPropsFromSvelteOptions = (
   // WARNING: this object is being mutated
   inferredProps: InferredSvelteOptionProps,
   // TODO: write a type to make this a bit stricter
-  customElementOptions?: AST.Attribute,
+  svelteOptions?: SvelteOptions,
 ) => {
-  TODO("infer props from svelte options", inferredProps);
+  // TODO("infer props from svelte options", inferredProps);
 };
 
 const resolvePrimitiveType = (
@@ -169,5 +169,5 @@ export const inferPropsFromComponentPropDeclaration = (
   inferredProps: InferredSvelteOptionProps,
   propsDeclaration: TypedVariableDeclarator,
 ) => {
-  TODO("infer props from destructuring");
+  // TODO("infer props from destructuring");
 };
