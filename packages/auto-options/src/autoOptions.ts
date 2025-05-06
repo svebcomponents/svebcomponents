@@ -10,9 +10,9 @@ import {
   inferPropsFromComponentPropDeclaration,
   inferPropsFromSvelteOptions,
   inferPropsFromTypes,
-} from "./inferProps";
-import { injectInferredProps } from "./injectInferredProps";
-import { extractSvelteOptions } from "./extractSvelteOptionsProps";
+} from "./inferProps.js";
+import { injectInferredProps } from "./injectInferredProps.js";
+import { extractSvelteOptions } from "./extractSvelteOptionsProps.js";
 
 // In svelte web component land, even simple things such as exposing props as attributes have to be
 // manually configured using <svelte:options customElement={}/>

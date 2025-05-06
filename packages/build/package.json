@@ -29,6 +29,7 @@
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/ssr": "workspace:*",
+    "@svebcomponents/auto-options": "workspace:*",
     "@rollup/plugin-node-resolve": "catalog:",
     "@rollup/plugin-typescript": "catalog:",
     "@rollup/plugin-virtual": "catalog:",

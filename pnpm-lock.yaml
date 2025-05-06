@@ -370,6 +370,9 @@ importers:
       '@rollup/plugin-virtual':
         specifier: 'catalog:'
         version: 3.0.2(rollup@4.40.0)
+      '@svebcomponents/auto-options':
+        specifier: workspace:*
+        version: link:../auto-options
       '@svebcomponents/eslint-config':
         specifier: workspace:*
         version: link:../../configs/eslint-config
