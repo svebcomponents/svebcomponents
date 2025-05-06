@@ -35,6 +35,9 @@ export const svebcomponentRollupConfig = (
       autoOptions(),
       svelte({
         emitCss: false,
+        compilerOptions: {
+          customElement: true,
+        },
       }),
       typescript({
         outDir,
