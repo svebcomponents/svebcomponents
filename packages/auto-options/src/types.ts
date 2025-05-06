@@ -18,7 +18,7 @@ export interface InferredSvelteOptionProps {
   [propName: string]: SvelteOptionProp;
 }
 
-// TODO: we have no types for the typescript AST yet, probably should pull in a library to get them
+// SOMEDAY: we have no types for the typescript AST yet, probably should pull in a library to get them
 // ... but for now I'll just write my own
 export interface TypedVariableDeclarator extends VariableDeclarator {
   id: VariableDeclarator["id"] & {
@@ -89,14 +89,13 @@ interface PropertySignature extends AST.BaseNode {
 
 interface InterfaceBody extends AST.BaseNode {
   type: "TSInterfaceBody";
-  // TODO: there are propably other things that could come here... like method signatures?
   body: PropertySignature[];
 }
 
 export interface InterfaceDeclaration extends AST.BaseNode {
   type: "TSInterfaceDeclaration";
   id: Identifier;
-  // TODO: if we go really advanced we should probably handle generics here too..
+  // SOMEDAY: if we go really advanced we should probably handle generics here too..
   body: InterfaceBody;
 }
 

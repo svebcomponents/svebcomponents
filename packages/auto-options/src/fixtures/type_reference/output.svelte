@@ -4,7 +4,8 @@ numberProp: {attribute: "number-prop", reflect: true, type: "Number"},
 }
 }} />
 <script lang="ts">
-  type MyNumber = number;
+  type MyCoolNumber = number;
+  type MyNumber = MyCoolNumber;
   interface Props {
     numberProp: MyNumber;
   }

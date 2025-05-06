@@ -106,7 +106,6 @@ const resolvePrimitiveType = (
       if (type.typeName.name === "Array") {
         return "Array";
       }
-      // TODO: figure out how to best handle a reference here
       const resolvedTypeDeclaration = typeDeclarations.find(
         (typeDeclaration): typeDeclaration is TypeDeclaration => {
           if (!("id" in typeDeclaration)) return false;
@@ -122,9 +121,9 @@ const resolvePrimitiveType = (
         typeDeclarations,
       );
     default:
-      // TODO: at some point the switch statement should be exhaustive
+      // at some point the switch statement should be exhaustive & this log never trigger
       console.log(
-        "found unhandled type while trying to resolve primitive type: ",
+        "@svebcomponents/auto-options found unhandled type while trying to resolve primitive type: ",
         type,
       );
       return null;
