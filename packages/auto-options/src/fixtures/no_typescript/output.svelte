@@ -4,6 +4,9 @@ myNumber: {attribute: "my-number", reflect: true, type: "String"},
 }
 }} />
 <script>
-  let {myNumber} = $props();
+  let {
+    myNumber,
+    ...rest
+  } = $props();
 </script>
-<h1>{{myNumber}}</h1>
+<h1>{myNumber}{rest}</h1>
