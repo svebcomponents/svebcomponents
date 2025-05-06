@@ -1,0 +1,7 @@
+{
+  "extends": "@svebcomponents/typescript-config/svelte",
+  "compilerOptions": {
+    "types": ["vite/client"]
+  },
+  "include": ["src/**/*"]
+}

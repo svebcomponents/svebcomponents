@@ -6,7 +6,7 @@ import { spread } from "@open-wc/lit-helpers";
 /**
  * A utility to convert camelCase to kebab-case
  */
-const kebabize = (str: string) =>
+export const kebabize = (str: string) =>
   str.replace(
     /[A-Z]+(?![a-z])|[A-Z]/g,
     ($, ofs) => (ofs ? "-" : "") + $.toLowerCase(),
