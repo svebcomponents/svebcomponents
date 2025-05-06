@@ -1,7 +1,7 @@
 <svelte:options customElement={{
 props: {
 arrayProp: {attribute: "array-prop", reflect: true, type: "Array"},
-},
+}
 }} />
 <script lang="ts">
   interface Props {

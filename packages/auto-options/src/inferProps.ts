@@ -9,6 +9,18 @@ import type {
 import { kebabize, TODO } from "@svebcomponents/utils";
 import type { SvelteOptions } from "./extractSvelteOptionsProps";
 
+const primitiveTypes = {
+  String: "String",
+  Array: "Array",
+  Number: "Number",
+  Boolean: "Boolean",
+  Object: "Object",
+} as const satisfies Record<PrimitiveType, PrimitiveType>;
+
+const isPrimitiveType = (type: string): type is PrimitiveType => {
+  return type in primitiveTypes;
+};
+
 const enhanceInferredProps = (
   inferredProps: InferredSvelteOptionProps,
   propName: string,
@@ -20,23 +32,44 @@ const enhanceInferredProps = (
 ) => {
   // first we check if the propName is already in the inferred props
   const previouslyInferredProp = inferredProps[propName];
-  // if not, we insert what we inferred as isReflected
-  if (!previouslyInferredProp) {
-    inferredProps[propName] = {
-      attributeName,
-      type,
-      isReflected,
-    };
-  }
+  // and then update the previously inferred props, trying to not overwrite previous (more valuable) information
+  inferredProps[propName] = {
+    attributeName: previouslyInferredProp?.attributeName ?? attributeName,
+    type: previouslyInferredProp?.type ?? type,
+    isReflected: previouslyInferredProp?.isReflected ?? isReflected,
+  };
 };
 
 export const inferPropsFromSvelteOptions = (
   // WARNING: this object is being mutated
   inferredProps: InferredSvelteOptionProps,
-  // TODO: write a type to make this a bit stricter
-  svelteOptions?: SvelteOptions,
+  svelteOptions: SvelteOptions | null,
 ) => {
-  // TODO("infer props from svelte options", inferredProps);
+  const propValues = svelteOptions?.customElementOptions?.props?.propValues;
+  if (!propValues) return;
+  for (const [propName, propValue] of Object.entries(propValues)) {
+    const attributeName =
+      "attribute" in propValue && typeof propValue["attribute"] === "string"
+        ? propValue["attribute"]
+        : undefined;
+    const type =
+      "type" in propValue &&
+      typeof propValue["type"] === "string" &&
+      isPrimitiveType(propValue["type"])
+        ? propValue["type"]
+        : undefined;
+    const isReflected =
+      "reflect" in propValue && typeof propValue["reflect"] === "boolean"
+        ? propValue["reflect"]
+        : undefined;
+    enhanceInferredProps(
+      inferredProps,
+      propName,
+      attributeName,
+      type,
+      isReflected,
+    );
+  }
 };
 
 const resolvePrimitiveType = (

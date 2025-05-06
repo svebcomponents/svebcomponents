@@ -1,10 +1,4 @@
-<svelte:options customElement={{
-  props: {
-    numberProp: {
-      type: "String"
-    }
-  }
-}} />
+<svelte:options customElement={{shadow: 'none'}}/>
 <script lang="ts">
   interface Props {
     numberProp: number;

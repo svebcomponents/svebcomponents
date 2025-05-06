@@ -1,4 +1,4 @@
-import { parse, type AST } from "svelte/compiler";
+import { parse } from "svelte/compiler";
 import { walk } from "zimmerframe";
 import MagicString from "magic-string";
 import type {
@@ -12,7 +12,7 @@ import {
   inferPropsFromTypes,
 } from "./inferProps";
 import { injectInferredProps } from "./injectInferredProps";
-import { extractSvelteCustomElementOptions } from "./extractSvelteOptionsProps";
+import { extractSvelteOptions } from "./extractSvelteOptionsProps";
 
 // In svelte web component land, even simple things such as exposing props as attributes have to be
 // manually configured using <svelte:options customElement={}/>
@@ -27,7 +27,7 @@ export const autoOptions = () => {
       if (!id.endsWith(".svelte")) {
         return null;
       }
-      const { instance, options: svelteOptions } = parse(code, {
+      const { instance, options } = parse(code, {
         filename: id,
         modern: true,
       });
@@ -83,10 +83,9 @@ export const autoOptions = () => {
       // 1. Information provided by the user via '<svelte:options>' is the most valuable,
       // we use what is provided and never overwrite it
 
-      const customElementOptions =
-        extractSvelteCustomElementOptions(svelteOptions);
+      const svelteOptions = extractSvelteOptions(options);
 
-      inferPropsFromSvelteOptions(inferredProps, customElementOptions);
+      inferPropsFromSvelteOptions(inferredProps, svelteOptions);
 
       // 2. If the user uses TypeScript & we have types available, they are the next valuable information we can infer
       // we want to preferrably use them over what is being destructured

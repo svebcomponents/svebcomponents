@@ -1,7 +1,7 @@
 <svelte:options customElement={{
 props: {
 booleanProp: {attribute: "boolean-prop", reflect: true, type: "Boolean"},
-},
+}
 }} />
 <script lang="ts">
   interface Props {

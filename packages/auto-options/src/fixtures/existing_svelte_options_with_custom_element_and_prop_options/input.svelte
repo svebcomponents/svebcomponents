@@ -1,11 +1,12 @@
 <svelte:options customElement={{
 props: {
-objectProp: {attribute: "object-prop", reflect: true, type: "Object"},
+propOne: {type: "String", attribute: "this-should-not-be-changed"},
 }
 }} />
 <script lang="ts">
   interface Props {
-    objectProp: {'key': string};
+    propOne: number;
+    propTwo: boolean;
   }
   let props: Props = $props();
 </script>

@@ -1,24 +1,25 @@
 import type { AST } from "svelte/compiler";
-import type { InferredSvelteOptionProps } from "./types";
 import type { Property } from "estree";
 
 export interface SvelteOptions {
   // an index within the svelte:options element, where can be injected without causing syntax errors
   attributeInjectIndex: number;
   customElementOptions: {
+    propertyInjectIndex: number;
     props: {
       propsStart: number;
       propsEnd: number;
-      propValues: InferredSvelteOptionProps;
+      propValues: Record<string, Record<string, unknown>>;
     } | null;
   } | null;
 }
 
-export const extractSvelteCustomElementOptions = (
+export const extractSvelteOptions = (
   svelteOptions: AST.SvelteOptions | null,
 ): SvelteOptions | null => {
   if (!svelteOptions) return null;
 
+  // "<svelte:options hogefuga />" we want to inject attributes left of the "/>" so the index we want to inject code from is the second character from the back
   const attributeInjectIndex = svelteOptions.end - 2;
 
   const customElementSvelteOptions = svelteOptions?.attributes.find(
@@ -35,7 +36,10 @@ export const extractSvelteCustomElementOptions = (
   const {
     value: { expression },
   } = customElementSvelteOptions;
-  if (expression.type !== "ObjectExpression") {
+  if (
+    expression.type !== "ObjectExpression" ||
+    !("end" in expression && typeof expression["end"] === "number")
+  ) {
     console.log(
       'Svelte Options with the format `<svelte:options customElement="tagName"/>` are currently not supported. Please switch to the object variant of defining custom element options.',
     );
@@ -60,16 +64,20 @@ export const extractSvelteCustomElementOptions = (
     },
   );
 
+  // `{fuga: 'hoge'}` we want to inject properties left of the last closing bracket,
+  // so the property inject index is the index of closing bracket
+  const propertyInjectIndex = expression.end - 1;
   if (!propsOptions || propsOptions.value.type !== "ObjectExpression") {
     return {
-      attributeInjectIndex: attributeInjectIndex,
+      attributeInjectIndex,
       customElementOptions: {
+        propertyInjectIndex,
         props: null,
       },
     };
   }
 
-  const propValues: InferredSvelteOptionProps = {};
+  const propValues: Record<string, Record<string, unknown>> = {};
   const { start: propsStart, end: propsEnd } = propsOptions;
 
   for (const property of propsOptions.value.properties) {
@@ -83,17 +91,16 @@ export const extractSvelteCustomElementOptions = (
     for (const propertyOfProperty of property.value.properties) {
       if (
         propertyOfProperty.type !== "Property" ||
-        propertyOfProperty.key.type !== "Identifier"
+        propertyOfProperty.key.type !== "Identifier" ||
+        !("value" in propertyOfProperty.value)
       )
         continue;
 
-      resolvedProperty[propertyOfProperty.key.name] = propertyOfProperty.value;
-      console.log("propofprop", propertyOfProperty.value);
+      resolvedProperty[propertyOfProperty.key.name] =
+        propertyOfProperty.value.value;
     }
     propValues[property.key.name] = resolvedProperty;
   }
-
-  console.log("resolved props options", propValues);
 
   return {
     attributeInjectIndex: attributeInjectIndex,
