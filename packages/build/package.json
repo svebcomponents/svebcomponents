@@ -21,7 +21,7 @@
     }
   },
   "peerDependencies": {
-    "@svebcomponents/ssr": "^0.0.0",
+    "@svebcomponents/ssr": "^0.0.1",
     "rollup": "^4.0.0"
   },
   "devDependencies": {

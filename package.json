@@ -8,7 +8,8 @@
     "lint": "turbo lint",
     "fix": "turbo fix",
     "test": "turbo test",
-    "test:dev": "turbo test:dev"
+    "test:dev": "turbo test:dev",
+    "release": "turbo build && pnpx @changesets/cli publish"
   },
   "devDependencies": {
     "turbo": "catalog:",
