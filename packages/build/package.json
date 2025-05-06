@@ -2,7 +2,6 @@
   "name": "@svebcomponents/build",
   "version": "0.0.0",
   "type": "module",
-  "private": true,
   "scripts": {
     "dev": "tsc --watch",
     "build": "tsc",
@@ -37,5 +36,9 @@
     "rollup": "catalog:",
     "rollup-plugin-svelte": "catalog:",
     "typescript": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }

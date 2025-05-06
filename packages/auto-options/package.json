@@ -43,6 +43,10 @@
     "zimmerframe": "catalog:",
     "typescript": "catalog:"
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "keywords": [
     "svelte"
   ]
