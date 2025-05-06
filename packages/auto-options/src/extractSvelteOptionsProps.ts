@@ -103,8 +103,9 @@ export const extractSvelteOptions = (
   }
 
   return {
-    attributeInjectIndex: attributeInjectIndex,
+    attributeInjectIndex,
     customElementOptions: {
+      propertyInjectIndex,
       props: {
         propsStart,
         propsEnd,

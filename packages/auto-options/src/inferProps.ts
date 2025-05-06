@@ -6,7 +6,7 @@ import type {
   Type,
   TypeDeclaration,
 } from "./types";
-import { kebabize, TODO } from "@svebcomponents/utils";
+import { kebabize } from "@svebcomponents/utils";
 import type { SvelteOptions } from "./extractSvelteOptionsProps";
 
 const primitiveTypes = {
@@ -202,5 +202,11 @@ export const inferPropsFromComponentPropDeclaration = (
   inferredProps: InferredSvelteOptionProps,
   propsDeclaration: TypedVariableDeclarator,
 ) => {
-  // TODO("infer props from destructuring");
+  const pattern = propsDeclaration.id;
+  if (pattern.type !== "ObjectPattern") return;
+  for (const property of pattern.properties) {
+    if (property.type !== "Property" || !("name" in property.key)) continue;
+    const propName = property.key.name;
+    enhanceInferredProps(inferredProps, propName, kebabize(propName));
+  }
 };

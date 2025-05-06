@@ -7,6 +7,7 @@ export const injectInferredProps = (
   svelteOptions: SvelteOptions | null,
   magicString: MagicString,
 ) => {
+  if (Object.keys(inferredProps).length === 0) return;
   let inferredPropsResult = "props: {\n";
   for (const [propName, inferredProp] of Object.entries(inferredProps)) {
     inferredPropsResult += `${propName}: {attribute: "${inferredProp.attributeName}", reflect: ${inferredProp.isReflected}, type: "${inferredProp.type}"},\n`;
