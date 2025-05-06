@@ -28,7 +28,8 @@ export interface TypedVariableDeclarator extends VariableDeclarator {
 
 interface Identifier extends AST.BaseNode {
   type: "Identifier";
-  name: string;
+  // this could either be a builtin type or a user defined type
+  name: "Array" | "Record" | string;
 }
 
 interface TSTypeReference extends AST.BaseNode {
@@ -56,13 +57,28 @@ interface TSArrayType extends AST.BaseNode {
   typeName: Identifier;
 }
 
-export interface TypeAnnotation extends AST.BaseNode {
-  typeAnnotation:
-    | TSTypeReference
-    | TSArrayType
-    | TSStringKeyword
-    | TSNumberKeyword
-    | TSBooleanKeyword;
+interface Literal extends AST.BaseNode {
+  type: "Literal";
+  value: number | string | boolean;
+}
+
+interface TSLiteralType extends AST.BaseNode {
+  type: "TSLiteralType";
+  literal?: Literal;
+}
+
+interface TSTypeLiteral extends AST.BaseNode {
+  type: "TSTypeLiteral";
+  members: PropertySignature[];
+}
+
+interface TypeAnnotation extends AST.BaseNode {
+  typeAnnotation: Type;
+}
+
+interface TypeAliasDeclaration extends AST.BaseNode {
+  type: "TSTypeAliasDeclaration";
+  typeAnnotation: Type;
 }
 
 interface PropertySignature extends AST.BaseNode {
@@ -83,3 +99,14 @@ export interface InterfaceDeclaration extends AST.BaseNode {
   // TODO: if we go really advanced we should probably handle generics here too..
   body: InterfaceBody;
 }
+
+export type Type =
+  | TSTypeReference
+  | TSArrayType
+  | TSStringKeyword
+  | TSNumberKeyword
+  | TSTypeLiteral
+  | TSLiteralType
+  | TSBooleanKeyword;
+
+export type TypeDeclaration = InterfaceDeclaration | TypeAliasDeclaration;

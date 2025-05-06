@@ -4,7 +4,8 @@ import type {
   InterfaceDeclaration,
   PrimitiveType,
   TypedVariableDeclarator,
-  TypeAnnotation,
+  Type,
+  TypeDeclaration,
 } from "./types";
 import { kebabize, TODO } from "@svebcomponents/utils";
 
@@ -38,11 +39,12 @@ export const inferPropsFromSvelteOptions = (
   TODO("infer props from svelte options", inferredProps);
 };
 
-const resolvePrimitiveType = ({
-  typeAnnotation,
-}: TypeAnnotation): PrimitiveType | null => {
-  // TODO: there are way to many ways to write simple types in TS.. T.T
-  switch (typeAnnotation.type) {
+const resolvePrimitiveType = (
+  type: Type,
+  typeDeclarations: TypeDeclaration[],
+): PrimitiveType | null => {
+  // there are way to many ways to write simple types in TS.. T.T
+  switch (type.type) {
     case "TSStringKeyword":
       return "String";
     case "TSNumberKeyword":
@@ -51,18 +53,46 @@ const resolvePrimitiveType = ({
       return "Boolean";
     case "TSArrayType":
       return "Array";
+    case "TSLiteralType":
+      switch (typeof type.literal?.value) {
+        case "string":
+          return "String";
+        case "number":
+          return "Number";
+        case "boolean":
+          return "Boolean";
+      }
+      return "String";
+    case "TSTypeLiteral":
+      return "Object";
     case "TSTypeReference":
-      if (typeAnnotation.typeName.name === "Record") {
+      // handle builtin types
+      if (type.typeName.name === "Record") {
         return "Object";
       }
+      if (type.typeName.name === "Array") {
+        return "Array";
+      }
       // TODO: figure out how to best handle a reference here
-      console.log("do a little recursive dance? ", typeAnnotation);
-      return null;
+      const resolvedTypeDeclaration = typeDeclarations.find(
+        (typeDeclaration): typeDeclaration is TypeDeclaration => {
+          if (!("id" in typeDeclaration)) return false;
+          return typeDeclaration.id.name === type.typeName.name;
+        },
+      );
+      if (!resolvedTypeDeclaration) return null;
+      if (resolvedTypeDeclaration?.type === "TSInterfaceDeclaration") {
+        return "Object";
+      }
+      return resolvePrimitiveType(
+        resolvedTypeDeclaration.typeAnnotation,
+        typeDeclarations,
+      );
     default:
       // TODO: at some point the switch statement should be exhaustive
       console.log(
         "found unhandled type while trying to resolve primitive type: ",
-        typeAnnotation,
+        type,
       );
       return null;
   }
@@ -72,7 +102,7 @@ export const inferPropsFromTypes = (
   // WARNING: this object is being mutated
   inferredProps: InferredSvelteOptionProps,
   propsDeclaration: TypedVariableDeclarator,
-  typeDeclarations: InterfaceDeclaration[],
+  typeDeclarations: TypeDeclaration[],
 ) => {
   // if there are no types we bail early
   if (!("typeAnnotation" in propsDeclaration.id)) {
@@ -80,31 +110,57 @@ export const inferPropsFromTypes = (
   }
   const { typeAnnotation: propsAnnotation } =
     propsDeclaration.id.typeAnnotation;
+  let typedProps: InterfaceDeclaration["body"]["body"] | undefined;
+
   if (
     propsAnnotation.type === "TSTypeReference" &&
     propsAnnotation.typeName.type === "Identifier"
   ) {
-    const resolvedType = typeDeclarations.find(
-      (typeDeclaration) =>
-        typeDeclaration.id.name === propsAnnotation.typeName.name,
+    const resolvedTypeDeclaration = typeDeclarations.find(
+      (typeDeclaration): typeDeclaration is TypeDeclaration => {
+        if (!("id" in typeDeclaration)) return false;
+        return typeDeclaration.id.name === propsAnnotation.typeName.name;
+      },
     );
-
-    const typedProps = resolvedType?.body.body;
-    // if we could not find any typed props, so be it!
-    if (!typedProps) {
-      return;
+    switch (resolvedTypeDeclaration?.type) {
+      case "TSTypeAliasDeclaration":
+        if (resolvedTypeDeclaration?.typeAnnotation.type !== "TSTypeLiteral") {
+          console.log(
+            "@svebcomponents/auto-options could not resolve prop types since they were not of expected shape",
+          );
+          return;
+        }
+        typedProps = resolvedTypeDeclaration.typeAnnotation.members;
+        break;
+      case "TSInterfaceDeclaration":
+        typedProps = resolvedTypeDeclaration?.body.body;
+        break;
+      default:
+        return;
     }
+  }
 
-    for (const { typeAnnotation, key } of typedProps) {
-      const type = resolvePrimitiveType(typeAnnotation);
-      const propName = key.name;
-      enhanceInferredProps(
-        inferredProps,
-        propName,
-        kebabize(propName),
-        type ?? "String",
-      );
-    }
+  if (propsAnnotation.type === "TSTypeLiteral") {
+    typedProps = propsAnnotation.members;
+  }
+
+  // if we could not find any typed props, so be it!
+  if (!typedProps) {
+    return;
+  }
+
+  for (const { typeAnnotation, key } of typedProps) {
+    const resolvedPrimitiveType = resolvePrimitiveType(
+      typeAnnotation.typeAnnotation,
+      typeDeclarations,
+    );
+    const propName = key.name;
+    enhanceInferredProps(
+      inferredProps,
+      propName,
+      kebabize(propName),
+      resolvedPrimitiveType ?? "String",
+    );
   }
 };
 

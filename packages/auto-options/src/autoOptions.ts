@@ -3,7 +3,7 @@ import { walk } from "zimmerframe";
 import MagicString from "magic-string";
 import type {
   InferredSvelteOptionProps,
-  InterfaceDeclaration,
+  TypeDeclaration,
   TypedVariableDeclarator,
 } from "./types";
 import {
@@ -37,7 +37,7 @@ export const autoOptions = () => {
         return null;
       }
       let propsDeclaration: TypedVariableDeclarator | undefined;
-      const typeDeclarations: InterfaceDeclaration[] = [];
+      const typeDeclarations: TypeDeclaration[] = [];
       walk(instance.content, null, {
         Program(node) {
           for (const statement of node.body) {
@@ -57,10 +57,14 @@ export const autoOptions = () => {
                   propsDeclaration = declaration as TypedVariableDeclarator;
                 }
                 break;
-              // TODO: there are many other types of declaring types that we should also support
-              // @ts-expect-error -- we don't have types for the typescript AST yet
+              // TODO: support inline types
+              // TODO: then extend our nodes to have the correct declaration types
               case "TSInterfaceDeclaration":
                 typeDeclarations.push(statement);
+                break;
+              case "TSTypeAliasDeclaration":
+                typeDeclarations.push(statement);
+                break;
             }
           }
         },
