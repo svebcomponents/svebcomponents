@@ -59,10 +59,14 @@
     "vite": "catalog:",
     "zimmerframe": "catalog:"
   },
-  "keywords": [
-    "svelte"
-  ],
   "dependencies": {
     "esm-env": "catalog:"
-  }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "keywords": [
+    "svelte"
+  ]
 }
