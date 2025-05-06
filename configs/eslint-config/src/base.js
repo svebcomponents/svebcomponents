@@ -1,5 +1,6 @@
 import prettier from "eslint-config-prettier";
 import js from "@eslint/js";
+import { globalIgnores } from "eslint/config";
 import globals from "globals";
 import ts from "typescript-eslint";
 import { includeIgnoreFile } from "@eslint/compat";
@@ -40,4 +41,5 @@ export default ts.config(
       ],
     },
   },
+  globalIgnores(["**/fixtures/"]),
 );

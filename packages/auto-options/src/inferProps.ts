@@ -98,7 +98,7 @@ const resolvePrimitiveType = (
       return "String";
     case "TSTypeLiteral":
       return "Object";
-    case "TSTypeReference":
+    case "TSTypeReference": {
       // handle builtin types
       if (type.typeName.name === "Record") {
         return "Object";
@@ -120,6 +120,7 @@ const resolvePrimitiveType = (
         resolvedTypeDeclaration.typeAnnotation,
         typeDeclarations,
       );
+    }
     default:
       // at some point the switch statement should be exhaustive & this log never trigger
       console.log(
