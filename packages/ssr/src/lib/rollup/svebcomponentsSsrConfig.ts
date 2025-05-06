@@ -35,6 +35,7 @@ const rollupConfigSvebcomponentsSsr = (
         extensions: [".svelte"],
       }),
       svelte({
+        emitCss: false,
         compilerOptions: {
           customElement: false,
           generate: "server",

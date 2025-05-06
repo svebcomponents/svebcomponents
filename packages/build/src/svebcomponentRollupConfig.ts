@@ -33,7 +33,9 @@ export const svebcomponentRollupConfig = (
         extensions: [".svelte"],
       }),
       autoOptions(),
-      svelte(),
+      svelte({
+        emitCss: false,
+      }),
       typescript({
         outDir,
       }),
