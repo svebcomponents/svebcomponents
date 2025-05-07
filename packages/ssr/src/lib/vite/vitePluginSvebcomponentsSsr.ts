@@ -60,8 +60,6 @@ const transformSlotAttribute = (
   );
 };
 
-// TODO: `slot` attribute is processed by svelte compiler when an element is nested inside a component,
-// so we need to rewrite it as <el {...{slot: 'slotName'}}></el> to prevent svelte from processing it
 function vitePluginSvebcomponentsSsr(): Plugin {
   return {
     name: "vite-plugin-svelte-webcomponent-wrapper",
