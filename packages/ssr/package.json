@@ -48,10 +48,10 @@
     "svelte": "catalog:",
     "svelte-check": "catalog:",
     "typescript": "catalog:",
-    "@svebcomponents/utils": "workspace:*",
     "vite": "catalog:"
   },
   "dependencies": {
+    "@svebcomponents/utils": "workspace:*",
     "@lit-labs/ssr": "catalog:",
     "@lit-labs/ssr-dom-shim": "catalog:",
     "@rollup/plugin-node-resolve": "catalog:",

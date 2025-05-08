@@ -335,6 +335,9 @@ importers:
 
   packages/auto-options:
     dependencies:
+      '@svebcomponents/utils':
+        specifier: workspace:*
+        version: link:../utils
       magic-string:
         specifier: 'catalog:'
         version: 0.30.17
@@ -351,9 +354,6 @@ importers:
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
-      '@svebcomponents/utils':
-        specifier: workspace:*
-        version: link:../utils
       '@types/estree':
         specifier: 'catalog:'
         version: 1.0.7
@@ -433,6 +433,9 @@ importers:
       '@rollup/plugin-virtual':
         specifier: 'catalog:'
         version: 3.0.2(rollup@4.40.0)
+      '@svebcomponents/utils':
+        specifier: workspace:*
+        version: link:../utils
       esm-env:
         specifier: 'catalog:'
         version: 1.2.2
@@ -455,9 +458,6 @@ importers:
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
-      '@svebcomponents/utils':
-        specifier: workspace:*
-        version: link:../utils
       '@sveltejs/package':
         specifier: 'catalog:'
         version: 2.3.10(svelte@5.28.2)(typescript@5.8.3)

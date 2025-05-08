@@ -32,7 +32,6 @@
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
-    "@svebcomponents/utils": "workspace:*",
     "@types/estree": "catalog:",
     "@types/node": "catalog:",
     "rollup": "catalog:",
@@ -42,6 +41,7 @@
     "typescript": "catalog:"
   },
   "dependencies": {
+    "@svebcomponents/utils": "workspace:*",
     "magic-string": "catalog:",
     "zimmerframe": "catalog:"
   },
