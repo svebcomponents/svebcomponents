@@ -1,6 +1,6 @@
 {
   "name": "@svebcomponents/auto-options",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "scripts": {
     "build": "rm -rf dist && tsc",
     "check": "tsc --noEmit",
