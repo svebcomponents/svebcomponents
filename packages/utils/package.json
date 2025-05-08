@@ -29,5 +29,9 @@
   "dependencies": {
     "@open-wc/lit-helpers": "catalog:",
     "lit": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }
