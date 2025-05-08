@@ -35,13 +35,15 @@
     "@svebcomponents/utils": "workspace:*",
     "@types/estree": "catalog:",
     "@types/node": "catalog:",
-    "magic-string": "catalog:",
     "rollup": "catalog:",
     "svelte": "catalog:",
     "vitest": "catalog:",
     "vite": "catalog:",
-    "zimmerframe": "catalog:",
     "typescript": "catalog:"
+  },
+  "dependencies": {
+    "magic-string": "catalog:",
+    "zimmerframe": "catalog:"
   },
   "publishConfig": {
     "access": "public",

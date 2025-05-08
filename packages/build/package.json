@@ -27,15 +27,17 @@
     "@svebcomponents/typescript-config": "workspace:*",
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
-    "@svebcomponents/ssr": "workspace:*",
-    "@svebcomponents/auto-options": "workspace:*",
+    "@types/node": "catalog:",
+    "rollup": "catalog:",
+    "typescript": "catalog:"
+  },
+  "dependencies": {
+    "rollup-plugin-svelte": "catalog:",
     "@rollup/plugin-node-resolve": "catalog:",
     "@rollup/plugin-typescript": "catalog:",
     "@rollup/plugin-virtual": "catalog:",
-    "@types/node": "catalog:",
-    "rollup": "catalog:",
-    "rollup-plugin-svelte": "catalog:",
-    "typescript": "catalog:"
+    "@svebcomponents/ssr": "workspace:*",
+    "@svebcomponents/auto-options": "workspace:*"
   },
   "publishConfig": {
     "access": "public",
