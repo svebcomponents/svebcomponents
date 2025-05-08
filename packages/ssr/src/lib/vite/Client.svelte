@@ -2,7 +2,7 @@
   import type { Snippet } from "svelte";
 
   interface WebComponentWrapperProps {
-    children: Snippet;
+    children?: Snippet;
     _tagName: string;
     [key: string]: unknown;
   }
@@ -16,5 +16,5 @@
 
 <p>client</p>
 <svelte:element this={tag} {...props}>
-  {@render children()}
+  {@render children?.()}
 </svelte:element>
