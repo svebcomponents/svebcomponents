@@ -1,5 +1,13 @@
 # svelte-kit
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies [6fd10e7]
+  - @svebcomponents/ssr@0.0.4
+  - @svebcomponents/example-component@0.0.0
+
 ## 0.0.3
 
 ### Patch Changes

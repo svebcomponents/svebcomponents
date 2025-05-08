@@ -1,5 +1,13 @@
 # @svebcomponents/build
 
+## 0.0.3
+
+### Patch Changes
+
+- 6fd10e7: fix: add @rollup/plugin-typescript peer deps
+- Updated dependencies [6fd10e7]
+  - @svebcomponents/ssr@0.0.4
+
 ## 0.0.2
 
 ### Patch Changes
