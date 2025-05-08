@@ -47,13 +47,14 @@
     "rollup": "catalog:",
     "svelte": "catalog:",
     "svelte-check": "catalog:",
-    "typescript": "catalog:",
     "vite": "catalog:"
   },
   "dependencies": {
     "@svebcomponents/utils": "workspace:*",
     "@lit-labs/ssr": "catalog:",
     "@lit-labs/ssr-dom-shim": "catalog:",
+    "typescript": "catalog:",
+    "tslib": "catalog:",
     "@rollup/plugin-node-resolve": "catalog:",
     "@rollup/plugin-typescript": "catalog:",
     "@rollup/plugin-virtual": "catalog:",
