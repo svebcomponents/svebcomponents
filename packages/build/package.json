@@ -1,6 +1,6 @@
 {
   "name": "@svebcomponents/build",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "scripts": {
     "dev": "tsc --watch",
@@ -20,7 +20,7 @@
     }
   },
   "peerDependencies": {
-    "@svebcomponents/ssr": "^0.0.3",
+    "@svebcomponents/ssr": "^0.0.4",
     "rollup": "^4.0.0"
   },
   "devDependencies": {
