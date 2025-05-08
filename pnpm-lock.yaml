@@ -136,9 +136,22 @@ catalogs:
       specifier: 1.1.2
       version: 1.1.2
 
+overrides:
+  build: link:../../Library/pnpm/global/5/node_modules/packages/build
+
 importers:
 
   .:
+    dependencies:
+      auto-options:
+        specifier: link:../../Library/pnpm/global/5/node_modules/packages/auto-options
+        version: link:../../Library/pnpm/global/5/node_modules/packages/auto-options
+      build:
+        specifier: link:../../Library/pnpm/global/5/node_modules/packages/build
+        version: link:../../Library/pnpm/global/5/node_modules/packages/build
+      ssr:
+        specifier: link:../../Library/pnpm/global/5/node_modules/packages/ssr
+        version: link:../../Library/pnpm/global/5/node_modules/packages/ssr
     devDependencies:
       eslint:
         specifier: 'catalog:'
@@ -318,6 +331,13 @@ importers:
         version: 5.0.4
 
   packages/auto-options:
+    dependencies:
+      magic-string:
+        specifier: 'catalog:'
+        version: 0.30.17
+      zimmerframe:
+        specifier: 'catalog:'
+        version: 1.1.2
     devDependencies:
       '@svebcomponents/eslint-config':
         specifier: workspace:*
@@ -337,9 +357,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.14.1
-      magic-string:
-        specifier: 'catalog:'
-        version: 0.30.17
       rollup:
         specifier: 'catalog:'
         version: 4.40.0
@@ -355,12 +372,9 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 3.1.1(@types/node@22.14.1)
-      zimmerframe:
-        specifier: 'catalog:'
-        version: 1.1.2
 
   packages/build:
-    devDependencies:
+    dependencies:
       '@rollup/plugin-node-resolve':
         specifier: 'catalog:'
         version: 16.0.1(rollup@4.40.0)
@@ -373,15 +387,19 @@ importers:
       '@svebcomponents/auto-options':
         specifier: workspace:*
         version: link:../auto-options
+      '@svebcomponents/ssr':
+        specifier: workspace:*
+        version: link:../ssr
+      rollup-plugin-svelte:
+        specifier: 'catalog:'
+        version: 7.2.2(rollup@4.40.0)(svelte@5.28.2)
+    devDependencies:
       '@svebcomponents/eslint-config':
         specifier: workspace:*
         version: link:../../configs/eslint-config
       '@svebcomponents/prettier-config':
         specifier: workspace:*
         version: link:../../configs/prettier-config
-      '@svebcomponents/ssr':
-        specifier: workspace:*
-        version: link:../ssr
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
@@ -391,19 +409,12 @@ importers:
       rollup:
         specifier: 'catalog:'
         version: 4.40.0
-      rollup-plugin-svelte:
-        specifier: 'catalog:'
-        version: 7.2.2(rollup@4.40.0)(svelte@5.28.2)
       typescript:
         specifier: 'catalog:'
         version: 5.8.3
 
   packages/ssr:
     dependencies:
-      esm-env:
-        specifier: 'catalog:'
-        version: 1.2.2
-    devDependencies:
       '@lit-labs/ssr':
         specifier: 'catalog:'
         version: 3.3.1
@@ -419,6 +430,19 @@ importers:
       '@rollup/plugin-virtual':
         specifier: 'catalog:'
         version: 3.0.2(rollup@4.40.0)
+      esm-env:
+        specifier: 'catalog:'
+        version: 1.2.2
+      magic-string:
+        specifier: 'catalog:'
+        version: 0.30.17
+      rollup-plugin-svelte:
+        specifier: 'catalog:'
+        version: 7.2.2(rollup@4.40.0)(svelte@5.28.2)
+      zimmerframe:
+        specifier: 'catalog:'
+        version: 1.1.2
+    devDependencies:
       '@svebcomponents/eslint-config':
         specifier: workspace:*
         version: link:../../configs/eslint-config
@@ -437,18 +461,12 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.14.1
-      magic-string:
-        specifier: 'catalog:'
-        version: 0.30.17
       publint:
         specifier: 'catalog:'
         version: 0.3.11
       rollup:
         specifier: 'catalog:'
         version: 4.40.0
-      rollup-plugin-svelte:
-        specifier: 'catalog:'
-        version: 7.2.2(rollup@4.40.0)(svelte@5.28.2)
       svelte:
         specifier: 'catalog:'
         version: 5.28.2
@@ -461,9 +479,6 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 6.2.6(@types/node@22.14.1)
-      zimmerframe:
-        specifier: 'catalog:'
-        version: 1.1.2
 
   packages/utils:
     dependencies:
