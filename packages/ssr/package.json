@@ -1,6 +1,6 @@
 {
   "name": "@svebcomponents/ssr",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "scripts": {
     "build": "svelte-package && publint",
     "check": "svelte-check --tsconfig ./tsconfig.json",
