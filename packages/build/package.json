@@ -28,10 +28,11 @@
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
     "@types/node": "catalog:",
-    "rollup": "catalog:",
-    "typescript": "catalog:"
+    "rollup": "catalog:"
   },
   "dependencies": {
+    "typescript": "catalog:",
+    "tslib": "catalog:",
     "rollup-plugin-svelte": "catalog:",
     "@rollup/plugin-node-resolve": "catalog:",
     "@rollup/plugin-typescript": "catalog:",
