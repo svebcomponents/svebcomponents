@@ -47,3 +47,4 @@ catalog:
   vite: 6.2.6
   vitest: 3.1.1
   zimmerframe: 1.1.2
+  "@changesets/cli": 2.29.3
