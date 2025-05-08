@@ -1,5 +1,11 @@
 # @svebcomponents/ssr
 
+## 0.0.5
+
+### Patch Changes
+
+- a1bc248: fix: consider that component children might be undefined
+
 ## 0.0.4
 
 ### Patch Changes
