@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    '@changesets/cli':
+      specifier: 2.29.3
+      version: 2.29.3
     '@chromatic-com/storybook':
       specifier: 3.2.6
       version: 3.2.6
@@ -141,7 +144,7 @@ importers:
   .:
     dependencies:
       '@changesets/cli':
-        specifier: 2.29.3
+        specifier: 'catalog:'
         version: 2.29.3
       auto-options:
         specifier: link:../../Library/pnpm/global/5/node_modules/packages/auto-options
