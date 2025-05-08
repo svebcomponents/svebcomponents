@@ -6,7 +6,7 @@
   import { ElementRendererRegistry } from "../runtime/rendererRegistry.js";
 
   interface WebComponentWrapperProps {
-    children: Snippet;
+    children?: Snippet;
     _tagName: string;
     [key: string]: unknown;
   }
@@ -60,5 +60,5 @@
     <!-- eslint-disable-next-line -- it is the ElementRenderer's responsibility to ensure everything is properly sanitized -->
     {@html shadow}
   </template>
-  {@render children()}
+  {@render children?.()}
 </svelte:element>
