@@ -10,11 +10,12 @@
     "test": "turbo test",
     "test:dev": "turbo test:dev",
     "release": "turbo build && changeset publish",
-    "prepare": "husky"
+    "submodule": "pnpm submodule:update && pnpm submodule:adopt",
+    "submodule:update": "git submodule update --recursive --remote",
+    "submodule:adopt": "yq -i '.catalogs.template = load(\"template/pnpm-workspace.yaml\").catalogs.template' pnpm-workspace.yaml && pnpm install --prefer-offline"
   },
   "devDependencies": {
     "eslint": "catalog:",
-    "husky": "9.1.7",
     "prettier": "catalog:",
     "turbo": "catalog:"
   },

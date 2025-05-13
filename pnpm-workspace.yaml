@@ -4,16 +4,10 @@ packages:
   - template/apps/*
   - configs/*
 overrides:
+  # overrides dependencies from catalog:template to use local packages instead of deployed ones
   "@svebcomponents/build": workspace:*
   "@svebcomponents/ssr": workspace:*
-# This catalog must be a strict superset of the catalog defined in template/pnpm-workspace.yaml
 catalog:
-  # TODO 1: add catalogs.template that is the catalogs.template from template/pnpm-workspace.yaml
-  # TODO 2: then add a post-merge git hook that will copy the catalogs.template to this file
-  # TODO 3: then remove the `will-be-overridden-to-workspace` lines
-  # references to @svebcomponents/build and @svebcomponents/ssr are overridden to use the local workspace versions
-  "@svebcomponents/build": will-be-overridden-to-workspace
-  "@svebcomponents/ssr": will-be-overridden-to-workspace
   "@chromatic-com/storybook": 3.2.6
   "@lit-labs/ssr": 3.3.1
   "@lit-labs/ssr-dom-shim": 1.3.0
@@ -59,4 +53,30 @@ catalog:
   vitest: 3.1.1
   zimmerframe: 1.1.2
   "@changesets/cli": 2.29.3
-catalogs: null
+catalogs:
+  template:
+    "@svebcomponents/build": 0.0.4
+    "@svebcomponents/ssr": 0.0.5
+    "@svebcomponents/auto-options": 0.0.4
+    "@sveltejs/adapter-auto": 6.0.0
+    "@sveltejs/kit": 2.20.5
+    "@sveltejs/package": 2.3.10
+    "@sveltejs/vite-plugin-svelte": 5.0.3
+    "@tsconfig/strictest": 2.0.5
+    "@tsconfig/svelte": 5.0.4
+    "@types/node": 22.14.1
+    eslint: 9.24.0
+    "@eslint/js": 9.24.0
+    eslint-config-prettier: 10.1.2
+    eslint-plugin-svelte: 3.5.1
+    globals: 16.0.0
+    prettier: 3.5.3
+    prettier-plugin-svelte: 3.3.3
+    rollup: 4.40.0
+    svelte: 5.28.2
+    svelte-check: 4.1.6
+    turbo: 2.5.2
+    typescript: 5.8.3
+    typescript-eslint: 8.29.1
+    vite: 6.2.6
+    vitest: 3.1.1

@@ -30,18 +30,9 @@ catalogs:
     '@rollup/plugin-virtual':
       specifier: 3.0.2
       version: 3.0.2
-    '@sveltejs/adapter-auto':
-      specifier: 6.0.0
-      version: 6.0.0
-    '@sveltejs/kit':
-      specifier: 2.20.5
-      version: 2.20.5
     '@sveltejs/package':
       specifier: 2.3.10
       version: 2.3.10
-    '@sveltejs/vite-plugin-svelte':
-      specifier: 5.0.3
-      version: 5.0.3
     '@tsconfig/strictest':
       specifier: 2.0.5
       version: 2.0.5
@@ -117,6 +108,34 @@ catalogs:
     zimmerframe:
       specifier: 1.1.2
       version: 1.1.2
+  template:
+    '@sveltejs/adapter-auto':
+      specifier: 6.0.0
+      version: 6.0.0
+    '@sveltejs/kit':
+      specifier: 2.20.5
+      version: 2.20.5
+    '@sveltejs/vite-plugin-svelte':
+      specifier: 5.0.3
+      version: 5.0.3
+    globals:
+      specifier: 16.0.0
+      version: 16.0.0
+    rollup:
+      specifier: 4.40.0
+      version: 4.40.0
+    svelte:
+      specifier: 5.28.2
+      version: 5.28.2
+    svelte-check:
+      specifier: 4.1.6
+      version: 4.1.6
+    typescript:
+      specifier: 5.8.3
+      version: 5.8.3
+    vite:
+      specifier: 6.2.6
+      version: 6.2.6
 
 overrides:
   '@svebcomponents/build': workspace:*
@@ -142,9 +161,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 9.24.0
-      husky:
-        specifier: 9.1.7
-        version: 9.1.7
       prettier:
         specifier: 'catalog:'
         version: 3.5.3
@@ -400,28 +416,28 @@ importers:
         specifier: workspace:*
         version: link:../../../configs/typescript-config
       '@sveltejs/adapter-auto':
-        specifier: 'catalog:'
+        specifier: catalog:template
         version: 6.0.0(@sveltejs/kit@2.20.5(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.28.2)(vite@6.2.6(@types/node@22.14.1)))(svelte@5.28.2)(vite@6.2.6(@types/node@22.14.1)))
       '@sveltejs/kit':
-        specifier: 'catalog:'
+        specifier: catalog:template
         version: 2.20.5(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.28.2)(vite@6.2.6(@types/node@22.14.1)))(svelte@5.28.2)(vite@6.2.6(@types/node@22.14.1))
       '@sveltejs/vite-plugin-svelte':
-        specifier: 'catalog:'
+        specifier: catalog:template
         version: 5.0.3(svelte@5.28.2)(vite@6.2.6(@types/node@22.14.1))
       globals:
-        specifier: 'catalog:'
+        specifier: catalog:template
         version: 16.0.0
       svelte:
-        specifier: 'catalog:'
+        specifier: catalog:template
         version: 5.28.2
       svelte-check:
-        specifier: 'catalog:'
+        specifier: catalog:template
         version: 4.1.6(picomatch@4.0.2)(svelte@5.28.2)(typescript@5.8.3)
       typescript:
-        specifier: 'catalog:'
+        specifier: catalog:template
         version: 5.8.3
       vite:
-        specifier: 'catalog:'
+        specifier: catalog:template
         version: 6.2.6(@types/node@22.14.1)
 
   template/components/example-component:
@@ -442,16 +458,16 @@ importers:
         specifier: workspace:*
         version: link:../../../configs/typescript-config
       rollup:
-        specifier: 'catalog:'
+        specifier: catalog:template
         version: 4.40.0
       svelte:
-        specifier: 'catalog:'
+        specifier: catalog:template
         version: 5.28.2
       svelte-check:
-        specifier: 'catalog:'
+        specifier: catalog:template
         version: 4.1.6(picomatch@4.0.2)(svelte@5.28.2)(typescript@5.8.3)
       vite:
-        specifier: 'catalog:'
+        specifier: catalog:template
         version: 6.2.6(@types/node@22.14.1)
 
 packages:
@@ -1472,11 +1488,6 @@ packages:
 
   human-id@4.1.1:
     resolution: {integrity: sha512-3gKm/gCSUipeLsRYZbbdA1BD83lBoWUkZ7G9VFrhWPAU76KwYo5KR8V28bpoPm/ygy0x5/GCbpRQdY7VLYCoIg==}
-    hasBin: true
-
-  husky@9.1.7:
-    resolution: {integrity: sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==}
-    engines: {node: '>=18'}
     hasBin: true
 
   iconv-lite@0.4.24:
@@ -3231,8 +3242,6 @@ snapshots:
       function-bind: 1.1.2
 
   human-id@4.1.1: {}
-
-  husky@9.1.7: {}
 
   iconv-lite@0.4.24:
     dependencies:
