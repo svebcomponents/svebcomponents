@@ -26,10 +26,7 @@
     "svelte": "catalog:",
     "typescript": "catalog:"
   },
-  "dependencies": {
-    "@open-wc/lit-helpers": "catalog:",
-    "lit": "catalog:"
-  },
+  "dependencies": {},
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
