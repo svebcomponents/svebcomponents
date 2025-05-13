@@ -9,7 +9,7 @@
     "lint": {},
     "fix": {},
     "check": {
-      "dependsOn": ["^check"]
+      "dependsOn": ["build"]
     },
     "dev": {
       "dependsOn": ["^build"],
