@@ -9,10 +9,12 @@
     "fix": "turbo fix",
     "test": "turbo test",
     "test:dev": "turbo test:dev",
-    "release": "turbo build && changeset publish"
+    "release": "turbo build && changeset publish",
+    "prepare": "husky"
   },
   "devDependencies": {
     "eslint": "catalog:",
+    "husky": "9.1.7",
     "prettier": "catalog:",
     "turbo": "catalog:"
   },
@@ -31,5 +33,10 @@
     "auto-options": "link:../../Library/pnpm/global/5/node_modules/packages/auto-options",
     "build": "link:../../Library/pnpm/global/5/node_modules/packages/build",
     "ssr": "link:../../Library/pnpm/global/5/node_modules/packages/ssr"
+  },
+  "overrides": {
+    "@svebcomponents/build": "workspace:*",
+    "@svebcomponents/ssr": "workspace:*",
+    "@svebcomponents/example-component": "workspace:*"
   }
 }

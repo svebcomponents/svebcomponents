@@ -1,0 +1,9 @@
+echo "updating pnpm-lock.yml catalog:template to match latest @svebcomponents/template..."
+if ! command -v yq 2>&1 >/dev/null
+then
+    echo "yq could not be found - aborting post-merge hook execution..."
+    echo "please install yq to ensure "
+    exit 1
+fi
+# override the packages catalog with the catalog of the submoduled template
+yq '.catalogs.template = load("template/pnpm-workspace.yaml").catalogs.template' pnpm-workspace.yaml
