@@ -6,6 +6,7 @@ packages:
 overrides:
   # overrides dependencies from catalog:template to use local packages instead of deployed ones
   "@svebcomponents/build": workspace:*
+  "@svebcomponents/auto-options": workspace:*
   "@svebcomponents/ssr": workspace:*
 catalog:
   "@lit-labs/ssr": 3.3.1

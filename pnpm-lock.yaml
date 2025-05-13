@@ -135,6 +135,7 @@ catalogs:
       version: 6.2.6
 
 overrides:
+  '@svebcomponents/auto-options': workspace:*
   '@svebcomponents/build': workspace:*
   '@svebcomponents/ssr': workspace:*
 
