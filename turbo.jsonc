@@ -3,7 +3,9 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ]
     },
     // since @svebcomponents/example-component does not use the workspace:* protocol
     // for it's `@svebcomponents/*` dependencies,
@@ -11,24 +13,32 @@
     // we need to manually declare its dependency on @svebcomponents/build
     "@svebcomponents/example-component#build": {
       // since @svebcomponents/build has dependencies on all other @svebcomponents/* we don't need to declare them here
-      "dependsOn": ["@svebcomponents/build#build"],
+      "dependsOn": [
+        "@svebcomponents/build#build"
+      ]
     },
     "lint": {},
     "fix": {},
     "check": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ]
     },
     "dev": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "cache": false,
-      "persistent": true,
+      "persistent": true
     },
     "test": {
-      "dependsOn": ["^test"],
+      "dependsOn": [
+        "^test"
+      ]
     },
     "test:dev": {
       "cache": false,
-      "persistent": true,
-    },
-  },
+      "persistent": true
+    }
+  }
 }
