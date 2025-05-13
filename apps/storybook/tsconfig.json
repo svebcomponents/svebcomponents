@@ -1,4 +1,0 @@
-{
-  "extends": "@svebcomponents/typescript-config/base",
-  "include": ["src/**/*"]
-}

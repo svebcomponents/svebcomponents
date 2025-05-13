@@ -9,7 +9,10 @@
     "fix": "turbo fix",
     "test": "turbo test",
     "test:dev": "turbo test:dev",
-    "release": "turbo build && changeset publish"
+    "release": "turbo build && changeset publish",
+    "submodule": "pnpm submodule:update && pnpm submodule:adopt",
+    "submodule:update": "git submodule update --recursive --remote",
+    "submodule:adopt": "yq -i '.catalogs.template = load(\"template/pnpm-workspace.yaml\").catalogs.template' pnpm-workspace.yaml && pnpm install --prefer-offline"
   },
   "devDependencies": {
     "eslint": "catalog:",
@@ -31,5 +34,10 @@
     "auto-options": "link:../../Library/pnpm/global/5/node_modules/packages/auto-options",
     "build": "link:../../Library/pnpm/global/5/node_modules/packages/build",
     "ssr": "link:../../Library/pnpm/global/5/node_modules/packages/ssr"
+  },
+  "overrides": {
+    "@svebcomponents/build": "workspace:*",
+    "@svebcomponents/ssr": "workspace:*",
+    "@svebcomponents/example-component": "workspace:*"
   }
 }
