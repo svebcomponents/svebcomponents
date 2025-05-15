@@ -14,7 +14,7 @@ catalog:
   "@rollup/plugin-node-resolve": 16.0.1
   "@rollup/plugin-typescript": 12.1.2
   "@rollup/plugin-virtual": 3.0.2
-  "@sveltejs/package": 2.3.10
+  "@sveltejs/package": 2.3.11
   "@types/node": 22.14.1
   "@types/estree": "1.0.7"
   eslint: 9.24.0
