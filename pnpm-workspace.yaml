@@ -22,7 +22,7 @@ catalog:
   magic-string: 0.30.17
   prettier: 3.5.3
   publint: 0.3.11
-  rollup: 4.40.0
+  rollup: 4.42.0
   rollup-plugin-svelte: 7.2.2
   svelte: 5.28.2
   svelte-check: 4.1.6
