@@ -67,8 +67,8 @@ catalogs:
       specifier: 3.3.3
       version: 3.3.3
     publint:
-      specifier: 0.3.11
-      version: 0.3.11
+      specifier: 0.3.12
+      version: 0.3.12
     rollup:
       specifier: 4.40.0
       version: 4.40.0
@@ -325,7 +325,7 @@ importers:
         version: 22.14.1
       publint:
         specifier: 'catalog:'
-        version: 0.3.11
+        version: 0.3.12
       rollup:
         specifier: 'catalog:'
         version: 4.40.0
@@ -1638,8 +1638,8 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  publint@0.3.11:
-    resolution: {integrity: sha512-snArkBXO8Sl1Nlnqr3Y3DCT9CzNw8QxzlFXZ6nRkyEPEUGPRg25lM4IjNQyIyp3vRwpsZ24EEexmKSIZdVMizA==}
+  publint@0.3.12:
+    resolution: {integrity: sha512-1w3MMtL9iotBjm1mmXtG3Nk06wnq9UhGNRpQ2j6n1Zq7YAD6gnxMMZMIxlRPAydVjVbjSm+n0lhwqsD1m4LD5w==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -3263,7 +3263,7 @@ snapshots:
 
   prettier@3.5.3: {}
 
-  publint@0.3.11:
+  publint@0.3.12:
     dependencies:
       '@publint/pack': 0.1.2
       package-manager-detector: 1.1.0
