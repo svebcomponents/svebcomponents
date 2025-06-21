@@ -1,0 +1,28 @@
+{
+  "name": "@svebcomponents/eslint-config",
+  "type": "module",
+  "private": true,
+  "version": "0.0.0",
+  "exports": {
+    "./base": "./src/base.js",
+    "./svelte": "./src/svelte.js"
+  },
+  "scripts": {
+    "lint": "pnpm /^lint:.*/",
+    "lint:eslint": "eslint .",
+    "lint:format": "prettier --check .",
+    "fix": "pnpm /^fix:.*/",
+    "fix:eslint": "eslint . --fix",
+    "fix:format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/compat": "1.2.8",
+    "@eslint/js": "catalog:",
+    "@svebcomponents/prettier-config": "workspace:*",
+    "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-svelte": "catalog:",
+    "globals": "catalog:",
+    "typescript-eslint": "catalog:"
+  }
+}

@@ -9,10 +9,7 @@
     "fix": "turbo fix",
     "test": "turbo test",
     "test:dev": "turbo test:dev",
-    "release": "turbo build && changeset publish",
-    "submodule": "pnpm submodule:update && pnpm submodule:adopt",
-    "submodule:update": "git submodule update --recursive --remote",
-    "submodule:adopt": "yq -i '.catalogs.template = load(\"template/pnpm-workspace.yaml\").catalogs.template' pnpm-workspace.yaml && pnpm install --prefer-offline"
+    "release": "turbo build && changeset publish"
   },
   "devDependencies": {
     "eslint": "catalog:",

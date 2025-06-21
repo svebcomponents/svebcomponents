@@ -1,0 +1,19 @@
+{
+  "name": "@svebcomponents/typescript-config",
+  "type": "module",
+  "private": true,
+  "version": "0.0.0",
+  "exports": {
+    "./base": "./src/base.json",
+    "./svelte": "./src/svelte.json"
+  },
+  "scripts": {
+    "lint": "prettier --check .",
+    "fix": "prettier --write ."
+  },
+  "devDependencies": {
+    "@svebcomponents/prettier-config": "workspace:*",
+    "@tsconfig/strictest": "catalog:",
+    "@tsconfig/svelte": "catalog:"
+  }
+}
