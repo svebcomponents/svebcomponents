@@ -1,0 +1,20 @@
+{
+  "name": "@svebcomponents/prettier-config",
+  "type": "module",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "lint": "pnpm /^lint:.*/",
+    "lint:format": "prettier --check .",
+    "fix": "pnpm /^fix:.*/",
+    "fix:format": "prettier --write ."
+  },
+  "exports": {
+    "./base": "./src/base.js",
+    "./svelte": "./src/svelte.js"
+  },
+  "dependencies": {
+    "prettier": "catalog:",
+    "prettier-plugin-svelte": "catalog:"
+  }
+}
