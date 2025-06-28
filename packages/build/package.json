@@ -11,7 +11,9 @@
     "lint:format": "prettier --check .",
     "fix": "pnpm /^fix:.*/",
     "fix:eslint": "eslint . --fix",
-    "fix:format": "prettier --write ."
+    "fix:format": "prettier --write .",
+    "test": "vitest run",
+    "test:dev": "vitest --watch"
   },
   "exports": {
     ".": {
@@ -37,6 +39,7 @@
     "@rollup/plugin-node-resolve": "catalog:",
     "@rollup/plugin-typescript": "catalog:",
     "@rollup/plugin-virtual": "catalog:",
+    "vitest": "catalog:",
     "@svebcomponents/ssr": "workspace:*",
     "@svebcomponents/auto-options": "workspace:*"
   },

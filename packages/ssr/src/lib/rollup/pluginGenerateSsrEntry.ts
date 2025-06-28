@@ -30,7 +30,7 @@ export function pluginGenerateSsrEntry(
       this: PluginContext,
       outputOptions: NormalizedOutputOptions,
     ): Promise<void> {
-      if (!outputOptions.dir) {
+      if (outputOptions.dir === undefined) {
         this.error(
           "generateSsrEntryPlugin requires an output directory (outputOptions.dir)",
         );
@@ -71,7 +71,7 @@ export default ComponentSpecificSvelteCustomElementRenderer;
 `;
 
       try {
-        await Promise.allSettled([
+        await Promise.all([
           fs.writeFile(ssrFilePath, content.trim()),
           fs.writeFile(ssrTypesFilePath, typesContent.trim()),
         ]);

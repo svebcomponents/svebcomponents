@@ -9,7 +9,9 @@
     "lint:format": "prettier --check .",
     "fix": "pnpm /^fix:.*/",
     "fix:eslint": "eslint . --fix",
-    "fix:format": "prettier --write --ignore-unknown ."
+    "fix:format": "prettier --write --ignore-unknown .",
+    "test": "vitest run",
+    "test:dev": "vitest --watch"
   },
   "files": [
     "dist",
@@ -55,6 +57,7 @@
     "@lit-labs/ssr-dom-shim": "catalog:",
     "typescript": "catalog:",
     "tslib": "catalog:",
+    "vitest": "catalog:",
     "@rollup/plugin-node-resolve": "catalog:",
     "@rollup/plugin-typescript": "catalog:",
     "@rollup/plugin-virtual": "catalog:",
