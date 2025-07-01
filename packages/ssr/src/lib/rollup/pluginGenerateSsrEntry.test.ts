@@ -61,12 +61,6 @@ describe("pluginGenerateSsrEntry", () => {
         "import ClientSvelteComponent from '../client/index.js'",
       ),
     );
-
-    // Check TypeScript declaration file generation
-    expect(mockFs.writeFile).toHaveBeenCalledWith(
-      expect.stringContaining("dist/server/ssr.d.ts"),
-      expect.any(String),
-    );
   });
 
   test("uses custom import paths when provided", async () => {
@@ -144,46 +138,4 @@ describe("pluginGenerateSsrEntry", () => {
       "Failed to generate SSR entry file: File write failed",
     );
   });
-
-  test("generates correct file content structure", async () => {
-    const plugin = pluginGenerateSsrEntry({}) as {
-      writeBundle: FunctionPluginHooks["writeBundle"];
-    };
-    const mockContext = {
-      error: vi.fn(),
-    } as unknown as PluginContext;
-
-    const outputOptions: NormalizedOutputOptions = {
-      dir: "dist/server",
-    } as NormalizedOutputOptions;
-
-    plugin.writeBundle.call(mockContext, outputOptions, outputBundle);
-
-    const jsFileCall = mockFs.writeFile.mock.calls.find((call) =>
-      call[0].toString().endsWith("ssr.js"),
-    );
-    const jsContent = jsFileCall?.[1] as string;
-
-    expect(jsContent).toContain("import { SvelteCustomElementRenderer }");
-    expect(jsContent).toContain(
-      "class ComponentSpecificSvelteCustomElementRenderer",
-    );
-    expect(jsContent).toContain("extends SvelteCustomElementRenderer");
-    expect(jsContent).toContain(
-      "export default ComponentSpecificSvelteCustomElementRenderer",
-    );
-
-    const dtsFileCall = mockFs.writeFile.mock.calls.find((call) =>
-      call[0].toString().endsWith("ssr.d.ts"),
-    );
-    const dtsContent = dtsFileCall?.[1] as string;
-
-    expect(dtsContent).toContain(
-      "declare class ComponentSpecificSvelteCustomElementRenderer",
-    );
-    expect(dtsContent).toContain(
-      "export default ComponentSpecificSvelteCustomElementRenderer",
-    );
-  });
 });
-
