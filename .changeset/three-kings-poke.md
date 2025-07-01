@@ -1,6 +1,5 @@
 ---
-"@svebcomponents/build": patch
 "@svebcomponents/ssr": patch
 ---
 
-fix: address bugs uncovered by tests
+fix: imrpove faulty ctor lookup logic
