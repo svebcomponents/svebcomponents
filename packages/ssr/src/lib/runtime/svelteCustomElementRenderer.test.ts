@@ -1,4 +1,12 @@
-import { expect, test, describe, vi, beforeEach } from "vitest";
+import {
+  expect,
+  test,
+  describe,
+  vi,
+  beforeEach,
+  assert,
+  type MockedFunction,
+} from "vitest";
 import { SvelteCustomElementRenderer } from "./svelteCustomElementRenderer";
 import { render } from "svelte/server";
 
@@ -7,18 +15,7 @@ vi.mock("svelte/server", () => ({
   render: vi.fn(),
 }));
 
-// Mock @lit-labs/ssr
-vi.mock("@lit-labs/ssr", () => ({
-  ElementRenderer: class ElementRenderer {
-    constructor(public tagName: string) {}
-    setAttribute(_name: string, _value: string) {}
-    setProperty(_name: string, _value: unknown) {}
-    renderAttributes() { return []; }
-    renderShadow() { return undefined; }
-  },
-}));
-
-const mockRender = render as typeof render & { mockReturnValue: (value: any) => void };
+const mockRender = render as unknown as MockedFunction<typeof render>;
 
 describe("SvelteCustomElementRenderer", () => {
   let mockSvelteComponent: any;
@@ -27,9 +24,9 @@ describe("SvelteCustomElementRenderer", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockSvelteComponent = {};
-    
+
     mockClientElementCtor = vi.fn().mockImplementation(() => ({
       attributes: {},
       attributeChangedCallback: vi.fn(),
@@ -40,6 +37,7 @@ describe("SvelteCustomElementRenderer", () => {
     mockRender.mockReturnValue({
       body: "<div>Test content</div>",
       head: "<style>/* test styles */</style>",
+      html: "<style>/* test styles */</style>",
     });
   });
 
@@ -47,11 +45,20 @@ describe("SvelteCustomElementRenderer", () => {
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
       mockClientElementCtor,
-      tagName
+      tagName,
     );
-    
+
     expect(renderer.tagName).toBe(tagName);
-    expect(mockClientElementCtor).toHaveBeenCalled();
+  });
+
+  test("instantiates client element constructor", () => {
+    new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+    );
+
+    expect(mockClientElementCtor).toHaveBeenCalledOnce();
   });
 
   test("sets attributes via attributeChangedCallback for string values", () => {
@@ -61,40 +68,42 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
     };
     mockClientElementCtor.mockReturnValue(mockElement);
-    
+
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
       mockClientElementCtor,
-      tagName
+      tagName,
     );
-    
+
     renderer.setAttribute("test-attr", "test-value");
-    
+
     expect(mockElement.attributeChangedCallback).toHaveBeenCalledWith(
       "test-attr",
       "test-value",
-      "test-value"
+      "test-value",
     );
   });
 
-  test("sets non-string attributes directly on $$d", () => {
+  test("sets non-string attributes directly on $$d without calling attribute changed callback", () => {
     const mockElement = {
       attributes: {},
       attributeChangedCallback: vi.fn(),
       $$d: {},
     };
     mockClientElementCtor.mockReturnValue(mockElement);
-    
+
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
       mockClientElementCtor,
-      tagName
+      tagName,
     );
-    
+
     const complexValue = { foo: "bar" };
     renderer.setAttribute("test-prop", complexValue as any);
-    
+
+    assert("test-prop" in mockElement.$$d);
     expect(mockElement.$$d["test-prop"]).toBe(complexValue);
+    expect(mockElement.attributeChangedCallback).not.toHaveBeenCalled();
   });
 
   test("renders attributes correctly", () => {
@@ -107,59 +116,64 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
     };
     mockClientElementCtor.mockReturnValue(mockElement);
-    
+
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
       mockClientElementCtor,
-      tagName
+      tagName,
     );
-    
+
     const attributes = Array.from(renderer.renderAttributes());
-    
+
     expect(attributes).toContain(' data-test="value1"');
     expect(attributes).toContain(' aria-label="value2"');
   });
 
-  test("sets properties on $$d", () => {
+  // TODO: test if attributes are escaped correctly?
+
+  test("sets properties to data property", () => {
     const mockElement = {
       attributes: {},
       attributeChangedCallback: vi.fn(),
       $$d: {},
     };
     mockClientElementCtor.mockReturnValue(mockElement);
-    
+
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
       mockClientElementCtor,
-      tagName
+      tagName,
     );
-    
+
     const testValue = { complex: true };
     renderer.setProperty("testProp", testValue);
-    
+    assert("testProp" in mockElement.$$d);
+
     expect(mockElement.$$d.testProp).toBe(testValue);
   });
 
-  test("renders shadow DOM content using Svelte server render", () => {
+  test("renderShadow method prints shadow content including expected content", () => {
     const mockElement = {
       attributes: {},
       attributeChangedCallback: vi.fn(),
       $$d: { prop1: "value1", prop2: "value2" },
     };
     mockClientElementCtor.mockReturnValue(mockElement);
-    
+
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
       mockClientElementCtor,
-      tagName
+      tagName,
     );
-    
-    const shadowContent = Array.from(renderer.renderShadow({} as any));
-    
+
+    const renderResult = renderer.renderShadow({} as any);
+    assert(renderResult);
+    const shadowContent = Array.from(renderResult).join("");
+
     expect(mockRender).toHaveBeenCalledWith(mockSvelteComponent, {
       props: mockElement.$$d,
     });
-    
+
     expect(shadowContent).toContain("<style>/* test styles */</style>");
     expect(shadowContent).toContain("<div>Test content</div>");
   });
@@ -168,23 +182,27 @@ describe("SvelteCustomElementRenderer", () => {
     mockRender.mockReturnValue({
       body: "",
       head: "",
+      html: "",
     });
-    
+
     const mockElement = {
       attributes: {},
       attributeChangedCallback: vi.fn(),
       $$d: {},
     };
     mockClientElementCtor.mockReturnValue(mockElement);
-    
+
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
       mockClientElementCtor,
-      tagName
+      tagName,
     );
-    
-    const shadowContent = Array.from(renderer.renderShadow({} as any));
-    
-    expect(shadowContent).toEqual(["", ""]);
+
+    const renderResult = renderer.renderShadow({} as any);
+    assert(renderResult);
+    const shadowContent = Array.from(renderResult).join("");
+
+    expect(shadowContent).toEqual("");
   });
 });
+
