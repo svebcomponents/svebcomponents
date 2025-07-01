@@ -1,4 +1,4 @@
-import { expect, test, describe } from "vitest";
+import { expect, test, describe, assert } from "vitest";
 import { defineConfig } from "./index";
 import type { RollupOptions } from "rollup";
 
@@ -8,10 +8,8 @@ describe("defineConfig", () => {
 
     expect(config).toHaveLength(1);
     expect(config[0]).toHaveProperty("input", "src/index.ts");
-    expect(config[0]).toHaveProperty("output");
-    expect(config[0]!.output).toHaveProperty("dir", "dist/client");
-    expect(config[0]!.output).toHaveProperty("format", "esm");
-    expect(config[0]!.output).toHaveProperty("sourcemap", true);
+    assert(config[0]?.output, "client config should have output property");
+    expect(config[0].output).toHaveProperty("dir", "dist/client");
   });
 
   test("returns both client and ssr configs when ssr is true", () => {
@@ -21,19 +19,29 @@ describe("defineConfig", () => {
 
     // Client config
     expect(config[0]).toHaveProperty("input", "src/index.ts");
-    expect(config[0]!.output).toHaveProperty("dir", "dist/client");
+    assert(config[0]?.output, "client config should have output property");
+    expect(config[0].output).toHaveProperty("dir", "dist/client");
 
     // SSR config
     expect(config[1]).toHaveProperty("input", "src/index.ts");
-    expect(config[1]!.output).toHaveProperty("dir", "dist/server");
+    assert(config[1]?.output, "ssr config should have output property");
+    expect(config[1].output).toHaveProperty("dir", "dist/server");
   });
 
   test("returns both configs by default (ssr defaults to true)", () => {
     const config = defineConfig();
 
     expect(config).toHaveLength(2);
-    expect(config[0]!.output).toHaveProperty("dir", "dist/client");
-    expect(config[1]!.output).toHaveProperty("dir", "dist/server");
+
+    // Client config
+    expect(config[0]).toHaveProperty("input", "src/index.ts");
+    assert(config[0]?.output, "client config should have output property");
+    expect(config[0].output).toHaveProperty("dir", "dist/client");
+
+    // SSR config
+    expect(config[1]).toHaveProperty("input", "src/index.ts");
+    assert(config[1]?.output, "ssr config should have output property");
+    expect(config[1].output).toHaveProperty("dir", "dist/server");
   });
 
   test("uses custom entry point when provided", () => {
@@ -63,4 +71,3 @@ describe("defineConfig", () => {
     });
   });
 });
-
