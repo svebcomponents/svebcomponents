@@ -35,13 +35,22 @@ class _ElementRendererRegistry {
         return this.renderers.get(targetPrototype) ?? null;
       }
     } while (
-      (targetPrototype = Object.getPrototypeOf(targetPrototype) !== HTMLElement)
+      (targetPrototype = Object.getPrototypeOf(targetPrototype)) &&
+      targetPrototype !== HTMLElement
     );
     return null;
   }
 
-  has(elementClass: Element) {
-    return this.renderers.has(elementClass);
+  has(elementClass: Element): boolean {
+    const targetPrototype = elementClass.prototype;
+    if (this.renderers.has(targetPrototype)) {
+      return true;
+    }
+    if (targetPrototype === HTMLElement || targetPrototype === undefined) {
+      // not in the registry if null prototype or HTMLElement
+      return false;
+    }
+    return this.has(Object.getPrototypeOf(targetPrototype));
   }
 
   getAll() {
