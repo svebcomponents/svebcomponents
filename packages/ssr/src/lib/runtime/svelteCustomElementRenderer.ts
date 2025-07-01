@@ -6,7 +6,7 @@ import {
 import type { Component } from "svelte";
 import { render } from "svelte/server";
 
-interface SvelteClientCustomElement {
+export interface SvelteClientCustomElement {
   new (): Omit<SvelteClientCustomElement, "new">;
   attributes: Record<string, string>;
   attributeChangedCallback: (

@@ -42,7 +42,7 @@ class _ElementRendererRegistry {
   }
 
   has(elementClass: Element): boolean {
-    let targetPrototype = elementClass.prototype;
+    const targetPrototype = elementClass.prototype;
     if (this.renderers.has(targetPrototype)) {
       return true;
     }

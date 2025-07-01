@@ -9,6 +9,7 @@ import {
 } from "vitest";
 import { SvelteCustomElementRenderer } from "./svelteCustomElementRenderer";
 import { render } from "svelte/server";
+import type { RenderInfo } from "@lit-labs/ssr";
 
 // Mock svelte/server
 vi.mock("svelte/server", () => ({
@@ -18,7 +19,9 @@ vi.mock("svelte/server", () => ({
 const mockRender = render as unknown as MockedFunction<typeof render>;
 
 describe("SvelteCustomElementRenderer", () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- this is just a mock
   let mockSvelteComponent: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- this is just a mock
   let mockClientElementCtor: any;
   const tagName = "test-element";
 
@@ -99,7 +102,7 @@ describe("SvelteCustomElementRenderer", () => {
     );
 
     const complexValue = { foo: "bar" };
-    renderer.setAttribute("test-prop", complexValue as any);
+    renderer.setAttribute("test-prop", complexValue as unknown as string);
 
     assert("test-prop" in mockElement.$$d);
     expect(mockElement.$$d["test-prop"]).toBe(complexValue);
@@ -166,7 +169,7 @@ describe("SvelteCustomElementRenderer", () => {
       tagName,
     );
 
-    const renderResult = renderer.renderShadow({} as any);
+    const renderResult = renderer.renderShadow({} as RenderInfo);
     assert(renderResult);
     const shadowContent = Array.from(renderResult).join("");
 
@@ -198,11 +201,10 @@ describe("SvelteCustomElementRenderer", () => {
       tagName,
     );
 
-    const renderResult = renderer.renderShadow({} as any);
+    const renderResult = renderer.renderShadow({} as RenderInfo);
     assert(renderResult);
     const shadowContent = Array.from(renderResult).join("");
 
     expect(shadowContent).toEqual("");
   });
 });
-
