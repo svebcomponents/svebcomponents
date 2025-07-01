@@ -87,7 +87,6 @@ describe("ElementRendererRegistry", () => {
     expect(allRenderers).toContain(mockRenderer2);
   });
 
-  // tests breaking
   test("returns null when renderer not found", () => {
     class MockElement {}
 
@@ -120,4 +119,3 @@ describe("ElementRendererRegistry", () => {
     expect(retrieved).toBe(mockRenderer);
   });
 });
-

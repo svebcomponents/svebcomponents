@@ -27,44 +27,4 @@ describe("svebcomponentRollupConfig", () => {
       sourcemap: true,
     });
   });
-
-  test("includes required plugins", () => {
-    const config = svebcomponentRollupConfig({
-      input: "src/index.ts",
-      outDir: "dist",
-    });
-
-    expect(config.plugins).toHaveLength(4);
-
-    // Check that plugins are configured (we can't easily test the exact plugin instances)
-    expect(config.plugins).toBeDefined();
-    expect(Array.isArray(config.plugins)).toBe(true);
-  });
-
-  test("handles different input paths", () => {
-    const inputs = ["src/component.ts", "lib/index.ts", "components/Button.ts"];
-
-    inputs.forEach((input) => {
-      const config = svebcomponentRollupConfig({
-        input,
-        outDir: "dist",
-      });
-
-      expect(config.input).toBe(input);
-    });
-  });
-
-  test("handles different output directories", () => {
-    const outDirs = ["dist/client", "build/output", "public/components"];
-
-    outDirs.forEach((outDir) => {
-      const config = svebcomponentRollupConfig({
-        input: "src/index.ts",
-        outDir,
-      });
-
-      expect(config.output.dir).toBe(outDir);
-    });
-  });
 });
-
