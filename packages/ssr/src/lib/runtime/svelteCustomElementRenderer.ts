@@ -6,7 +6,7 @@ import {
 import type { Component } from "svelte";
 import { render } from "svelte/server";
 
-interface SvelteClientCustomElement {
+export interface SvelteClientCustomElement {
   new (): Omit<SvelteClientCustomElement, "new">;
   attributes: Record<string, string>;
   attributeChangedCallback: (
@@ -37,7 +37,6 @@ export class SvelteCustomElementRenderer
   }
 
   override setAttribute(name: string, value: string) {
-    // Browser turns all HTML attributes to lowercase.
     if (typeof value !== "string") {
       this.svelteClientCustomElement.$$d[name] = value;
       // maybe do something to reflect the prop to the attributes, perhaps 'this.$$me' does this out of the box for us?
