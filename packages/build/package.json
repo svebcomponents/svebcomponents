@@ -30,7 +30,10 @@
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
     "@types/node": "catalog:",
-    "rollup": "catalog:"
+    "rollup": "catalog:",
+    "vitest": "catalog:",
+    "vite": "catalog:",
+    "svelte": "catalog:"
   },
   "dependencies": {
     "typescript": "catalog:",
