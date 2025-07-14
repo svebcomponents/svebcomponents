@@ -28,8 +28,8 @@ catalogs:
       specifier: 3.0.2
       version: 3.0.2
     '@sveltejs/package':
-      specifier: 2.3.10
-      version: 2.3.10
+      specifier: 2.4.0
+      version: 2.4.0
     '@tsconfig/strictest':
       specifier: 2.0.5
       version: 2.0.5
@@ -325,7 +325,7 @@ importers:
         version: link:../../configs/typescript-config
       '@sveltejs/package':
         specifier: 'catalog:'
-        version: 2.3.10(svelte@5.28.2)(typescript@5.8.3)
+        version: 2.4.0(svelte@5.28.2)(typescript@5.8.3)
       '@types/node':
         specifier: 'catalog:'
         version: 22.14.1
@@ -854,8 +854,8 @@ packages:
     peerDependencies:
       acorn: ^8.9.0
 
-  '@sveltejs/package@2.3.10':
-    resolution: {integrity: sha512-A4fQacgjJ7C/7oSmxR61/TdB14u6ecyMZ8V9JCR5Lol0bLj/PdJPU4uFodFBsKzO3iFiJMpNTgZZ+zYsYZNpUg==}
+  '@sveltejs/package@2.4.0':
+    resolution: {integrity: sha512-DZzPhkSkxJDBI2o07FbyrI7pxOMXl0j4RR5AB0aH/RVnoBC5lBl4v4FAW5WFrTRu3IC3H9y00MIia4uZ1buX+w==}
     engines: {node: ^16.14 || >=18}
     hasBin: true
     peerDependencies:
@@ -2495,7 +2495,7 @@ snapshots:
     dependencies:
       acorn: 8.14.1
 
-  '@sveltejs/package@2.3.10(svelte@5.28.2)(typescript@5.8.3)':
+  '@sveltejs/package@2.4.0(svelte@5.28.2)(typescript@5.8.3)':
     dependencies:
       chokidar: 4.0.3
       kleur: 4.1.5
