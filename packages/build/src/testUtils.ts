@@ -35,7 +35,7 @@ export interface TestFixture {
 }
 
 export const getTestFixtures = (): TestFixture[] => {
-  const modules = import.meta.glob("./fixtures/**/expected.json", {
+  const modules = import.meta.glob("./fixtures/**/expected.ts", {
     eager: true,
     import: "default",
   });
@@ -48,8 +48,6 @@ export const getTestFixtures = (): TestFixture[] => {
     const fixtureName = pathSegments.at(-1);
     if (!fixtureName) continue;
     const fixtureDirPath = join(import.meta.dirname, ...pathSegments);
-
-    console.log(`Found fixture: ${fixtureName} at ${fixtureDirPath}`);
 
     fixtures.push({
       name: fixtureName,
