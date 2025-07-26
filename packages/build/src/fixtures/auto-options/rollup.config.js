@@ -1,6 +1,6 @@
-import { defineConfig } from '../../../dist/index.js';
+import { defineConfig } from "../../../dist/index.js";
 
 export default defineConfig({
-  entry: 'index.ts',
-  ssr: true
+  entry: "index.ts",
+  ssr: false,
 });

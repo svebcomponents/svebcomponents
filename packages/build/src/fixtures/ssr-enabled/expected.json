@@ -1,16 +1,20 @@
 {
   "client/index.js": {
-    "content": ["create_custom_element", "my-component", "message"],
+    "content": [
+      "const tagName = \"simple-component\";\nif (!customElements.get(tagName) && Component.element !== undefined) {\n    customElements.define(tagName, Component.element);\n}"
+    ],
     "sourcemap": true
-  },
-  "client/index.d.ts": {
-    "types": ["export"]
   },
   "server/index.js": {
+    "content": [
+      "function Component($$payload) {\n\n\t$$payload.out += `<div>Hello</div>`;\n}\n\nconst tagName = \"simple-component\";\nif (!customElements.get(tagName) && Component.element !== undefined) {\n    customElements.define(tagName, Component.element);\n}"
+    ],
     "sourcemap": true
   },
-  "server/index.d.ts": {
-    "types": ["export"]
+  "server/ssr.js": {
+    "content": [
+      "import { SvelteCustomElementRenderer } from '@svebcomponents/ssr';\nimport ServerSvelteComponent from './index.js';\nimport ClientSvelteComponent from '../client/index.js';\n\nconst ctor = ClientSvelteComponent.element;\nif (!ctor) {\n  throw new Error('Could not access custom element constructor');\n}\nclass ComponentSpecificSvelteCustomElementRenderer extends SvelteCustomElementRenderer {\n  constructor() {\n    super(ServerSvelteComponent, ctor);\n  }\n}\n\nexport default ComponentSpecificSvelteCustomElementRenderer;"
+    ],
+    "sourcemap": false
   }
 }
-
