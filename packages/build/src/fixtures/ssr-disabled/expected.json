@@ -1,0 +1,10 @@
+{
+  "client/index.js": {
+    "content": ["create_custom_element", "simple-component", "name"],
+    "sourcemap": true
+  },
+  "client/index.d.ts": {
+    "types": ["export"]
+  }
+}
+

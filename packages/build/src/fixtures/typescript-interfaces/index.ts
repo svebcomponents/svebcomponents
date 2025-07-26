@@ -1,1 +1,2 @@
-export { default } from './UserCard.svelte';
+export { default } from "./Component.svelte";
+
