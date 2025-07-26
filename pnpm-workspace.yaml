@@ -10,7 +10,7 @@ catalog:
   '@rollup/plugin-node-resolve': 16.0.1
   '@rollup/plugin-typescript': 12.1.2
   '@rollup/plugin-virtual': 3.0.2
-  '@sveltejs/package': 2.3.10
+  '@sveltejs/package': 2.4.0
   '@tsconfig/strictest': 2.0.5
   '@tsconfig/svelte': 5.0.4
   '@types/estree': 1.0.7
