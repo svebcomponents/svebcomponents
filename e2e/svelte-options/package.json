@@ -1,0 +1,22 @@
+{
+  "name": "@svebcomponents/e2e-svelte-options",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "rollup -c",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "svelte": "catalog:"
+  },
+  "devDependencies": {
+    "@svebcomponents/build": "workspace:*",
+    "@svebcomponents/eslint-config": "workspace:*",
+    "@svebcomponents/prettier-config": "workspace:*",
+    "@svebcomponents/typescript-config": "workspace:*",
+    "rollup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
