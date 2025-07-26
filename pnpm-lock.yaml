@@ -277,9 +277,6 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 6.2.6(@types/node@22.14.1)
-      vitest:
-        specifier: 'catalog:'
-        version: 3.1.1(@types/node@22.14.1)
 
   packages/ssr:
     dependencies:
