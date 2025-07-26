@@ -42,7 +42,7 @@ export const getTestFixtures = (): TestFixture[] => {
 
   const fixtures: TestFixture[] = [];
   for (const path of Object.keys(modules)) {
-    // './fixtures/fixtureName/expected.json' -> ['.', 'fixtures', 'fixtureName']
+    // './fixtures/fixtureName/expected.ts' -> ['.', 'fixtures', 'fixtureName']
     const pathSegments = path.split("/").slice(0, -1);
     // Extract the fixture name from the path
     const fixtureName = pathSegments.at(-1);
