@@ -5,7 +5,7 @@ import { rm } from "fs/promises";
 
 const execAsync = promisify(exec);
 
-export async function buildFixture(fixturePath: string) {
+export async function buildFixture(fixturePath: TestFixture["path"]) {
   const configPath = join(fixturePath, "rollup.config.js");
   const distDir = join(fixturePath, "dist");
 
@@ -14,7 +14,6 @@ export async function buildFixture(fixturePath: string) {
 
   await execAsync(`npx rollup -c ${configPath}`, {
     cwd: fixturePath,
-    env: { ...process.env, NODE_PATH: join(import.meta.dirname, "..") },
   });
 
   return distDir;
@@ -56,8 +55,4 @@ export const getTestFixtures = (): TestFixture[] => {
     });
   }
   return fixtures;
-};
-
-export const getFixture = (fixtureName: string): TestFixture | undefined => {
-  return getTestFixtures().find((fixture) => fixture.name === fixtureName);
 };
