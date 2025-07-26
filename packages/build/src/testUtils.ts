@@ -1,5 +1,3 @@
-import { readdirSync, existsSync } from "fs";
-import { readFile } from "fs/promises";
 import { join } from "path";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -33,29 +31,33 @@ export interface FileExpectations {
 export interface TestFixture {
   name: string;
   path: string;
+  expectations: FixtureExpectations;
 }
 
 export const getTestFixtures = (): TestFixture[] => {
-  const fixturesDir = join(import.meta.dirname, "fixtures");
+  const modules = import.meta.glob("./fixtures/**/expected.json", {
+    eager: true,
+    import: "default",
+  });
 
-  if (!existsSync(fixturesDir)) {
-    return [];
+  const fixtures: TestFixture[] = [];
+  for (const path of Object.keys(modules)) {
+    // './fixtures/fixtureName/expected.json' -> ['.', 'fixtures', 'fixtureName']
+    const pathSegments = path.split("/").slice(0, -1);
+    // Extract the fixture name from the path
+    const fixtureName = pathSegments.at(-1);
+    if (!fixtureName) continue;
+    const fixtureDirPath = join(import.meta.dirname, ...pathSegments);
+
+    console.log(`Found fixture: ${fixtureName} at ${fixtureDirPath}`);
+
+    fixtures.push({
+      name: fixtureName,
+      path: fixtureDirPath,
+      expectations: modules[path] as FixtureExpectations,
+    });
   }
-
-  return readdirSync(fixturesDir, { withFileTypes: true })
-    .filter((dirent) => dirent.isDirectory())
-    .map((dirent) => ({
-      name: dirent.name,
-      path: join(fixturesDir, dirent.name),
-    }));
-};
-
-export const getFixtureExpectations = async (
-  fixturePath: string,
-): Promise<FixtureExpectations> => {
-  const expectedPath = join(fixturePath, "expected.json");
-  const content = await readFile(expectedPath, "utf-8");
-  return JSON.parse(content) as FixtureExpectations;
+  return fixtures;
 };
 
 export const getFixture = (fixtureName: string): TestFixture | undefined => {

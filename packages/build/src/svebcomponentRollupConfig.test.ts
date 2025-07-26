@@ -1,11 +1,7 @@
 import { describe, test, expect } from "vitest";
 import { readFile, access } from "fs/promises";
 import { join } from "path";
-import {
-  getTestFixtures,
-  getFixtureExpectations,
-  buildFixture,
-} from "./testUtils";
+import { getTestFixtures, buildFixture } from "./testUtils";
 
 describe("svebcomponents build integration tests", () => {
   const fixtures = getTestFixtures();
@@ -14,7 +10,7 @@ describe("svebcomponents build integration tests", () => {
     test.concurrent(
       `fixture: ${fixture.name} builds successfully and generates correct output`,
       async () => {
-        const expectations = await getFixtureExpectations(fixture.path);
+        const expectations = fixture.expectations;
         const distDir = await buildFixture(fixture.path);
 
         for (const [filePath, fileExpectations] of Object.entries(
