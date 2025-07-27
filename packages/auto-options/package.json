@@ -34,7 +34,7 @@
     "@svebcomponents/typescript-config": "workspace:*",
     "@types/estree": "catalog:",
     "@types/node": "catalog:",
-    "rollup": "catalog:",
+    "rolldown": "catalog:",
     "svelte": "catalog:",
     "vitest": "catalog:",
     "vite": "catalog:",

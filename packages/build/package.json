@@ -23,28 +23,25 @@
   },
   "peerDependencies": {
     "@svebcomponents/ssr": "^0.0.5",
-    "rollup": "^4.0.0"
+    "rolldown": "^1.0.0-beta.29"
   },
   "devDependencies": {
-    "@svebcomponents/typescript-config": "workspace:*",
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
+    "@svebcomponents/typescript-config": "workspace:*",
     "@types/node": "catalog:",
-    "rollup": "catalog:",
-    "vitest": "catalog:",
+    "rolldown": "catalog:",
+    "svelte": "catalog:",
     "vite": "catalog:",
-    "svelte": "catalog:"
+    "vitest": "catalog:"
   },
   "dependencies": {
-    "typescript": "catalog:",
-    "tslib": "catalog:",
-    "rollup-plugin-svelte": "catalog:",
-    "@rollup/plugin-node-resolve": "catalog:",
-    "@rollup/plugin-typescript": "catalog:",
-    "@rollup/plugin-virtual": "catalog:",
-    "vitest": "catalog:",
+    "@svebcomponents/auto-options": "workspace:*",
     "@svebcomponents/ssr": "workspace:*",
-    "@svebcomponents/auto-options": "workspace:*"
+    "rollup-plugin-svelte": "catalog:",
+    "tslib": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "publishConfig": {
     "access": "public",

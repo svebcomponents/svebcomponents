@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "rollup -c",
+    "build": "rolldown -c",
     "test": "vitest run"
   },
   "dependencies": {
@@ -21,7 +21,7 @@
     "@svebcomponents/typescript-config": "workspace:*",
     "@vitest/browser": "catalog:",
     "playwright": "catalog:",
-    "rollup": "catalog:",
+    "rolldown": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
