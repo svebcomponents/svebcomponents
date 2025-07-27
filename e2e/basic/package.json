@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "rolldown -c",
+    "build": "svebcomponents",
     "test": "vitest run"
   },
   "devDependencies": {
