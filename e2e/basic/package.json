@@ -10,14 +10,12 @@
   "devDependencies": {
     "svelte": "catalog:",
     "@svebcomponents/build": "workspace:*",
-    "@svebcomponents/eslint-config": "workspace:*",
-    "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
+    "@svebcomponents/vitest-config": "workspace:*",
     "@vitest/browser": "catalog:",
+    "vitest": "catalog:",
     "playwright": "catalog:",
     "rolldown": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:",
-    "@svebcomponents/vitest-config": "workspace:*"
+    "typescript": "catalog:"
   }
 }

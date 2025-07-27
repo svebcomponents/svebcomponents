@@ -198,18 +198,9 @@ importers:
 
   e2e/auto-options:
     devDependencies:
-      '@svebcomponents/auto-options':
-        specifier: workspace:*
-        version: link:../../packages/auto-options
       '@svebcomponents/build':
         specifier: workspace:*
         version: link:../../packages/build
-      '@svebcomponents/eslint-config':
-        specifier: workspace:*
-        version: link:../../configs/eslint-config
-      '@svebcomponents/prettier-config':
-        specifier: workspace:*
-        version: link:../../configs/prettier-config
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
@@ -240,12 +231,6 @@ importers:
       '@svebcomponents/build':
         specifier: workspace:*
         version: link:../../packages/build
-      '@svebcomponents/eslint-config':
-        specifier: workspace:*
-        version: link:../../configs/eslint-config
-      '@svebcomponents/prettier-config':
-        specifier: workspace:*
-        version: link:../../configs/prettier-config
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
@@ -283,12 +268,6 @@ importers:
       '@svebcomponents/build':
         specifier: workspace:*
         version: link:../../packages/build
-      '@svebcomponents/eslint-config':
-        specifier: workspace:*
-        version: link:../../configs/eslint-config
-      '@svebcomponents/prettier-config':
-        specifier: workspace:*
-        version: link:../../configs/prettier-config
       '@svebcomponents/ssr':
         specifier: workspace:*
         version: link:../../packages/ssr

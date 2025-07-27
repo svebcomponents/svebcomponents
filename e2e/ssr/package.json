@@ -11,18 +11,16 @@
     "@svebcomponents/vitest-config": "workspace:*"
   },
   "devDependencies": {
-    "@svebcomponents/auto-options": "workspace:*",
-    "@svebcomponents/ssr": "workspace:*",
     "svelte": "catalog:",
     "@sveltejs/vite-plugin-svelte": "catalog:",
+    "@svebcomponents/auto-options": "workspace:*",
     "@svebcomponents/build": "workspace:*",
-    "@svebcomponents/eslint-config": "workspace:*",
-    "@svebcomponents/prettier-config": "workspace:*",
+    "@svebcomponents/ssr": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
     "@vitest/browser": "catalog:",
+    "vitest": "catalog:",
     "playwright": "catalog:",
     "rolldown": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:"
+    "typescript": "catalog:"
   }
 }
