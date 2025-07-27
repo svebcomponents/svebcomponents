@@ -1,0 +1,8 @@
+{
+    "extends": "@svebcomponents/typescript-config/svelte",
+    "include": [
+        "src",
+        "test",
+        "vitest.config.ts"
+    ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@svebcomponents/e2e.auto-options",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "rollup -c",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@svebcomponents/auto-options": "workspace:*",
+    "svelte": "catalog:",
+    "@svebcomponents/build": "workspace:*",
+    "@svebcomponents/eslint-config": "workspace:*",
+    "@svebcomponents/prettier-config": "workspace:*",
+    "@svebcomponents/typescript-config": "workspace:*",
+    "@vitest/browser": "catalog:",
+    "playwright": "catalog:",
+    "rollup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "@svebcomponents/vitest-config": "workspace:*"
+  }
+}
