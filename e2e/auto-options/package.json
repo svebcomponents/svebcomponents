@@ -18,6 +18,7 @@
     "playwright": "catalog:",
     "rollup": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "@svebcomponents/vitest-config": "workspace:*"
   }
 }

@@ -1,8 +1,6 @@
 {
     "extends": "@svebcomponents/typescript-config/node",
     "include": [
-        "src",
-        "test",
-        "vitest.config.ts"
+        "src"
     ]
 }

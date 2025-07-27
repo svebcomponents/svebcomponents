@@ -1,5 +1,5 @@
 import { test, expect, assert } from "vitest";
-import "../dist/client/index.js";
+import "../../dist/client/index.js";
 
 interface Props {
   title: string;

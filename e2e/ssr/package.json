@@ -7,6 +7,9 @@
     "build": "rollup -c",
     "test": "vitest run"
   },
+  "dependencies": {
+    "@svebcomponents/vitest-config": "workspace:*"
+  },
   "devDependencies": {
     "@svebcomponents/auto-options": "workspace:*",
     "@svebcomponents/ssr": "workspace:*",

@@ -1,0 +1,27 @@
+{
+  "name": "@svebcomponents/vitest-config",
+  "type": "module",
+  "private": true,
+  "version": "0.0.0",
+  "exports": {
+    ".": {
+      "import": "./dist/base.js",
+      "types": "./dist/base.d.ts"
+    },
+    "./ssr": {
+      "import": "./dist/ssr.js",
+      "types": "./dist/ssr.d.ts"
+    }
+  },
+  "scripts": {
+    "lint": "prettier --check .",
+    "fix": "prettier --write .",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@svebcomponents/prettier-config": "workspace:*",
+    "@svebcomponents/typescript-config": "workspace:*",
+    "vitest": "catalog:",
+    "typescript": "catalog:"
+  }
+}

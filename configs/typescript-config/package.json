@@ -5,7 +5,8 @@
   "version": "0.0.0",
   "exports": {
     "./base": "./src/base.json",
-    "./svelte": "./src/svelte.json"
+    "./svelte": "./src/svelte.json",
+    "./node": "./src/node.json"
   },
   "scripts": {
     "lint": "prettier --check .",
