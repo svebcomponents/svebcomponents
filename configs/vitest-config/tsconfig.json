@@ -1,6 +1,4 @@
 {
-    "extends": "@svebcomponents/typescript-config/node",
-    "include": [
-        "src"
-    ]
+  "extends": "@svebcomponents/typescript-config/node",
+  "include": ["src"]
 }
