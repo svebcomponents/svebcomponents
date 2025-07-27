@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import type { Plugin, NormalizedOutputOptions, PluginContext } from "rollup";
+import type { Plugin, NormalizedOutputOptions, PluginContext } from "rolldown";
 
 const ENTRY_FILE_NAME = "ssr";
 

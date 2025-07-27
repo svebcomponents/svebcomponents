@@ -1,4 +1,4 @@
-import type { Plugin, ResolveIdResult } from "rollup";
+import type { Plugin, ResolveIdResult } from "rolldown";
 
 const pluginName = "svebcomponents:override-svelte-ssr-slot-implementation";
 const VIRTUAL_MODULE_ID =

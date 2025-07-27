@@ -1,7 +1,5 @@
-import type { RollupOptions } from "rollup";
+import type { RolldownOptions } from "rolldown";
 import svelte from "rollup-plugin-svelte";
-import resolve from "@rollup/plugin-node-resolve";
-import typescript from "@rollup/plugin-typescript";
 
 import { pluginGenerateSsrEntry } from "./pluginGenerateSsrEntry.js";
 import { pluginOverrideSvelteSsrSlotImplementation } from "./pluginOverrideSvelteSsrSlotImplementation.js";
@@ -29,11 +27,6 @@ const rollupConfigSvebcomponentsSsr = (
     },
     plugins: [
       pluginOverrideSvelteSsrSlotImplementation(),
-      resolve({
-        browser: true,
-        exportConditions: ["svelte"],
-        extensions: [".svelte"],
-      }),
       svelte({
         emitCss: false,
         compilerOptions: {
@@ -42,11 +35,8 @@ const rollupConfigSvebcomponentsSsr = (
           css: "injected",
         },
       }),
-      typescript({
-        outDir: options.outDir,
-      }),
       pluginGenerateSsrEntry({}),
     ],
-  }) satisfies RollupOptions;
+  }) satisfies RolldownOptions;
 
 export default rollupConfigSvebcomponentsSsr;

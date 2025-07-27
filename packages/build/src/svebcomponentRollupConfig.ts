@@ -1,7 +1,5 @@
-import type { RollupOptions } from "rollup";
+import type { RolldownOptions } from "rolldown";
 import svelte from "rollup-plugin-svelte";
-import resolve from "@rollup/plugin-node-resolve";
-import typescript from "@rollup/plugin-typescript";
 import autoOptions from "@svebcomponents/auto-options";
 
 interface RollupConfigSvebcomponentsOptions {
@@ -22,16 +20,11 @@ export const svebcomponentRollupConfig = (
   return {
     input,
     output: {
-      dir: options.outDir,
+      dir: outDir,
       format: "esm",
       sourcemap: true,
     },
     plugins: [
-      resolve({
-        browser: true,
-        exportConditions: ["svelte"],
-        extensions: [".svelte"],
-      }),
       autoOptions(),
       svelte({
         emitCss: false,
@@ -39,9 +32,6 @@ export const svebcomponentRollupConfig = (
           customElement: true,
         },
       }),
-      typescript({
-        outDir,
-      }),
     ],
-  } satisfies RollupOptions;
+  } satisfies RolldownOptions;
 };

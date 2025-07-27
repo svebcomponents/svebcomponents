@@ -1,5 +1,5 @@
 import svebcomponentsSsr from "@svebcomponents/ssr/rollup";
-import type { RollupOptions } from "rollup";
+import type { RolldownOptions } from "rolldown";
 
 import { svebcomponentRollupConfig } from "./svebcomponentRollupConfig.js";
 
@@ -17,7 +17,7 @@ interface DefineConfigOptions {
 export const defineConfig = (options: DefineConfigOptions = {}) => {
   const { ssr = true, entry = "src/index.ts" } = options;
 
-  const rollupConfig: Array<RollupOptions> = [
+  const rollupConfig: Array<RolldownOptions> = [
     svebcomponentRollupConfig({
       input: entry,
       outDir: "dist/client",

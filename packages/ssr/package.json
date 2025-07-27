@@ -46,7 +46,7 @@
     "@sveltejs/package": "catalog:",
     "@types/node": "catalog:",
     "publint": "catalog:",
-    "rollup": "catalog:",
+    "rolldown": "catalog:",
     "svelte": "catalog:",
     "svelte-check": "catalog:",
     "vite": "catalog:"
@@ -58,9 +58,6 @@
     "typescript": "catalog:",
     "tslib": "catalog:",
     "vitest": "catalog:",
-    "@rollup/plugin-node-resolve": "catalog:",
-    "@rollup/plugin-typescript": "catalog:",
-    "@rollup/plugin-virtual": "catalog:",
     "rollup-plugin-svelte": "catalog:",
     "zimmerframe": "catalog:",
     "magic-string": "catalog:",

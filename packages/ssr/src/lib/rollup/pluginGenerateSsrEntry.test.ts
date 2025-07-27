@@ -12,7 +12,7 @@ import type {
   NormalizedOutputOptions,
   OutputBundle,
   PluginContext,
-} from "rollup";
+} from "rolldown";
 import fs from "fs/promises";
 
 vi.mock("fs/promises");

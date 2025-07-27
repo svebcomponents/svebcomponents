@@ -1,6 +1,6 @@
 import { expect, test, describe, assert } from "vitest";
 import { defineConfig } from "./index";
-import type { RollupOptions } from "rollup";
+import type { RolldownOptions } from "rolldown";
 
 describe("defineConfig", () => {
   test("returns default config with client build only when ssr is false", () => {
@@ -60,10 +60,10 @@ describe("defineConfig", () => {
     expect(config[1]).toHaveProperty("input", "src/index.ts");
   });
 
-  test("returns valid RollupOptions", () => {
+  test("returns valid RolldownOptions", () => {
     const config = defineConfig();
 
-    config.forEach((rollupConfig: RollupOptions) => {
+    config.forEach((rollupConfig: RolldownOptions) => {
       expect(rollupConfig).toHaveProperty("input");
       expect(rollupConfig).toHaveProperty("output");
       expect(rollupConfig).toHaveProperty("plugins");
