@@ -5,4 +5,3 @@ export default defineConfig({
   outDir: "dist",
   ssr: false,
 });
-

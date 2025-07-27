@@ -5,14 +5,11 @@
   "type": "module",
   "scripts": {
     "build": "rollup -c",
-    "test": "vitest run",
-    "test:browser": "vitest --browser.headless"
-  },
-  "dependencies": {
-    "@svebcomponents/auto-options": "workspace:*",
-    "svelte": "catalog:"
+    "test": "vitest run"
   },
   "devDependencies": {
+    "@svebcomponents/auto-options": "workspace:*",
+    "svelte": "catalog:",
     "@svebcomponents/build": "workspace:*",
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
@@ -24,4 +21,3 @@
     "vitest": "catalog:"
   }
 }
-

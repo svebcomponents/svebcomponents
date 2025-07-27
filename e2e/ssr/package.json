@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "rollup -c",
-    "test": "vitest run",
-    "test:browser": "vitest --browser.headless"
+    "test": "vitest run"
   },
   "devDependencies": {
     "@svebcomponents/auto-options": "workspace:*",
