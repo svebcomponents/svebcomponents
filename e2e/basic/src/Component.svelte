@@ -1,17 +1,21 @@
 <svelte:options customElement={{
-  tag: 'svelte-component',
+  tag: 'simple-component',
   props: {
-    name: { reflect: false, attribute: 'custom-title' }
+    count: {
+      type: 'Number',
+    },
+    enabled: {
+      type: 'Boolean',
+    }
   }
 }} />
 
 <script lang="ts">
-  interface Props {
-    title: string;
-  }
-  let { title }: Props = $props();
+  let { title, count = 0, enabled = true } = $props();
 </script>
 
 <div>
-  {title}
+  <h1>{title}</h1>
+  <p id="count">Count: {typeof count}-{count}</p>
+  <p id="enabled">Enabled: {typeof enabled}-{enabled}</p>
 </div>

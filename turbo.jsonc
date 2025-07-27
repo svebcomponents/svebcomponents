@@ -5,6 +5,9 @@
     "build": {
       "dependsOn": [
         "^build"
+      ],
+      "outputs": [
+        "dist"
       ]
     },
     // since @svebcomponents/example-component does not use the workspace:* protocol
@@ -33,7 +36,7 @@
     },
     "test": {
       "dependsOn": [
-        "^test"
+        "build"
       ]
     },
     "test:dev": {

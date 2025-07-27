@@ -1,5 +1,5 @@
 {
     "extends": "@svebcomponents/typescript-config/svelte",
-    "include": ["src"],
+    "include": ["src", "test"],
     "exclude": ["dist", "node_modules"]
 }

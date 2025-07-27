@@ -1,12 +1,25 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-    test: {
-        browser: {
+  test: {
+    projects: [
+      {
+        test: {
+          setupFiles: ["test/client/setup.ts"],
+          include: ["test/client/component.test.ts"],
+          browser: {
+            screenshotFailures: false,
             enabled: true,
-            name: "playwright",
-            provider: "playwright",
+            instances: [
+              {
+                browser: "chromium",
+              },
+            ],
             headless: true,
+            provider: "playwright",
+          },
         },
-    },
+      },
+    ],
+  },
 });

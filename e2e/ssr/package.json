@@ -8,12 +8,11 @@
     "test": "vitest run",
     "test:browser": "vitest --browser.headless"
   },
-  "dependencies": {
+  "devDependencies": {
     "@svebcomponents/auto-options": "workspace:*",
     "@svebcomponents/ssr": "workspace:*",
-    "svelte": "catalog:"
-  },
-  "devDependencies": {
+    "svelte": "catalog:",
+    "@sveltejs/vite-plugin-svelte": "catalog:",
     "@svebcomponents/build": "workspace:*",
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
@@ -25,4 +24,3 @@
     "vitest": "catalog:"
   }
 }
-

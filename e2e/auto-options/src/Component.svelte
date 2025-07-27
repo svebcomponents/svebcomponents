@@ -10,6 +10,6 @@
 
 <div>
   <h1>{title}</h1>
-  <span>Count: {count}</span>
-  <p>Enabled: {enabled}</p>
+  <p id="count">Count: {typeof count}-{count}</p>
+  <p id="enabled">Enabled: {typeof enabled}-{enabled}</p>
 </div>
