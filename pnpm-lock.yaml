@@ -192,15 +192,9 @@ importers:
       '@svebcomponents/prettier-config':
         specifier: workspace:*
         version: link:../prettier-config
-      '@svebcomponents/ssr':
-        specifier: workspace:*
-        version: link:../../packages/ssr
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 'catalog:'
-        version: 6.1.0(svelte@5.28.2)(vite@7.0.6(@types/node@22.14.1)(jiti@2.5.1))
       typescript:
         specifier: 'catalog:'
         version: 5.8.3
