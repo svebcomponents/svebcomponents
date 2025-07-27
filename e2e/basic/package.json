@@ -1,15 +1,14 @@
 {
-  "name": "@svebcomponents/e2e-ssr-enabled",
+  "name": "@svebcomponents/e2e.basic",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "build": "rollup -c",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:browser": "vitest --browser.headless"
   },
   "dependencies": {
-    "@svebcomponents/auto-options": "workspace:*",
-    "@svebcomponents/ssr": "workspace:*",
     "svelte": "catalog:"
   },
   "devDependencies": {
@@ -17,8 +16,11 @@
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
+    "@vitest/browser": "catalog:",
+    "playwright": "catalog:",
     "rollup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
 }
+

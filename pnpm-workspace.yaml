@@ -1,6 +1,7 @@
 packages:
   - packages/*
   - configs/*
+  - e2e/*
 
 catalog:
   '@changesets/cli': 2.29.3
@@ -34,6 +35,8 @@ catalog:
   typescript-eslint: 8.29.1
   vite: 6.2.6
   vitest: 3.1.1
+  '@vitest/browser': 3.1.1
+  playwright: 1.45.0
   zimmerframe: 1.1.2
 
 catalogMode: strict

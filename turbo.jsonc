@@ -39,6 +39,7 @@
     "test:dev": {
       "cache": false,
       "persistent": true
-    }
+    },
+    "test:browser": {}
   }
 }
