@@ -19,4 +19,9 @@ async function main() {
   await build(rolldownOptions);
 }
 
-main();
+try {
+  main();
+} catch (error) {
+  console.error("[svebcomponents]: encountered error during build.", error);
+  process.exit(1);
+}
