@@ -28,7 +28,7 @@ catalog:
   prettier: 3.5.3
   prettier-plugin-svelte: 3.3.3
   publint: 0.3.11
-  rollup: 4.40.0
+  rollup: 4.46.0
   rollup-plugin-svelte: 7.2.2
   svelte: 5.28.2
   svelte-check: 4.1.6
