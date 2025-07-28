@@ -19,22 +19,18 @@ npm install --global corepack@latest && corepack enable
 pnpm install
 ```
 
-## Development
-
-### Submodule
-
-The `template` directory and it's contained packages are a git submodule.
-The actual repository is managed in a [separate repository](https://github.com/svebcomponents/template).
-This architecture is necessary to keep it a minimal template that can be just cloned and used.
-However, to avoid breaking the template & the web components built with it,
-it is included as a submodule and it's tests & lints are run in this repository.
-
-Updates to the `svebcomponents/template` repository are not automatically reflected, but have to be pulled in manually.
-To update the submodule, run the following command:
+### 4. build the entire project
 
 ```bash
-pnpm submodule
+pnpm build
 ```
 
-This will pull in the latest changes from the `svebcomponents/template` repository and then add it's dependencies to the `template` catalog in `pnpm-workspace.yaml`.
-Doing so allows us to keep external dependencies the same as in production, while at the same time injecting local `@svebcomponents/*` into the `template` package via pnpm `overrides`.
+### 5. install (AGAIN)
+
+After building the project, you need to install the dependencies again to ensure that all packages are linked correctly.
+
+```bash
+pnpm install
+```
+
+The first pnpm install can't link our local command-line tools because their files haven't been built yet. The second pnpm install allows us to correctly link the now-existing tool bin files.

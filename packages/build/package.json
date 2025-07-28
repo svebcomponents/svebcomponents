@@ -2,6 +2,9 @@
   "name": "@svebcomponents/build",
   "version": "0.0.4",
   "type": "module",
+  "bin": {
+    "svebcomponents": "./dist/cli.js"
+  },
   "scripts": {
     "dev": "tsc --watch",
     "build": "tsc",
@@ -41,6 +44,7 @@
     "rollup-plugin-svelte": "catalog:",
     "tslib": "catalog:",
     "typescript": "catalog:",
+    "unconfig": "catalog:",
     "vitest": "catalog:"
   },
   "publishConfig": {
