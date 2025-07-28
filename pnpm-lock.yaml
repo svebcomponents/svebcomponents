@@ -257,10 +257,6 @@ importers:
         version: 3.2.4(@types/node@22.14.1)(@vitest/browser@3.2.4)(jiti@2.5.1)
 
   e2e/ssr:
-    dependencies:
-      '@svebcomponents/vitest-config':
-        specifier: workspace:*
-        version: link:../../configs/vitest-config
     devDependencies:
       '@svebcomponents/auto-options':
         specifier: workspace:*
@@ -274,6 +270,9 @@ importers:
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
+      '@svebcomponents/vitest-config':
+        specifier: workspace:*
+        version: link:../../configs/vitest-config
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
         version: 6.1.0(svelte@5.28.2)(vite@7.0.6(@types/node@22.14.1)(jiti@2.5.1))

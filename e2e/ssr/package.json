@@ -7,9 +7,6 @@
     "build": "svebcomponents",
     "test": "vitest run"
   },
-  "dependencies": {
-    "@svebcomponents/vitest-config": "workspace:*"
-  },
   "devDependencies": {
     "svelte": "catalog:",
     "@sveltejs/vite-plugin-svelte": "catalog:",
@@ -17,6 +14,7 @@
     "@svebcomponents/build": "workspace:*",
     "@svebcomponents/ssr": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
+    "@svebcomponents/vitest-config": "workspace:*",
     "@vitest/browser": "catalog:",
     "vitest": "catalog:",
     "playwright": "catalog:",
