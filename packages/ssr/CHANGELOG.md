@@ -1,5 +1,11 @@
 # @svebcomponents/ssr
 
+## 0.0.7
+
+### Patch Changes
+
+- b282163: fix: migrate to tsdown to emit types again
+
 ## 0.0.6
 
 ### Patch Changes
