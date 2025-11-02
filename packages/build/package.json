@@ -1,6 +1,6 @@
 {
   "name": "@svebcomponents/build",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "type": "module",
   "bin": {
     "svebcomponents": "./bin.js"
@@ -25,7 +25,7 @@
     }
   },
   "peerDependencies": {
-    "@svebcomponents/ssr": "^0.0.6"
+    "@svebcomponents/ssr": "^0.0.7"
   },
   "devDependencies": {
     "@svebcomponents/eslint-config": "workspace:*",
