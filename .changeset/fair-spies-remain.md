@@ -1,7 +1,7 @@
 ---
-"@svebcomponents/auto-options": minor
-"@svebcomponents/build": minor
-"@svebcomponents/ssr": minor
+"@svebcomponents/auto-options": patch
+"@svebcomponents/build": patch
+"@svebcomponents/ssr": patch
 ---
 
 refactor!: migrate to rolldown
