@@ -3,8 +3,7 @@
   "version": "0.0.4",
   "type": "module",
   "bin": {
-    "svebcomponents": "./dist/cli.js",
-    "prepare": "pnpm run build"
+    "svebcomponents": "./bin.js"
   },
   "scripts": {
     "dev": "tsc --watch",
