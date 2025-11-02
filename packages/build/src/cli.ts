@@ -29,7 +29,7 @@ async function main() {
 
   const tsdownOptions = config ?? defineConfig({});
 
-  await Promise.allSettled(tsdownOptions.map(build));
+  await Promise.all(tsdownOptions.map(build));
 }
 
 try {
