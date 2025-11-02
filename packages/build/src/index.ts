@@ -1,4 +1,4 @@
-import svebcomponentsSsr from "../../ssr/dist/tsdown/svebcomponentsSsrConfig.js";
+import svebcomponentsSsr from "@svebcomponents/ssr/tsdown";
 
 import { createTsdownConfig } from "./svebcomponentConfig.js";
 import { Options } from "tsdown";
