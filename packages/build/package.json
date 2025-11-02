@@ -3,7 +3,7 @@
   "version": "0.0.5",
   "type": "module",
   "bin": {
-    "svebcomponents": "./dist/cli.js"
+    "svebcomponents": "./bin.js"
   },
   "scripts": {
     "dev": "tsc --watch",

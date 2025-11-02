@@ -35,9 +35,6 @@ jobs:
       - name: lint
         run: pnpm lint
 
-      - name: run install again to correctly link bins (see CONTRIBUTING.md)
-        run: pnpm install
-
       - name: build
         run: pnpm build
 
