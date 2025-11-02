@@ -1,5 +1,11 @@
 # @svebcomponents/build
 
+## 0.0.7
+
+### Patch Changes
+
+- 776bbbc: fix: ensure tsdown is a regular dependency
+
 ## 0.0.6
 
 ### Patch Changes
