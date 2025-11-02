@@ -33,7 +33,6 @@
     "@svebcomponents/typescript-config": "workspace:*",
     "@types/node": "catalog:",
     "svelte": "catalog:",
-    "tsdown": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
     "rolldown": "catalog:"
@@ -45,6 +44,7 @@
     "tslib": "catalog:",
     "typescript": "catalog:",
     "unconfig": "catalog:",
+    "tsdown": "catalog:",
     "vitest": "catalog:"
   },
   "publishConfig": {

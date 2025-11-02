@@ -27,10 +27,7 @@
     ]
   },
   "dependencies": {
-    "@changesets/cli": "catalog:",
-    "auto-options": "link:../../Library/pnpm/global/5/node_modules/packages/auto-options",
-    "build": "link:../../Library/pnpm/global/5/node_modules/packages/build",
-    "ssr": "link:../../Library/pnpm/global/5/node_modules/packages/ssr"
+    "@changesets/cli": "catalog:"
   },
   "overrides": {
     "@svebcomponents/build": "workspace:*",
