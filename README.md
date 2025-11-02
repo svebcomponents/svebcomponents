@@ -10,9 +10,9 @@ However, once you get into building a library of components boilerplate and conf
 ## Packages
 
 - [`@svebcomponents/build`]
-  - Provides the `svebcomponents` CLI tool for building web components (based on rolldown ⚡).
+  - Provides the `svebcomponents` CLI tool for building web components (based on tsdown ⚡).
   - By default, it offers a zero-configuration build experience.
-  - For advanced configuration, create a `svebcomponents.config.ts` file in your project root and import `defineConfig` from `@svebcomponents/build` to define a custom Rolldown configuration.
+  - For advanced configuration, create a `svebcomponents.config.ts` file in your project root and import `defineConfig` from `@svebcomponents/build` to define a custom tsdown configuration.
 - [`@svebcomponents/auto-options`]
   - automatically generate type converter & attribute settings from your props leveraging the typescript AST
 - [`@svebcomponents/ssr`]

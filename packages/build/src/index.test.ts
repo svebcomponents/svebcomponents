@@ -55,13 +55,13 @@ describe("defineConfig", () => {
     expect(config[1]).toHaveProperty("entry", "src/index.ts");
   });
 
-  test("returns valid RolldownOptions", () => {
+  test("returns valid tsdownOptions", () => {
     const config = defineConfig();
 
-    config.forEach((rollupConfig: Options) => {
-      expect(rollupConfig).toHaveProperty("entry");
-      expect(rollupConfig).toHaveProperty("outDir");
-      expect(rollupConfig).toHaveProperty("plugins");
+    config.forEach((tsdownConfig: Options) => {
+      expect(tsdownConfig).toHaveProperty("entry");
+      expect(tsdownConfig).toHaveProperty("outDir");
+      expect(tsdownConfig).toHaveProperty("plugins");
     });
   });
 });

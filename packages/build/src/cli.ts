@@ -27,9 +27,9 @@ async function main() {
     );
   }
 
-  const rolldownOptions = config ?? defineConfig({});
+  const tsdownOptions = config ?? defineConfig({});
 
-  await Promise.allSettled(rolldownOptions.map(build));
+  await Promise.allSettled(tsdownOptions.map(build));
 }
 
 try {

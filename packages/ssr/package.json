@@ -61,7 +61,8 @@
     "rollup-plugin-svelte": "catalog:",
     "zimmerframe": "catalog:",
     "magic-string": "catalog:",
-    "esm-env": "catalog:"
+    "esm-env": "catalog:",
+    "rolldown": "catalog:"
   },
   "publishConfig": {
     "access": "public",

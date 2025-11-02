@@ -25,7 +25,7 @@ export interface DefineConfigOptions {
 export const defineConfig = (options: DefineConfigOptions = {}) => {
   const { ssr = true, entry = "src/index.ts" } = options;
 
-  const rollupConfig: Options[] = [
+  const tsdownOptions: Options[] = [
     createTsdownConfig({
       entry,
       outDir: options.outDir ?? "dist/client",
@@ -33,7 +33,7 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
   ];
 
   if (ssr) {
-    rollupConfig.push(
+    tsdownOptions.push(
       svebcomponentsSsr({
         entry,
         outDir: options.ssrOutDir ?? "dist/server",
@@ -41,5 +41,5 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
     );
   }
 
-  return rollupConfig;
+  return tsdownOptions;
 };
