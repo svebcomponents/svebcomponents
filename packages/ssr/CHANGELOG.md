@@ -1,5 +1,15 @@
 # @svebcomponents/ssr
 
+## 0.0.6
+
+### Patch Changes
+
+- 1c5b92f: refactor!: migrate to rolldown
+
+  since the minification logic of rolldown is different than rollup & rolldown is also still in beta, this is a breaking change
+
+- 1b1aea0: fix: imrpove faulty ctor lookup logic
+
 ## 0.0.5
 
 ### Patch Changes

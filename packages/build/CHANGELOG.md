@@ -1,5 +1,19 @@
 # @svebcomponents/build
 
+## 0.0.5
+
+### Patch Changes
+
+- 1c5b92f: refactor!: migrate to rolldown
+
+  since the minification logic of rolldown is different than rollup & rolldown is also still in beta, this is a breaking change
+
+- 2d11175: feat: add 'svebcomponents' cli tool & 'svebcomponents.config.ts' configuration
+- Updated dependencies [1c5b92f]
+- Updated dependencies [1b1aea0]
+  - @svebcomponents/auto-options@0.0.4
+  - @svebcomponents/ssr@0.0.6
+
 ## 0.0.4
 
 ### Patch Changes
