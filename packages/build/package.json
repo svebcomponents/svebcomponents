@@ -44,8 +44,7 @@
     "tslib": "catalog:",
     "typescript": "catalog:",
     "unconfig": "catalog:",
-    "tsdown": "catalog:",
-    "vitest": "catalog:"
+    "tsdown": "catalog:"
   },
   "publishConfig": {
     "access": "public",
