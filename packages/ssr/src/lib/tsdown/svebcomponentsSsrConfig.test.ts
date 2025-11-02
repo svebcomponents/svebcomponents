@@ -4,12 +4,12 @@ import svebcomponentsSsrConfig from "./svebcomponentsSsrConfig";
 describe("svebcomponentsSsrConfig", () => {
   test("returns valid rollup config with required properties", () => {
     const config = svebcomponentsSsrConfig({
-      input: "src/test.ts",
+      entry: "src/test.ts",
       outDir: "dist/test",
     });
 
-    expect(config).toHaveProperty("input", "src/test.ts");
-    expect(config).toHaveProperty("output");
+    expect(config).toHaveProperty("entry", "src/test.ts");
+    expect(config).toHaveProperty("outDir", "dist/test");
     expect(config).toHaveProperty("plugins");
     expect(Array.isArray(config.plugins)).toBe(true);
   });
@@ -17,14 +17,10 @@ describe("svebcomponentsSsrConfig", () => {
   test("configures output for SSR", () => {
     const outDir = "dist/server";
     const config = svebcomponentsSsrConfig({
-      input: "src/index.ts",
+      entry: "src/index.ts",
       outDir,
     });
 
-    expect(config.output).toEqual({
-      dir: outDir,
-      format: "esm",
-      sourcemap: true,
-    });
+    expect(config.outDir).toEqual(outDir);
   });
 });

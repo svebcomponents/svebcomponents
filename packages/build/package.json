@@ -33,8 +33,8 @@
     "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
     "@types/node": "catalog:",
-    "rolldown": "catalog:",
     "svelte": "catalog:",
+    "tsdown": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
   },

@@ -1,7 +1,7 @@
-import svebcomponentsSsr from "@svebcomponents/ssr/rollup";
-import type { BuildOptions } from "rolldown";
+import svebcomponentsSsr from "../../ssr/dist/tsdown/svebcomponentsSsrConfig.js";
 
-import { svebcomponentRollupConfig } from "./svebcomponentRollupConfig.js";
+import { createTsdownConfig } from "./svebcomponentConfig.js";
+import { Options } from "tsdown";
 
 export interface DefineConfigOptions {
   /**
@@ -25,9 +25,9 @@ export interface DefineConfigOptions {
 export const defineConfig = (options: DefineConfigOptions = {}) => {
   const { ssr = true, entry = "src/index.ts" } = options;
 
-  const rollupConfig: Array<BuildOptions> = [
-    svebcomponentRollupConfig({
-      input: entry,
+  const rollupConfig: Options[] = [
+    createTsdownConfig({
+      entry,
       outDir: options.outDir ?? "dist/client",
     }),
   ];
@@ -35,7 +35,7 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
   if (ssr) {
     rollupConfig.push(
       svebcomponentsSsr({
-        input: entry,
+        entry,
         outDir: options.ssrOutDir ?? "dist/server",
       }),
     );

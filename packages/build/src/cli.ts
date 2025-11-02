@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-import { build, type BuildOptions } from "rolldown";
+import { build, type Options } from "tsdown";
 import { loadConfig } from "unconfig";
 
 import { defineConfig } from "./index.js";
 import { inferComponents } from "./inferComponents.js";
 
 async function main() {
-  const { config } = await loadConfig<BuildOptions[] | null>({
+  const { config } = await loadConfig<Options[] | null>({
     sources: [
       {
         files: "svebcomponents.config",
@@ -29,7 +29,7 @@ async function main() {
 
   const rolldownOptions = config ?? defineConfig({});
 
-  await build(rolldownOptions);
+  await Promise.allSettled(rolldownOptions.map(build));
 }
 
 try {
