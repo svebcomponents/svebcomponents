@@ -4,21 +4,23 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "rolldown -c",
+    "build": "svebcomponents",
     "test": "vitest run"
   },
+  "exports": {
+    ".": {
+      "import": "./dist/client/index.js"
+    }
+  },
   "devDependencies": {
-    "@svebcomponents/auto-options": "workspace:*",
     "svelte": "catalog:",
     "@svebcomponents/build": "workspace:*",
-    "@svebcomponents/eslint-config": "workspace:*",
-    "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
+    "@svebcomponents/vitest-config": "workspace:*",
     "@vitest/browser": "catalog:",
+    "vitest": "catalog:",
     "playwright": "catalog:",
     "rolldown": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:",
-    "@svebcomponents/vitest-config": "workspace:*"
+    "typescript": "catalog:"
   }
 }

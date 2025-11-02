@@ -1,9 +1,9 @@
 import svebcomponentsSsr from "@svebcomponents/ssr/rollup";
-import type { RolldownOptions } from "rolldown";
+import type { BuildOptions } from "rolldown";
 
 import { svebcomponentRollupConfig } from "./svebcomponentRollupConfig.js";
 
-interface DefineConfigOptions {
+export interface DefineConfigOptions {
   /**
    * The entrypoint for the svelte component that is being transformed.
    */
@@ -12,15 +12,23 @@ interface DefineConfigOptions {
    * Whether to generate an SSR entry file for the web component.
    */
   ssr?: boolean;
+  /**
+   * The output directory for the build files.
+   */
+  outDir?: string;
+  /**
+   * The output directory for the SSR build files.
+   */
+  ssrOutDir?: string;
 }
 
 export const defineConfig = (options: DefineConfigOptions = {}) => {
   const { ssr = true, entry = "src/index.ts" } = options;
 
-  const rollupConfig: Array<RolldownOptions> = [
+  const rollupConfig: Array<BuildOptions> = [
     svebcomponentRollupConfig({
       input: entry,
-      outDir: "dist/client",
+      outDir: options.outDir ?? "dist/client",
     }),
   ];
 
@@ -28,7 +36,7 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
     rollupConfig.push(
       svebcomponentsSsr({
         input: entry,
-        outDir: "dist/server",
+        outDir: options.ssrOutDir ?? "dist/server",
       }),
     );
   }
