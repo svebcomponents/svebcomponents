@@ -25,18 +25,18 @@
     }
   },
   "peerDependencies": {
-    "@svebcomponents/ssr": "^0.0.6",
-    "rolldown": "^1.0.0-beta.29"
+    "@svebcomponents/ssr": "^0.0.6"
   },
   "devDependencies": {
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
     "@types/node": "catalog:",
-    "rolldown": "catalog:",
     "svelte": "catalog:",
+    "tsdown": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "rolldown": "catalog:"
   },
   "dependencies": {
     "@svebcomponents/auto-options": "workspace:*",

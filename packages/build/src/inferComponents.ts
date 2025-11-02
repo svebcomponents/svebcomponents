@@ -1,7 +1,7 @@
 import path from "node:path";
 import { defineConfig, DefineConfigOptions } from "./index.js";
-import type { BuildOptions } from "rolldown";
 import { existsSync } from "node:fs";
+import { type Options } from "tsdown";
 
 const resolveSvebcomponentEntryPoint = (
   entryPath: string,
@@ -20,7 +20,7 @@ const resolveSvebcomponentEntryPoint = (
   return tsEntry;
 };
 
-export const inferComponents = (packageJson: unknown): BuildOptions[] | [] => {
+export const inferComponents = (packageJson: unknown): Options[] => {
   if (
     !(
       typeof packageJson === "object" &&

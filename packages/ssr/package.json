@@ -31,9 +31,9 @@
       "types": "./dist/vite/vitePluginSvebcomponentsSsr.d.ts",
       "import": "./dist/vite/vitePluginSvebcomponentsSsr.js"
     },
-    "./rollup": {
-      "types": "./dist/rollup/svebcomponentsSsrConfig.d.ts",
-      "import": "./dist/rollup/svebcomponentsSsrConfig.js"
+    "./tsdown": {
+      "types": "./dist/tsdown/svebcomponentsSsrConfig.d.ts",
+      "import": "./dist/tsdown/svebcomponentsSsrConfig.js"
     }
   },
   "peerDependencies": {
@@ -46,7 +46,7 @@
     "@sveltejs/package": "catalog:",
     "@types/node": "catalog:",
     "publint": "catalog:",
-    "rolldown": "catalog:",
+    "tsdown": "catalog:",
     "svelte": "catalog:",
     "svelte-check": "catalog:",
     "vite": "catalog:"
@@ -61,7 +61,8 @@
     "rollup-plugin-svelte": "catalog:",
     "zimmerframe": "catalog:",
     "magic-string": "catalog:",
-    "esm-env": "catalog:"
+    "esm-env": "catalog:",
+    "rolldown": "catalog:"
   },
   "publishConfig": {
     "access": "public",

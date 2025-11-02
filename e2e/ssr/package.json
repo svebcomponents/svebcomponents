@@ -18,7 +18,6 @@
     "@vitest/browser": "catalog:",
     "vitest": "catalog:",
     "playwright": "catalog:",
-    "rolldown": "catalog:",
     "typescript": "catalog:"
   }
 }

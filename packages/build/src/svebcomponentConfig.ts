@@ -1,29 +1,24 @@
-import type { RolldownOptions } from "rolldown";
 import svelte from "rollup-plugin-svelte";
 import autoOptions from "@svebcomponents/auto-options";
+import { Options } from "tsdown";
 
-interface RollupConfigSvebcomponentsOptions {
+interface SvebcomponentsOptions {
   /**
    * The entrypoint for the svelte component that is being transformed.
    */
-  input: string;
+  entry: string;
   /**
    * The file rollup should write the output to.
    */
   outDir: string;
 }
 
-export const svebcomponentRollupConfig = (
-  options: RollupConfigSvebcomponentsOptions,
-) => {
-  const { input, outDir } = options;
+export const createTsdownConfig = (options: SvebcomponentsOptions) => {
+  const { entry, outDir } = options;
   return {
-    input,
-    output: {
-      dir: outDir,
-      format: "esm",
-      sourcemap: true,
-    },
+    entry,
+    outDir,
+    dts: true,
     plugins: [
       autoOptions(),
       svelte({
@@ -33,5 +28,5 @@ export const svebcomponentRollupConfig = (
         },
       }),
     ],
-  } satisfies RolldownOptions;
+  } satisfies Options;
 };
