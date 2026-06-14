@@ -1,0 +1,174 @@
+---
+title: Getting Started
+description: Start from the Svebcomponents template and build your first Svelte custom element package.
+---
+
+Let's say you want to write a Svelte component and then use it somewhere that is very much not your Svelte app.
+
+A React app. A Rails view. A CMS template. Some page where the only shared abstraction is "the browser probably knows what HTML is".
+
+That is the nice part of custom elements. The browser already has a distribution format.
+
+The less nice part is everything around the first demo: package exports, custom element prop metadata, typed attributes, declarations, and the tiny pile of build config that appears the moment you want to publish the thing.
+
+Svebcomponents is the pile reducer.
+
+The recommended starting point is the template repo:
+
+```bash
+pnpx degit svebcomponents/template my-project
+cd my-project
+pnpm install
+pnpm dev
+```
+
+The template gives you a small pnpm workspace:
+
+- `components/example-component`: a Svelte custom element package
+- `apps/svelte-kit`: a SvelteKit app that consumes the custom element
+- `configs/*`: shared linting, formatting, and TypeScript config packages
+
+## Example Component
+
+The component itself is deliberately boring, which is exactly what we want for a first pass.
+
+It lives at `components/example-component/src/ExampleComponent.svelte`.
+
+```svelte
+<script lang="ts">
+  let {
+    increments = 1,
+  }: {
+    increments: number;
+  } = $props();
+
+  let count = $state(0);
+</script>
+
+<button onclick={() => (count += increments)}>
+  add {increments} to {count}
+</button>
+```
+
+The interesting bit is not the button. It is this:
+
+```ts
+increments: number;
+```
+
+That type is enough information for `@svebcomponents/auto-options` to generate the custom element prop metadata Svelte needs later, when an HTML attribute has to become an actual number.
+
+## Component Entrypoint
+
+The package entrypoint imports the Svelte component and registers the generated custom element constructor:
+
+```ts
+import ExampleComponent from "./ExampleComponent.svelte";
+
+export default ExampleComponent;
+
+if (!customElements.get("example-component") && "element" in ExampleComponent) {
+  customElements.define(
+    "example-component",
+    ExampleComponent.element as CustomElementConstructor,
+  );
+}
+```
+
+When Svelte compiles a component as a custom element, it exposes the constructor as `Component.element`.
+
+The guard does two small but important things:
+
+- it avoids registering the same tag twice
+- it avoids assuming `Component.element` exists in the server build
+
+## Package Exports
+
+The component package tells consumers where the browser build lives and, if you want to opt into the experimental SSR path, where the renderer lives:
+
+```json
+{
+  "exports": {
+    ".": {
+      "import": "./dist/client/index.js"
+    },
+    "./ssr": {
+      "import": "./dist/server/ssr.js"
+    }
+  }
+}
+```
+
+The `.` export is the normal one. Importing it defines `<example-component>`.
+
+The `./ssr` export is the strange one. It points at an `ElementRenderer` so a server app can render the component before the browser upgrades it.
+
+## Using the Component
+
+In the demo SvelteKit app, usage is intentionally uneventful:
+
+```svelte
+<script lang="ts">
+  import "@svebcomponents/example-component";
+</script>
+
+<example-component increments={5}></example-component>
+```
+
+The tiny footgun here is worth calling out.
+
+Use a JavaScript expression for non-string values when consuming custom elements from Svelte. In the example above, `increments={5}` passes the number `5`.
+
+Writing `increments="5"` passes the string `"5"` from Svelte's JavaScript side, which bypasses the custom element attribute converter. This is a Svelte custom element interop detail, not a Svebcomponents-specific rule.
+
+## SSR Setup
+
+The template also shows the experimental SSR path, because that is part of where this project is trying to go.
+
+This part is not the stable happy path yet. Useful? Yes. Production-hardened? Please no.
+
+In `apps/svelte-kit/vite.config.ts`, the SvelteKit app installs the Svebcomponents Vite transform:
+
+```ts
+import { defineConfig } from "vite";
+import { sveltekit } from "@sveltejs/kit/vite";
+import svebcomponents from "@svebcomponents/ssr/vite";
+
+export default defineConfig({
+  plugins: [svebcomponents(), sveltekit()],
+});
+```
+
+In `apps/svelte-kit/src/hooks.server.ts`, it registers the component renderer:
+
+```ts
+import { ElementRendererRegistry } from "@svebcomponents/ssr";
+import ExampleComponentRenderer from "@svebcomponents/example-component/ssr";
+import type { Handle } from "@sveltejs/kit";
+
+ElementRendererRegistry.set("example-component", ExampleComponentRenderer);
+
+export const handle: Handle = async ({ event, resolve }) => {
+  return await resolve(event);
+};
+```
+
+That registry step is the server saying: "when you see `<example-component>`, this is the renderer that knows what to do with it."
+
+Start with browser-only custom element packages. Come back to SSR once the regular build feels boring.
+
+## Background
+
+The original pitch was basically:
+
+- make it easy to start from a real package template
+- stop writing the same custom element options by hand
+- explore SSR for Svelte-built web components using Lit's `ElementRenderer` model
+
+For the longer motivation, see the [Svelte Summit talk](https://www.youtube.com/watch?v=lDWfdfTH3e8) and the [slide deck](https://svebcomponents.theosteiner.de/).
+
+## Next Steps
+
+- Read [Core Concepts](/core-concepts/) for the mental model behind custom elements, `$props()`, and the Svelte interop bits that can otherwise feel haunted.
+- Read [`@svebcomponents/build`](/packages/build/) for package export inference and manual config.
+- Read [`@svebcomponents/auto-options`](/packages/auto-options/) for supported prop shapes and manual overrides.
