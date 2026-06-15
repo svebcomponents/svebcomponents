@@ -37,10 +37,14 @@ Expose it from your component package:
 {
   "exports": {
     ".": {
-      "import": "./dist/client/index.js"
+      "types": "./dist/client/index.d.ts",
+      "svelte": "./dist/client-svelte/index.js",
+      "default": "./dist/client/index.js"
     },
     "./ssr": {
-      "import": "./dist/server/ssr.js"
+      "types": "./dist/server/ssr.d.ts",
+      "svelte": "./dist/server-svelte/ssr.js",
+      "default": "./dist/server/ssr.js"
     }
   }
 }

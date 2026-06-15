@@ -27,6 +27,21 @@ const ssrPackageJson = {
   },
 };
 
+const svelteConditionPackageJson = {
+  exports: {
+    ".": {
+      types: "./dist/client/index.d.ts",
+      svelte: "./dist/client-svelte/index.js",
+      default: "./dist/client/index.js",
+    },
+    "./ssr": {
+      types: "./dist/server/ssr.d.ts",
+      svelte: "./dist/server-svelte/ssr.js",
+      default: "./dist/server/ssr.js",
+    },
+  },
+};
+
 const multipleComponentsPackageJson = {
   exports: {
     ".": {
@@ -51,6 +66,15 @@ const manualSSRConfig = defineConfig({
   entry: "src/index.js",
   outDir: "dist/client",
   ssr: true,
+});
+
+const manualSvelteConditionConfig = defineConfig({
+  entry: "src/index.js",
+  outDir: "dist/client",
+  svelteOutDir: "dist/client-svelte",
+  ssr: true,
+  ssrOutDir: "dist/server",
+  ssrSvelteOutDir: "dist/server-svelte",
 });
 
 const manualMultipleComponentsConfig = [
@@ -81,6 +105,14 @@ describe("infer components", () => {
     // use `JSON.stringify` to avoid comparing method references
     expect(JSON.stringify(inferredComponents)).toEqual(
       JSON.stringify(manualSSRConfig),
+    );
+  });
+  it("parses Svelte conditional exports from package.json", () => {
+    mockFs.existsSync.mockReturnValue(true);
+    const inferredComponents = inferComponents(svelteConditionPackageJson);
+    // use `JSON.stringify` to avoid comparing method references
+    expect(JSON.stringify(inferredComponents)).toEqual(
+      JSON.stringify(manualSvelteConditionConfig),
     );
   });
   it("parses multiple components from package.json", () => {

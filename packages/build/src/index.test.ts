@@ -11,6 +11,19 @@ describe("defineConfig", () => {
     expect(config[0]).toHaveProperty("outDir", "dist/client");
   });
 
+  test("returns Svelte-aware configs when Svelte output directories are provided", () => {
+    const config = defineConfig({
+      svelteOutDir: "dist/client-svelte",
+      ssrSvelteOutDir: "dist/server-svelte",
+    });
+
+    expect(config).toHaveLength(4);
+    expect(config[1]).toHaveProperty("outDir", "dist/client-svelte");
+    expect(config[1]).toHaveProperty("external", [/^svelte(\/.*)?$/]);
+    expect(config[3]).toHaveProperty("outDir", "dist/server-svelte");
+    expect(config[3]).toHaveProperty("external", [/^svelte(\/.*)?$/]);
+  });
+
   test("returns both client and ssr configs when ssr is true", () => {
     const config = defineConfig({ ssr: true });
 

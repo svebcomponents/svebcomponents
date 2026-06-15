@@ -51,13 +51,15 @@ export default Component;
 {
   "exports": {
     ".": {
-      "import": "./dist/client/index.js"
+      "types": "./dist/client/index.d.ts",
+      "svelte": "./dist/client-svelte/index.js",
+      "default": "./dist/client/index.js"
     }
   }
 }
 ```
 
-That export tells the CLI: build `src/index.ts` into `dist/client/index.js`.
+That export tells the CLI: build `src/index.ts` into standalone `dist/client/index.js` and Svelte-aware `dist/client-svelte/index.js`.
 
 ## `$props()` Is the Source for Prop Inference
 
@@ -162,10 +164,14 @@ A component package can expose a server renderer:
 {
   "exports": {
     ".": {
-      "import": "./dist/client/index.js"
+      "types": "./dist/client/index.d.ts",
+      "svelte": "./dist/client-svelte/index.js",
+      "default": "./dist/client/index.js"
     },
     "./ssr": {
-      "import": "./dist/server/ssr.js"
+      "types": "./dist/server/ssr.d.ts",
+      "svelte": "./dist/server-svelte/ssr.js",
+      "default": "./dist/server/ssr.js"
     }
   }
 }

@@ -11,14 +11,19 @@ interface SvebcomponentsOptions {
    * The file rollup should write the output to.
    */
   outDir: string;
+  /**
+   * Whether Svelte runtime imports should be left for Svelte-aware tooling to resolve.
+   */
+  externalSvelte?: boolean;
 }
 
 export const createTsdownConfig = (options: SvebcomponentsOptions) => {
-  const { entry, outDir } = options;
+  const { entry, outDir, externalSvelte = false } = options;
   return {
     entry,
     outDir,
     dts: true,
+    ...(externalSvelte ? { external: [/^svelte(\/.*)?$/] } : {}),
     plugins: [
       autoOptions(),
       svelte({
