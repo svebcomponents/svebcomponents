@@ -1,5 +1,3 @@
-# `@svebcomponents/ssr`
-
 Experimental server-side rendering support for Svelte-built custom elements.
 
 Browsers know how to instantiate custom elements, but server renderers usually only see an unknown HTML tag. `@svebcomponents/ssr` bridges that gap by letting a custom element package provide an `ElementRenderer`, then letting a Vite app use that renderer when it sees the custom element in a Svelte template.

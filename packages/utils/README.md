@@ -1,5 +1,3 @@
-# `@svebcomponents/utils`
-
 Small shared helpers used by Svebcomponents packages.
 
 This package is intentionally narrow. It keeps common string transformations in one place so the build-time and runtime packages agree on how prop names and attribute names map to each other.

@@ -1,0 +1,31 @@
+---
+title: Introduction
+description: Start from the Svebcomponents template and build your first Svelte custom element package.
+---
+
+While web components are are the best encapsulation tool the web has to offer, and as such are a vital addition to every developers toolbelt they unfortunately come with many warts.
+The authoring experience of custom elements in JavaScript is one of them. Instead of the declarative approach of modern frameworks, that allow you to describe **what you want**, the imperative platform APIs require you to instead enumerate the steps of **how to get to what you want**.
+Svelte's template language offers a more ergonomic way of building web components - allowing developers to set custom elements as the compile target for Svelte's compiler.
+However, even though far superior to handwriting custom elements, the Svelte story to creating web components is not without its issues either:
+
+- boilerplate heavy
+  - svelte requires a lengthy `<svelte:options>` configuration to wire up attributes and component props
+- hard to configure a build pipeline
+  - SvelteKit ignores the web component use case entirely, requiring users to write their own build pipelines with rollup
+- no support for SSR
+  - with the declarative shadow DOM API, it has, in theory, become possible to render web components on the server. In practice however, almost no frameworks (apart from Lit) offer support for it.
+
+> [!NOTE]  
+> Watch Theo Steiner's "Ultimate Guide to Building Web Components with Svelte" for a look under the hood of the svelte compiler, a more detailed exploration of current limitations & a teaser for how `svebcomponents` attempts to solve these issues
+> https://www.youtube.com/watch?v=lDWfdfTH3e8
+
+`svebcomponents` is an attempt at solving the above issues, making web components first class citizens of the Svelte ecosystem:
+
+
+- ~boilerplate heavy~
+  - configuration is automatically inferred from TypeScript
+- ~hard to configure a build pipeline~
+  - `sveltekit` CLI makes build configuration as simple as defining exports in your `package.json`
+- ~no support for SSR~
+  - *experimental* support for building server-side renderable web components and a vite plugin to enable your server to actually render them
+

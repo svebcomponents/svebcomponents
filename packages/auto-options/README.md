@@ -1,5 +1,3 @@
-# `@svebcomponents/auto-options`
-
 Infer Svelte custom element prop options from `$props()`.
 
 Svelte custom elements need prop metadata to expose component props as HTML attributes. Writing that metadata by hand gets repetitive, especially when the same information already exists in your TypeScript props.

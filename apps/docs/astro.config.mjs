@@ -23,7 +23,7 @@ export default defineConfig({
         {
           label: "Documentation",
           items: [
-            // Each item here is one entry in the navigation menu.
+            { label: "Introduction", slug: "introduction" },
             { label: "Getting Started", slug: "getting-started" },
             { label: "Core Concepts", slug: "core-concepts" },
           ],

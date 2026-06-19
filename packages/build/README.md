@@ -1,5 +1,3 @@
-# `@svebcomponents/build`
-
 Build Svelte custom element packages with the `svebcomponents` CLI.
 
 This package wraps `tsdown` with the defaults Svebcomponents needs:
