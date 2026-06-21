@@ -13,13 +13,32 @@ interface SvebcomponentsSsrOptions {
    * The file rollup should write the output to.
    */
   outDir: string;
+  /**
+   * Whether Svelte runtime imports should be left for Svelte-aware tooling to resolve.
+   */
+  externalSvelte?: boolean;
+  /**
+   * Import path from the generated SSR renderer entrypoint to the server component module.
+   */
+  serverImportPath?: string;
+  /**
+   * Import path from the generated SSR renderer entrypoint to the client component module.
+   */
+  clientImportPath?: string;
 }
 
-const createSsrTsdownConfig = ({ entry, outDir }: SvebcomponentsSsrOptions) =>
+const createSsrTsdownConfig = ({
+  entry,
+  outDir,
+  externalSvelte = false,
+  serverImportPath,
+  clientImportPath,
+}: SvebcomponentsSsrOptions) =>
   ({
     entry,
     outDir,
     dts: true,
+    ...(externalSvelte ? { external: [/^svelte(\/.*)?$/] } : {}),
     plugins: [
       pluginOverrideSvelteSsrSlotImplementation(),
       svelte({
@@ -30,7 +49,10 @@ const createSsrTsdownConfig = ({ entry, outDir }: SvebcomponentsSsrOptions) =>
           css: "injected",
         },
       }),
-      pluginGenerateSsrEntry({}),
+      pluginGenerateSsrEntry({
+        ...(serverImportPath !== undefined ? { serverImportPath } : {}),
+        ...(clientImportPath !== undefined ? { clientImportPath } : {}),
+      }),
     ],
   }) satisfies Options;
 

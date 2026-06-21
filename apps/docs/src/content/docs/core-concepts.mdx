@@ -1,0 +1,182 @@
+---
+title: Core Concepts
+description: The concepts behind building Svelte custom element packages with Svebcomponents.
+---
+
+This page is the mental model.
+
+Not every button and lever, just enough context that the generated files stop looking like build-tool ceremony.
+
+Svebcomponents sits on top of a few ideas: Svelte custom elements, package entrypoints, prop metadata, framework interop, and optional server renderers.
+
+The project grew out of the same motivation as the Svelte Summit talk: web components are a browser-native distribution format, and Svelte is a very pleasant way to write them. The hard part is not making one button show up on a page. The hard part is turning that into a package workflow you still understand six months later.
+
+## Svelte Custom Elements
+
+Svelte can compile a component into a custom element constructor. Register that constructor with the browser and you get a normal HTML tag:
+
+```ts
+import Component from "./Component.svelte";
+
+customElements.define("favorite-number", Component.element);
+```
+
+After that, consumers can write:
+
+```html
+<favorite-number value="42"></favorite-number>
+```
+
+That is the whole trick, and also not quite enough.
+
+For a package, you also want declarations, stable exports, useful prop conversion, and ideally a build command that does not require you to remember which plugin order made everything work last time.
+
+## Package Entrypoints
+
+The browser entrypoint is the module consumers import for the side effect of defining the custom element.
+
+```ts
+import Component from "./Component.svelte";
+
+if (!customElements.get("favorite-number") && Component.element) {
+  customElements.define("favorite-number", Component.element);
+}
+
+export default Component;
+```
+
+`@svebcomponents/build` can infer this from your package exports. If an export points at `dist/client/*`, the CLI maps it back to the matching source file under `src/*`.
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./dist/client/index.d.ts",
+      "svelte": "./dist/client-svelte/index.js",
+      "default": "./dist/client/index.js"
+    }
+  }
+}
+```
+
+That export tells the CLI: build `src/index.ts` into standalone `dist/client/index.js` and Svelte-aware `dist/client-svelte/index.js`.
+
+## `$props()` Is the Source for Prop Inference
+
+In Svelte 5, props usually live in `$props()`.
+
+```svelte
+<script lang="ts">
+  interface Props {
+    label: string;
+    value: number;
+  }
+
+  let { label, value }: Props = $props();
+</script>
+```
+
+`@svebcomponents/auto-options` reads that declaration before the Svelte compiler runs. It uses the prop names and TypeScript types to generate the custom element options you would otherwise have to write by hand.
+
+## Attribute Names and Prop Names
+
+HTML wants `kebab-case`. JavaScript wants `camelCase`.
+
+Those worlds meet at the custom element boundary, so Svebcomponents kebab-cases prop names for attributes:
+
+| Prop name        | Attribute name    |
+| ---------------- | ----------------- |
+| `value`          | `value`           |
+| `favoriteNumber` | `favorite-number` |
+| `isFeatured`     | `is-featured`     |
+
+Your component keeps normal JavaScript names. Consumers get HTML-shaped markup. Everybody can pretend this was obvious all along.
+
+## Attribute Conversion
+
+HTML attributes are strings. Always. Even when they look like numbers and booleans and other small lies.
+
+Svelte custom elements need prop metadata to convert those strings into richer JavaScript values.
+
+```svelte
+<favorite-number value="42" featured="true"></favorite-number>
+```
+
+With inferred metadata, Svelte can treat those attributes as typed props:
+
+- `value` can become a number
+- `featured` can become a boolean
+- object and array props can use Svelte's custom element conversion behavior
+
+Without the metadata, attributes stay string-shaped.
+
+## Svelte Consumers and Non-string Values
+
+Here is the part that tends to surprise people.
+
+When a Svelte app uses a custom element, values written as JavaScript expressions are assigned as properties:
+
+```svelte
+<favorite-number value={42}></favorite-number>
+```
+
+That passes the number `42`. Great.
+
+Values written as quoted markup are strings:
+
+```svelte
+<favorite-number value="42"></favorite-number>
+```
+
+In browser-authored HTML, custom element attribute converters can turn string attributes into typed props. In Svelte-authored markup, Svelte may set the JavaScript property directly when it can see that the property exists.
+
+If that direct property assignment receives the string `"42"`, the custom element attribute converter is not involved. The converter is standing right there, but Svelte has already walked past it.
+
+Use JavaScript expressions for non-string values when consuming custom elements from Svelte.
+
+## Manual Overrides
+
+Inference should save you from boilerplate, not trap you inside it.
+
+You can write custom element prop options manually when you need a different attribute name, type, or reflection behavior.
+
+```svelte
+<svelte:options
+  customElement={{
+    props: {
+      value: { type: "Number", attribute: "data-value", reflect: false },
+    },
+  }}
+/>
+```
+
+`auto-options` preserves the fields you wrote manually and fills in missing information where it can.
+
+## SSR Renderers
+
+Browser custom elements are not automatically server-renderable. A server renderer usually sees an unknown tag and shrugs.
+
+For SSR, Svebcomponents follows Lit's `ElementRenderer` model.
+
+A component package can expose a server renderer:
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./dist/client/index.d.ts",
+      "svelte": "./dist/client-svelte/index.js",
+      "default": "./dist/client/index.js"
+    },
+    "./ssr": {
+      "types": "./dist/server/ssr.d.ts",
+      "svelte": "./dist/server-svelte/ssr.js",
+      "default": "./dist/server/ssr.js"
+    }
+  }
+}
+```
+
+A consuming app can register that renderer with `ElementRendererRegistry`. The Vite plugin can then wrap matching custom element tags and render them on the server.
+
+This is still experimental, has not been hardened for production use, and should be treated as a direction of travel more than a promise carved into stone.
