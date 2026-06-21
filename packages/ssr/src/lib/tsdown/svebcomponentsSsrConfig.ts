@@ -49,7 +49,10 @@ const createSsrTsdownConfig = ({
           css: "injected",
         },
       }),
-      pluginGenerateSsrEntry({ serverImportPath, clientImportPath }),
+      pluginGenerateSsrEntry({
+        ...(serverImportPath !== undefined ? { serverImportPath } : {}),
+        ...(clientImportPath !== undefined ? { clientImportPath } : {}),
+      }),
     ],
   }) satisfies Options;
 
