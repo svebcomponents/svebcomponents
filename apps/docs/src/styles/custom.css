@@ -1,0 +1,30 @@
+@media (min-width: 50rem) {
+  [data-has-hero] .hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+    padding-block: clamp(2rem, 6vh, 4rem);
+  }
+
+  [data-has-hero] .hero > img,
+  [data-has-hero] .hero > .hero-html {
+    order: 0;
+    width: min(55%, 18rem);
+  }
+
+  [data-has-hero] .hero .stack {
+    text-align: center;
+  }
+
+  [data-has-hero] .hero .copy {
+    align-items: center;
+  }
+
+  [data-has-hero] .hero .actions {
+    justify-content: center;
+  }
+}
+
+[data-has-hero] .hero h1 {
+  font-size: clamp(2rem, 8vw, var(--sl-text-6xl));
+  white-space: nowrap;
+}

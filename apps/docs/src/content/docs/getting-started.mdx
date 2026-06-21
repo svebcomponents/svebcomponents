@@ -67,12 +67,16 @@ if (!customElements.get("example-component") && "element" in ExampleComponent) {
 }
 ```
 
-> [!INFO]
-> When Svelte compiles a component as a custom element, it exposes the constructor as `Component.element`.
+:::note
+When Svelte compiles a component as a custom element, it exposes the
+constructor as `Component.element`.
+:::
 
-> [!NOTE]
-> Svelte can register a custom element through `<svelte:options>`.
-> Svebcomponents keeps registration in the entrypoint instead, so you can tailor it to your needs.
+:::note
+Svelte can register a custom element through `<svelte:options>`.
+Svebcomponents keeps registration in the entrypoint instead, so you can tailor
+it to your needs.
+:::
 
 ## Package Exports
 
@@ -117,11 +121,17 @@ You use the generated custom element just like any other web component:
 <example-component increments={5}></example-component>
 ```
 
-> [!WARNING]
-> Svelte 5 sets attributes as JavaScript properties under certain conditions.
-> Therefore, you should use JavaScript expressions for non-string values when consuming custom elements from Svelte.
-> In the example above, `increments={5}` passes the number `5`, where writing `increments="5"` passes the string `"5"` from Svelte's JavaScript side, which bypasses the custom element attribute converter.
-> See [sveltejs/svelte#12624](https://github.com/sveltejs/svelte/issues/12624).
+:::caution
+Svelte 5 sets attributes as JavaScript properties under certain conditions.
+Therefore, you should use JavaScript expressions for non-string values when
+consuming custom elements from Svelte.
+
+In the example above, `increments={5}` passes the number `5`, while writing
+`increments="5"` passes the string `"5"` from Svelte's JavaScript side. This
+bypasses the custom element attribute converter.
+
+See [sveltejs/svelte#12624](https://github.com/sveltejs/svelte/issues/12624).
+:::
 
 ## What Next?
 

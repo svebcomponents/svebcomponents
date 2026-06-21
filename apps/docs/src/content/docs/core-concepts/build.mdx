@@ -81,12 +81,13 @@ Svelte-aware tooling such as SvelteKit and `@sveltejs/vite-plugin-svelte` can
 select `dist/client-svelte/index.js` and share the host application's Svelte
 runtime. Other consumers select the standalone `default` build.
 
-> [!CAUTION]
-> The Svelte-aware build relies on Svelte runtime internals. Those internals
-> do not guarantee compatibility across patch or minor releases. Only use
-> this optimization when the component package and consuming application are
-> built with the same Svelte version. Keep the standalone `default` export as
-> the safe fallback for other consumers.
+:::caution
+The Svelte-aware build relies on Svelte runtime internals. Those internals do
+not guarantee compatibility across patch or minor releases. Only use this
+optimization when the component package and consuming application are built
+with the same Svelte version. Keep the standalone `default` export as the safe
+fallback for other consumers.
+:::
 
 Every matching export becomes a component entrypoint, so a package can expose
 more than one custom element:

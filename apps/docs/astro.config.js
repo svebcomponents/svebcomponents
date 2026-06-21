@@ -1,4 +1,3 @@
-// @ts-check
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
@@ -8,6 +7,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: "svebcomponents",
+      customCss: ["./src/styles/custom.css"],
       logo: {
         light: "/src/assets/svebcomponents_logo.svg",
         dark: "/src/assets/svebcomponents_logo.svg",
@@ -49,19 +49,14 @@ export default defineConfig({
             },
             { label: "@svebcomponents/ssr", slug: "packages/ssr" },
             { label: "@svebcomponents/utils", slug: "packages/utils" },
-          ],
-        },
-        {
-          label: "Maintainers",
-          items: [
             {
-              label: "Internal Config Packages",
+              label: "@svebcomponents internals",
               slug: "maintainers/config-packages",
             },
           ],
         },
         {
-          label: "Migration",
+          label: "Release Notes",
           items: [
             {
               label: "@svebcomponents/build",
