@@ -20,7 +20,8 @@ The template gives you a small pnpm workspace:
 
 ## Example Component
 
-Let's take a look at the example component: `components/example-component/src/ExampleComponent.svelte`.
+Take a look at the example component in
+`components/example-component/src/ExampleComponent.svelte`:
 
 ```svelte
 <script lang="ts">
@@ -38,13 +39,16 @@ Let's take a look at the example component: `components/example-component/src/Ex
 </button>
 ```
 
-If you know svelte 5, there is literally nothing unfamiliar in here.
+If you know Svelte 5, there is nothing unfamiliar here. It is a regular Svelte
+component with typed props.
 
 ```ts
 increments: number;
 ```
 
-The type annotation is enough information for `@svebcomponents/auto-options` to generate the custom element prop metadata Svelte needs later, when the `increments` HTML attributes has to be converted from string to number.
+The type annotation is enough information for `@svebcomponents/auto-options`
+to generate the prop metadata Svelte needs to convert the `increments`
+attribute from a string to a number.
 
 ## Component Entrypoint
 
@@ -62,34 +66,48 @@ if (!customElements.get("example-component") && "element" in ExampleComponent) {
   );
 }
 ```
+
 > [!INFO]
 > When Svelte compiles a component as a custom element, it exposes the constructor as `Component.element`.
 
 > [!NOTE]
-> Usually svelte immediately registers the component with the custom element registry, but `svebcomponents` makes this explicit allowing you to tailor registration to your needs.
+> Svelte can register a custom element through `<svelte:options>`.
+> Svebcomponents keeps registration in the entrypoint instead, so you can tailor it to your needs.
 
 ## Package Exports
 
-The `exports` field of your component's `package.json` tells consumers  where the web component, and, if you want to opt into the experimental SSR path, the renderer live.
+The `exports` field of your component's `package.json` tells consumers where the custom element lives:
 
 ```json
 {
   "exports": {
     ".": {
-      "import": "./dist/client/index.js"
-    },
-    "./ssr": {
-      "import": "./dist/server/ssr.js"
+      "types": "./dist/client/index.d.ts",
+      "svelte": "./dist/client-svelte/index.js",
+      "default": "./dist/client/index.js"
     }
   }
 }
 ```
 
-This declaration doubles as your config, as the `svebcomponents` CLI reads it to infer which components it has to build
+This declaration also doubles as build configuration. The `svebcomponents`
+CLI maps `dist/client/index.js` back to `src/index.ts` and builds that
+entrypoint. It also creates a lighter Svelte-aware build at
+`dist/client-svelte/index.js`, which Svelte tooling can select through the
+`svelte` condition.
+
+From the component package, run:
+
+```bash
+pnpm build
+```
+
+See [Build](/core-concepts/build/) for the complete inference rules, multiple
+entrypoints, and manual configuration.
 
 ## Using the Component
 
-You use the svelte generated web component just as you would use any other web component:
+You use the generated custom element just like any other web component:
 
 ```svelte
 <script lang="ts">
@@ -100,50 +118,13 @@ You use the svelte generated web component just as you would use any other web c
 ```
 
 > [!WARNING]
-> One footgun here worth calling out.
 > Svelte 5 sets attributes as JavaScript properties under certain conditions.
 > Therefore, you should use JavaScript expressions for non-string values when consuming custom elements from Svelte.
 > In the example above, `increments={5}` passes the number `5`, where writing `increments="5"` passes the string `"5"` from Svelte's JavaScript side, which bypasses the custom element attribute converter.
-> see: https://github.com/sveltejs/svelte/issues/12624
+> See [sveltejs/svelte#12624](https://github.com/sveltejs/svelte/issues/12624).
 
-## SSR Setup
+## What Next?
 
-The template also showcases the experimental SSR path, because that is part of where this project is trying to go.
-
-> [!DANGER]
-> Please do not use SSR in production as it is still in an experimental stage
-
-
-In `apps/svelte-kit/vite.config.ts`, the SvelteKit adds the Svebcomponents Vite transform plugin:
-
-```ts
-import { defineConfig } from "vite";
-import { sveltekit } from "@sveltejs/kit/vite";
-import svebcomponents from "@svebcomponents/ssr/vite";
-
-export default defineConfig({
-  plugins: [svebcomponents(), sveltekit()],
-});
-```
-
-In `apps/svelte-kit/src/hooks.server.ts`, it registers the component renderer:
-
-```ts
-import { ElementRendererRegistry } from "@svebcomponents/ssr";
-import ExampleComponentRenderer from "@svebcomponents/example-component/ssr";
-import type { Handle } from "@sveltejs/kit";
-
-ElementRendererRegistry.set("example-component", ExampleComponentRenderer);
-
-export const handle: Handle = async ({ event, resolve }) => {
-  return await resolve(event);
-};
-```
-
-This registration step is telling the server: "when you see `<example-component>`, this is the renderer that knows what to do with it."
-
-## Next Steps
-
-- Read [Core Concepts](/core-concepts/).
-- Read [`@svebcomponents/build`](/packages/build/) for package export inference and manual config.
-- Read [`@svebcomponents/auto-options`](/packages/auto-options/) for supported prop shapes and manual overrides.
+- Read [Build](/core-concepts/build/) to understand entrypoints and package export inference.
+- Read [Auto-options](/core-concepts/auto-options/) to understand prop and attribute conversion.
+- Read [SSR](/core-concepts/ssr/) when you want to explore server rendering.

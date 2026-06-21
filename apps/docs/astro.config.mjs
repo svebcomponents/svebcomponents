@@ -4,6 +4,7 @@ import starlight from "@astrojs/starlight";
 
 // https://astro.build/config
 export default defineConfig({
+  site: "https://svebcomponents.dev",
   integrations: [
     starlight({
       title: "svebcomponents",
@@ -25,7 +26,17 @@ export default defineConfig({
           items: [
             { label: "Introduction", slug: "introduction" },
             { label: "Getting Started", slug: "getting-started" },
-            { label: "Core Concepts", slug: "core-concepts" },
+            {
+              label: "Core Concepts",
+              items: [
+                { label: "Build", slug: "core-concepts/build" },
+                {
+                  label: "Auto-options",
+                  slug: "core-concepts/auto-options",
+                },
+                { label: "SSR", slug: "core-concepts/ssr" },
+              ],
+            },
           ],
         },
         {

@@ -1,31 +1,38 @@
 ---
 title: Introduction
-description: Start from the Svebcomponents template and build your first Svelte custom element package.
+description: Why Svebcomponents exists and which parts of the Svelte custom element workflow it improves.
 ---
 
-While web components are are the best encapsulation tool the web has to offer, and as such are a vital addition to every developers toolbelt they unfortunately come with many warts.
-The authoring experience of custom elements in JavaScript is one of them. Instead of the declarative approach of modern frameworks, that allow you to describe **what you want**, the imperative platform APIs require you to instead enumerate the steps of **how to get to what you want**.
-Svelte's template language offers a more ergonomic way of building web components - allowing developers to set custom elements as the compile target for Svelte's compiler.
-However, even though far superior to handwriting custom elements, the Svelte story to creating web components is not without its issues either:
+Web components are one of the best encapsulation tools the web platform has to
+offer, but authoring custom elements in JavaScript still comes with plenty of
+warts.
 
-- boilerplate heavy
-  - svelte requires a lengthy `<svelte:options>` configuration to wire up attributes and component props
-- hard to configure a build pipeline
-  - SvelteKit ignores the web component use case entirely, requiring users to write their own build pipelines with rollup
-- no support for SSR
-  - with the declarative shadow DOM API, it has, in theory, become possible to render web components on the server. In practice however, almost no frameworks (apart from Lit) offer support for it.
+Instead of the declarative approach used by modern frameworks, where you
+describe **what you want**, the platform APIs often require you to enumerate
+**how to get there**.
 
-> [!NOTE]  
-> Watch Theo Steiner's "Ultimate Guide to Building Web Components with Svelte" for a look under the hood of the svelte compiler, a more detailed exploration of current limitations & a teaser for how `svebcomponents` attempts to solve these issues
-> https://www.youtube.com/watch?v=lDWfdfTH3e8
+Svelte's template language offers a more ergonomic way to build web
+components by compiling Svelte components into custom elements. Even so, the
+Svelte custom element workflow has a few rough edges:
 
-`svebcomponents` is an attempt at solving the above issues, making web components first class citizens of the Svelte ecosystem:
+- **Boilerplate-heavy:** Svelte requires `<svelte:options>` configuration to
+  connect attributes and component props.
+- **Awkward build setup:** SvelteKit does not provide a packaging workflow for
+  custom element libraries, leaving authors to assemble their own build
+  pipeline.
+- **No built-in SSR path:** Declarative shadow DOM makes server-rendered web
+  components possible, but few frameworks provide support for it.
 
+> [!NOTE]
+> Watch [Theo Steiner's "Ultimate Guide to Building Web Components with Svelte"](https://www.youtube.com/watch?v=lDWfdfTH3e8)
+> for a look under the hood of the Svelte compiler, a deeper exploration of
+> current limitations, and a preview of how Svebcomponents approaches them.
 
-- ~boilerplate heavy~
-  - configuration is automatically inferred from TypeScript
-- ~hard to configure a build pipeline~
-  - `sveltekit` CLI makes build configuration as simple as defining exports in your `package.json`
-- ~no support for SSR~
-  - *experimental* support for building server-side renderable web components and a vite plugin to enable your server to actually render them
+Svebcomponents tackles those three problems:
 
+- [Auto-options](/core-concepts/auto-options/) infers custom element prop
+  configuration from TypeScript.
+- [Build](/core-concepts/build/) makes package configuration as simple as
+  defining exports in `package.json`.
+- [SSR](/core-concepts/ssr/) provides experimental support for building and
+  consuming server-renderable custom elements.
