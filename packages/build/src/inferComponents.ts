@@ -3,6 +3,13 @@ import { defineConfig, DefineConfigOptions } from "./index.js";
 import { existsSync } from "node:fs";
 import { type Options } from "tsdown";
 
+type ExportValue = {
+  types?: string;
+  svelte?: string;
+  import?: string;
+  default?: string;
+};
+
 const resolveSvebcomponentEntryPoint = (
   entryPath: string,
   type: "client" | "server",
@@ -32,14 +39,11 @@ export const inferComponents = (packageJson: unknown): Options[] => {
   ) {
     return [];
   }
-  const exports = packageJson.exports as Record<
-    string,
-    Record<"import", string>
-  >;
+  const exports = packageJson.exports as Record<string, ExportValue>;
   const components: (DefineConfigOptions | undefined)[] = Object.entries(
     packageJson.exports,
   ).map(([key, value]) => {
-    const esmPath = value["import"];
+    const esmPath = value["default"] ?? value["import"];
     // we skip all entries that do not point to dist/client
     if (typeof esmPath !== "string" || !esmPath.includes("dist/client")) {
       return undefined;
@@ -52,11 +56,16 @@ export const inferComponents = (packageJson: unknown): Options[] => {
       entry,
       outDir,
     };
+    const sveltePath = value["svelte"];
+    if (typeof sveltePath === "string") {
+      config.svelteOutDir = path.normalize(path.dirname(sveltePath));
+    }
     const ssrExportDeclaration = `${key}/ssr`;
     const ssr = ssrExportDeclaration in exports;
     config.ssr = ssr;
     if (ssr) {
-      const ssrPath = exports[ssrExportDeclaration]?.["import"];
+      const ssrExport = exports[ssrExportDeclaration];
+      const ssrPath = ssrExport?.["default"] ?? ssrExport?.["import"];
       if (typeof ssrPath !== "string") {
         throw new Error(
           "[svebcomponents]: could not find expected ESM ssr export.",
@@ -64,6 +73,11 @@ export const inferComponents = (packageJson: unknown): Options[] => {
       }
       const ssrOutDir = path.dirname(ssrPath);
       config.ssrOutDir = path.normalize(ssrOutDir);
+
+      const ssrSveltePath = ssrExport?.["svelte"];
+      if (typeof ssrSveltePath === "string") {
+        config.ssrSvelteOutDir = path.normalize(path.dirname(ssrSveltePath));
+      }
     }
     return config;
   });

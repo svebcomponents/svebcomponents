@@ -4210,8 +4210,8 @@ packages:
   vscode-languageserver-protocol@3.17.5:
     resolution: {integrity: sha512-mb1bvRJN8SVznADSGWM9u/b07H7Ecg0I3OgXDuLdn307rl/J3A9YD6/eYOssqhecL27hK1IPZAsaqh00i/Jljg==}
 
-  vscode-languageserver-protocol@3.18.0:
-    resolution: {integrity: sha512-Zdz+kJ12Iz6tc11xfZyEo501bBATHXrCjmMfnaR3pMnf1CoqZBKIynba3P+/bi9VEdrMbNtAVKYpKhbODvqy+Q==}
+  vscode-languageserver-protocol@3.18.1:
+    resolution: {integrity: sha512-RTiiVHdpxpYcJVI5sq6S5TLjQ4WDR/rBrIWru+kPXe6sGQ9PFQ3GamrTKLvPqbR4ylr1SoodhmcqbFII0WXVuw==}
 
   vscode-languageserver-textdocument@1.0.12:
     resolution: {integrity: sha512-cxWNPesCnQCcMPeenjKKsOCKQZ/L6Tv19DTRIGuLWe32lyzWhihGVJ/rcckZXJxfdKCFvRLS3fpBIsV/ZGX4zA==}
@@ -5754,14 +5754,14 @@ snapshots:
       path-browserify: 1.0.1
       request-light: 0.7.0
       vscode-languageserver: 9.0.1
-      vscode-languageserver-protocol: 3.18.0
+      vscode-languageserver-protocol: 3.18.1
       vscode-languageserver-textdocument: 1.0.12
       vscode-uri: 3.1.0
 
   '@volar/language-service@2.4.28':
     dependencies:
       '@volar/language-core': 2.4.28
-      vscode-languageserver-protocol: 3.18.0
+      vscode-languageserver-protocol: 3.18.1
       vscode-languageserver-textdocument: 1.0.12
       vscode-uri: 3.1.0
 
@@ -8759,7 +8759,7 @@ snapshots:
       vscode-jsonrpc: 8.2.0
       vscode-languageserver-types: 3.17.5
 
-  vscode-languageserver-protocol@3.18.0:
+  vscode-languageserver-protocol@3.18.1:
     dependencies:
       vscode-jsonrpc: 9.0.0
       vscode-languageserver-types: 3.18.0
