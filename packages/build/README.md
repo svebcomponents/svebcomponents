@@ -129,14 +129,14 @@ Set `ssr: false` to emit only the browser custom element build.
 
 ## Options
 
-| Option            | Default          | Description                                                        |
-| ----------------- | ---------------- | ------------------------------------------------------------------ |
-| `entry`           | `"src/index.ts"` | Entry file for the Svelte custom element package.                  |
+| Option            | Default          | Description                                                       |
+| ----------------- | ---------------- | ----------------------------------------------------------------- |
+| `entry`           | `"src/index.ts"` | Entry file for the Svelte custom element package.                 |
 | `outDir`          | `"dist/client"`  | Output directory for the standalone browser custom element build. |
-| `svelteOutDir`    | `undefined`      | Output directory for the Svelte-aware browser build.               |
-| `ssr`             | `true`           | Whether to generate the SSR build.                                 |
-| `ssrOutDir`       | `"dist/server"`  | Output directory for the standalone SSR build.                     |
-| `ssrSvelteOutDir` | `undefined`      | Output directory for the Svelte-aware SSR build.                   |
+| `svelteOutDir`    | `undefined`      | Output directory for the Svelte-aware browser build.              |
+| `ssr`             | `true`           | Whether to generate the SSR build.                                |
+| `ssrOutDir`       | `"dist/server"`  | Output directory for the standalone SSR build.                    |
+| `ssrSvelteOutDir` | `undefined`      | Output directory for the Svelte-aware SSR build.                  |
 
 ## Build Pipeline
 
