@@ -7,6 +7,17 @@ Building a one-off web component with Svelte is as easy as setting `customElemen
 However, once you get into building a library of components boilerplate and configuration quickly add up and the developer experience is not as good as it could be.
 `Svebcomponents` is a collection of tools that aim to smoothen the rough edges of building web components with Svelte.
 
+## Documentation
+
+Read the documentation at [svebcomponents.dev](https://svebcomponents.dev/).
+The [Getting Started guide](https://svebcomponents.dev/getting-started/) walks
+through building and consuming your first component package.
+
+If your consumers use Svelte, see the
+[Svelte conditional exports guide](https://svebcomponents.dev/core-concepts/build/#svelte-conditional-exports)
+to learn how they can share the host application's Svelte runtime, including
+the version-compatibility tradeoff.
+
 ## Packages
 
 - [`@svebcomponents/build`]

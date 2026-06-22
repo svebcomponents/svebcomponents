@@ -1,0 +1,162 @@
+---
+title: Build
+description: How Svebcomponents turns Svelte components into distributable custom element packages.
+---
+
+`@svebcomponents/build` provides the build pipeline around a Svelte custom
+element package. It compiles Svelte for the browser, runs
+`@svebcomponents/auto-options`, and emits TypeScript declarations alongside
+the JavaScript output.
+
+## Component Entrypoints
+
+Each custom element needs an entrypoint that imports the Svelte component and
+registers its generated constructor:
+
+```ts
+import Component from "./Component.svelte";
+
+if (!customElements.get("favorite-number") && Component.element) {
+  customElements.define("favorite-number", Component.element);
+}
+
+export default Component;
+```
+
+Consumers import this module for the side effect of defining
+`<favorite-number>`.
+
+Keeping registration in a TypeScript entrypoint also gives you control over
+the tag name, duplicate-registration guards, and any setup the component needs
+before registration.
+
+## Zero-config Builds
+
+For the common case, the CLI infers component entrypoints from the `exports`
+field in `package.json`:
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./dist/client/index.d.ts",
+      "svelte": "./dist/client-svelte/index.js",
+      "default": "./dist/client/index.js"
+    }
+  }
+}
+```
+
+The inference follows three rules:
+
+1. The export's `default` or `import` condition must contain `dist/client`.
+2. The output path is mapped from `dist/client` to `src`.
+3. If that exact source file does not exist, the CLI looks for the same path
+   with a `.ts` extension.
+
+In this example, `./dist/client/index.js` resolves to `src/index.ts`.
+
+## Svelte Conditional Exports
+
+The standalone `default` build includes the Svelte runtime so it can work in
+applications that do not use Svelte.
+
+When the package is consumed by a Svelte application, bundling another copy
+of the runtime is often unnecessary. Adding a `svelte` condition asks the CLI
+to create a second build that leaves `svelte` and `svelte/*` imports external:
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./dist/client/index.d.ts",
+      "svelte": "./dist/client-svelte/index.js",
+      "default": "./dist/client/index.js"
+    }
+  }
+}
+```
+
+Svelte-aware tooling such as SvelteKit and `@sveltejs/vite-plugin-svelte` can
+select `dist/client-svelte/index.js` and share the host application's Svelte
+runtime. Other consumers select the standalone `default` build.
+
+:::caution
+The Svelte-aware build relies on Svelte runtime internals. Those internals do
+not guarantee compatibility across patch or minor releases. Only use this
+optimization when the component package and consuming application are built
+with the same Svelte version. Keep the standalone `default` export as the safe
+fallback for other consumers.
+:::
+
+Every matching export becomes a component entrypoint, so a package can expose
+more than one custom element:
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./dist/client/index.d.ts",
+      "svelte": "./dist/client-svelte/index.js",
+      "default": "./dist/client/index.js"
+    },
+    "./button": {
+      "types": "./dist/client/button.d.ts",
+      "svelte": "./dist/client-svelte/button.js",
+      "default": "./dist/client/button.js"
+    }
+  }
+}
+```
+
+## Optional SSR Output
+
+SSR is enabled per component by adding an export with the same key followed by
+`/ssr`:
+
+```json
+{
+  "exports": {
+    "./button": {
+      "types": "./dist/client/button.d.ts",
+      "svelte": "./dist/client-svelte/button.js",
+      "default": "./dist/client/button.js"
+    },
+    "./button/ssr": {
+      "types": "./dist/server/button-ssr.d.ts",
+      "svelte": "./dist/server-svelte/button-ssr.js",
+      "default": "./dist/server/button-ssr.js"
+    }
+  }
+}
+```
+
+The browser export defines the custom element. The matching SSR export
+provides the renderer that a server application can register.
+
+SSR remains experimental. See [SSR](/core-concepts/ssr/) before enabling it.
+
+## Manual Configuration
+
+Package exports are the recommended configuration for straightforward
+packages. When you need different source paths or output directories, create
+`svebcomponents.config.ts`:
+
+```ts
+import { defineConfig } from "@svebcomponents/build";
+
+export default defineConfig({
+  entry: "src/index.ts",
+  outDir: "dist/client",
+  svelteOutDir: "dist/client-svelte",
+  ssr: true,
+  ssrOutDir: "dist/server",
+  ssrSvelteOutDir: "dist/server-svelte",
+});
+```
+
+`svelteOutDir` enables the Svelte-aware browser build.
+`ssrSvelteOutDir` does the same for the optional server renderer.
+
+For installation, every configuration option, and the exact generated
+outputs, see the [`@svebcomponents/build` reference](/packages/build/).

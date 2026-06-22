@@ -1,12 +1,13 @@
-// @ts-check
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
 // https://astro.build/config
 export default defineConfig({
+  site: "https://svebcomponents.dev",
   integrations: [
     starlight({
       title: "svebcomponents",
+      customCss: ["./src/styles/custom.css"],
       logo: {
         light: "/src/assets/svebcomponents_logo.svg",
         dark: "/src/assets/svebcomponents_logo.svg",
@@ -23,9 +24,19 @@ export default defineConfig({
         {
           label: "Documentation",
           items: [
-            // Each item here is one entry in the navigation menu.
+            { label: "Introduction", slug: "introduction" },
             { label: "Getting Started", slug: "getting-started" },
-            { label: "Core Concepts", slug: "core-concepts" },
+            {
+              label: "Core Concepts",
+              items: [
+                { label: "Build", slug: "core-concepts/build" },
+                {
+                  label: "Auto-options",
+                  slug: "core-concepts/auto-options",
+                },
+                { label: "SSR", slug: "core-concepts/ssr" },
+              ],
+            },
           ],
         },
         {
@@ -38,19 +49,14 @@ export default defineConfig({
             },
             { label: "@svebcomponents/ssr", slug: "packages/ssr" },
             { label: "@svebcomponents/utils", slug: "packages/utils" },
-          ],
-        },
-        {
-          label: "Maintainers",
-          items: [
             {
-              label: "Internal Config Packages",
+              label: "@svebcomponents internals",
               slug: "maintainers/config-packages",
             },
           ],
         },
         {
-          label: "Migration",
+          label: "Release Notes",
           items: [
             {
               label: "@svebcomponents/build",

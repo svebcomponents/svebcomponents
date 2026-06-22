@@ -5,11 +5,25 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build"
+    "build": "astro build",
+    "check": "astro check",
+    "lint": "pnpm /^lint:.*/",
+    "lint:eslint": "eslint .",
+    "lint:format": "prettier --check .",
+    "fix": "pnpm /^fix:.*/",
+    "fix:eslint": "eslint . --fix",
+    "fix:format": "prettier --write --ignore-unknown ."
   },
   "dependencies": {
     "@astrojs/starlight": "^0.36.2",
     "astro": "^5.6.1",
     "sharp": "^0.34.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "catalog:",
+    "@svebcomponents/eslint-config": "workspace:*",
+    "@svebcomponents/prettier-config": "workspace:*",
+    "@svebcomponents/typescript-config": "workspace:*",
+    "typescript": "catalog:"
   }
 }

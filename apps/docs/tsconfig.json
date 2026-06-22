@@ -1,5 +1,5 @@
 {
-  "extends": "astro/tsconfigs/strict",
-  "include": [".astro/types.d.ts", "**/*"],
+  "extends": "@svebcomponents/typescript-config/base",
+  "include": [".astro/types.d.ts", "astro.config.js", "src/**/*"],
   "exclude": ["dist"]
 }
