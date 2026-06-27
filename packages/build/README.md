@@ -67,11 +67,13 @@ reuse the host application's runtime.
 Other consumers fall back to `default`, which includes the Svelte runtime and
 can run outside Svelte applications.
 
-This optimization comes with a compatibility risk: the Svelte runtime is an
-implementation detail and does not guarantee compatibility even between patch
-or minor versions. The component package and host application should be built
-with the same Svelte version when using the `svelte` export. Consumers that
-cannot guarantee that should use the standalone `default` build.
+This optimization comes with a compatibility risk: the Svelte runtime internals
+are versioned with Svelte and its compiler, but they are not a semver-stable
+public API. A patch or minor compiler release can change the runtime contract in
+ways that break previously compiled output. The component package and host
+application should be built with the same Svelte version when using the `svelte`
+export. Consumers that cannot guarantee that should use the standalone
+`default` build.
 
 ## Multiple Components
 
