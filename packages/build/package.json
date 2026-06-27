@@ -1,6 +1,11 @@
 {
   "name": "@svebcomponents/build",
   "version": "0.0.8",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/svebcomponents/svebcomponents",
+    "directory": "packages/build"
+  },
   "type": "module",
   "bin": {
     "svebcomponents": "./bin.js"
