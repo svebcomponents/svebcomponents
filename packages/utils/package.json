@@ -1,6 +1,11 @@
 {
   "name": "@svebcomponents/utils",
   "version": "0.0.2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/svebcomponents/svebcomponents",
+    "directory": "packages/utils"
+  },
   "type": "module",
   "scripts": {
     "dev": "tsc --watch",
