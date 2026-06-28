@@ -10,6 +10,7 @@ import {
 import { SvelteCustomElementRenderer } from "./svelteCustomElementRenderer";
 import { render } from "svelte/server";
 import type { RenderInfo } from "@lit-labs/ssr";
+import { SvelteCustomElementPropType } from "./html";
 
 // Mock svelte/server
 vi.mock("svelte/server", () => ({
@@ -34,6 +35,7 @@ describe("SvelteCustomElementRenderer", () => {
       attributes: {},
       attributeChangedCallback: vi.fn(),
       $$d: {},
+      $$p_d: {},
       $$c: mockSvelteComponent,
     }));
 
@@ -69,6 +71,7 @@ describe("SvelteCustomElementRenderer", () => {
       attributes: {},
       attributeChangedCallback: vi.fn(),
       $$d: {},
+      $$p_d: {},
     };
     mockClientElementCtor.mockReturnValue(mockElement);
 
@@ -92,6 +95,7 @@ describe("SvelteCustomElementRenderer", () => {
       attributes: {},
       attributeChangedCallback: vi.fn(),
       $$d: {},
+      $$p_d: {},
     };
     mockClientElementCtor.mockReturnValue(mockElement);
 
@@ -111,12 +115,10 @@ describe("SvelteCustomElementRenderer", () => {
 
   test("renders attributes correctly", () => {
     const mockElement = {
-      attributes: {
-        "data-test": "value1",
-        "aria-label": "value2",
-      },
+      attributes: {},
       attributeChangedCallback: vi.fn(),
       $$d: {},
+      $$p_d: {},
     };
     mockClientElementCtor.mockReturnValue(mockElement);
 
@@ -126,19 +128,100 @@ describe("SvelteCustomElementRenderer", () => {
       tagName,
     );
 
+    renderer.setAttribute("data-test", "value1");
+    renderer.setAttribute("aria-label", "value2");
     const attributes = Array.from(renderer.renderAttributes());
 
     expect(attributes).toContain(' data-test="value1"');
     expect(attributes).toContain(' aria-label="value2"');
   });
 
-  // TODO: test if attributes are escaped correctly?
+  test("escapes attribute values", () => {
+    const mockElement = {
+      attributes: {},
+      attributeChangedCallback: vi.fn(),
+      $$d: {},
+      $$p_d: {},
+    };
+    mockClientElementCtor.mockReturnValue(mockElement);
+
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+    );
+
+    renderer.setAttribute("data-test", `"><img src=x onerror=alert('xss')>`);
+    const attributes = Array.from(renderer.renderAttributes());
+
+    expect(attributes).toContain(
+      ` data-test="&quot;>&lt;img src=x onerror=alert('xss')>"`,
+    );
+  });
+
+  test("rejects invalid attribute names", () => {
+    const mockElement = {
+      attributes: {},
+      attributeChangedCallback: vi.fn(),
+      $$d: {},
+      $$p_d: {},
+    };
+    mockClientElementCtor.mockReturnValue(mockElement);
+
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+    );
+
+    renderer.setAttribute(`data-test" onclick="alert(1)`, "value");
+
+    expect(() => Array.from(renderer.renderAttributes())).toThrow(
+      'Invalid SSR attribute name: data-test" onclick="alert(1)',
+    );
+  });
+
+  test("reflects configured properties to attributes", () => {
+    const mockElement = {
+      attributes: {},
+      attributeChangedCallback: vi.fn(),
+      $$d: {},
+      $$p_d: {
+        enabled: {
+          attribute: "enabled",
+          reflect: true,
+          type: SvelteCustomElementPropType.Boolean,
+        },
+        count: {
+          attribute: "count",
+          reflect: true,
+          type: SvelteCustomElementPropType.Number,
+        },
+      },
+    };
+    mockClientElementCtor.mockReturnValue(mockElement);
+
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+    );
+
+    renderer.setProperty("enabled", true);
+    renderer.setProperty("count", 5);
+
+    expect(Array.from(renderer.renderAttributes())).toStrictEqual([
+      " enabled",
+      ' count="5"',
+    ]);
+  });
 
   test("sets properties to data property", () => {
     const mockElement = {
       attributes: {},
       attributeChangedCallback: vi.fn(),
       $$d: {},
+      $$p_d: {},
     };
     mockClientElementCtor.mockReturnValue(mockElement);
 
@@ -160,6 +243,7 @@ describe("SvelteCustomElementRenderer", () => {
       attributes: {},
       attributeChangedCallback: vi.fn(),
       $$d: { prop1: "value1", prop2: "value2" },
+      $$p_d: {},
     };
     mockClientElementCtor.mockReturnValue(mockElement);
 
@@ -192,6 +276,7 @@ describe("SvelteCustomElementRenderer", () => {
       attributes: {},
       attributeChangedCallback: vi.fn(),
       $$d: {},
+      $$p_d: {},
     };
     mockClientElementCtor.mockReturnValue(mockElement);
 

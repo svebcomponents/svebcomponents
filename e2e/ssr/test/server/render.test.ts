@@ -10,8 +10,8 @@ import SsrComponent from "./SsrComponent.svelte";
 
 const expectedRenderResult = {
   head: "",
-  body: '<!--[--><!--[!--><p>server</p> <!----><simple-component><template shadowrootmode="open"><!--164jyg1--><!--[--><div><h1>SSR Test</h1> <p id="count">Count: number-5</p> <p id="enabled">Enabled: boolean-true</p></div><!--]--><!----></template> <!----><!----></simple-component><!----><!--]--><!--]-->',
-  html: '<!--[--><!--[!--><p>server</p> <!----><simple-component><template shadowrootmode="open"><!--164jyg1--><!--[--><div><h1>SSR Test</h1> <p id="count">Count: number-5</p> <p id="enabled">Enabled: boolean-true</p></div><!--]--><!----></template> <!----><!----></simple-component><!----><!--]--><!--]-->',
+  body: '<!--[--><!--[!--><p>server</p> <!--1mdqziy--><simple-component title="SSR Test" count="5" enabled><!----> <template shadowrootmode="open"><!--164jyg1--><!--[--><div><h1>SSR Test</h1> <p id="count">Count: number-5</p> <p id="enabled">Enabled: boolean-true</p></div><!--]--><!----></template> <!----> <!--1llhvfc--></simple-component><!----><!--]--><!--]-->',
+  html: '<!--[--><!--[!--><p>server</p> <!--1mdqziy--><simple-component title="SSR Test" count="5" enabled><!----> <template shadowrootmode="open"><!--164jyg1--><!--[--><div><h1>SSR Test</h1> <p id="count">Count: number-5</p> <p id="enabled">Enabled: boolean-true</p></div><!--]--><!----></template> <!----> <!--1llhvfc--></simple-component><!----><!--]--><!--]-->',
 };
 
 test("rendering svelte", () => {
@@ -69,7 +69,9 @@ test("does not turn untrusted host attribute values into markup", () => {
   });
 
   expect(res.html).not.toContain("<img");
-  if (res.html.includes("data-test=")) {
-    expect(res.html).toContain("&lt;img src=x onerror=alert(1)>");
-  }
+  // Confirms the hostile attribute payload is emitted as escaped attribute
+  // content, not parsed as markup or as additional attributes.
+  expect(res.html).toContain(
+    'data-test="&quot;>&lt;img src=x onerror=alert(1)>"',
+  );
 });

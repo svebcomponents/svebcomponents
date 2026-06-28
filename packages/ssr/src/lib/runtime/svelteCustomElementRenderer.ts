@@ -6,6 +6,12 @@ import {
 import type { Component } from "svelte";
 import { render } from "svelte/server";
 
+import {
+  propValueToAttributeValue,
+  renderSsrAttribute,
+  type SvelteCustomElementPropDefinition,
+} from "./html.js";
+
 export interface SvelteClientCustomElement {
   new (): Omit<SvelteClientCustomElement, "new">;
   attributes: Record<string, string>;
@@ -15,6 +21,11 @@ export interface SvelteClientCustomElement {
     newValue: string,
   ) => void;
   ["$$d"]: Record<string, unknown>;
+  /**
+   * Svelte's generated custom-element prop definition map. It tells us which
+   * component props should reflect to host attributes during SSR.
+   */
+  ["$$p_d"]: Record<string, SvelteCustomElementPropDefinition>;
   ["$$c"]: Component;
 }
 
@@ -23,6 +34,7 @@ export class SvelteCustomElementRenderer
   extends ElementRenderer
   implements ElementRenderer
 {
+  private readonly ssrAttributes = new Map<string, string>();
   private readonly svelteClientCustomElement: SvelteClientCustomElement;
 
   constructor(
@@ -42,18 +54,20 @@ export class SvelteCustomElementRenderer
       // maybe do something to reflect the prop to the attributes, perhaps 'this.$$me' does this out of the box for us?
       return;
     }
+    name = name.toLowerCase();
+    this.ssrAttributes.set(name, value);
     this.svelteClientCustomElement.attributeChangedCallback(name, value, value);
   }
 
   override *renderAttributes(): RenderResult {
-    const attributes = this.svelteClientCustomElement.attributes;
-    for (const [name, value] of Object.entries(attributes)) {
-      yield ` ${name}="${value}"`;
+    for (const [name, value] of this.ssrAttributes) {
+      yield renderSsrAttribute(name, value);
     }
   }
 
   override setProperty(name: string, value: unknown) {
     this.svelteClientCustomElement.$$d[name] = value;
+    this.reflectPropertyToAttribute(name, value);
   }
 
   override *renderShadow(_renderInfo: RenderInfo): RenderResult | undefined {
@@ -62,5 +76,22 @@ export class SvelteCustomElementRenderer
     });
     yield head;
     yield body;
+  }
+
+  private reflectPropertyToAttribute(name: string, value: unknown) {
+    const propDefinition = this.svelteClientCustomElement.$$p_d[name];
+    if (!propDefinition?.reflect) {
+      return;
+    }
+
+    // This mirrors Svelte's default observed attribute name when no explicit
+    // attribute is configured for a custom-element prop.
+    const attributeName = propDefinition.attribute ?? name.toLowerCase();
+    const attributeValue = propValueToAttributeValue(value, propDefinition);
+    if (attributeValue == null) {
+      this.ssrAttributes.delete(attributeName);
+      return;
+    }
+    this.ssrAttributes.set(attributeName, attributeValue);
   }
 }
