@@ -1,0 +1,27 @@
+{
+  "name": "@svebcomponents/e2e.conditional-export-host",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "build": "svebcomponents",
+    "test": "vitest run"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/client/index.d.ts",
+      "svelte": "./dist/client-svelte/index.js",
+      "default": "./dist/client/index.js"
+    }
+  },
+  "devDependencies": {
+    "svelte": "catalog:",
+    "@sveltejs/vite-plugin-svelte": "catalog:",
+    "@svebcomponents/build": "workspace:*",
+    "@svebcomponents/typescript-config": "workspace:*",
+    "@vitest/browser": "catalog:",
+    "vitest": "catalog:",
+    "playwright": "catalog:",
+    "typescript": "catalog:"
+  }
+}
