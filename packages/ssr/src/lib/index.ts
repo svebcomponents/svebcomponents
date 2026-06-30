@@ -2,3 +2,4 @@
 import "./runtime/installShim.js";
 export * from "./runtime/rendererRegistry.js";
 export * from "./runtime/svelteCustomElementRenderer.js";
+export * from "./runtime/vueCustomElementRenderer.js";
