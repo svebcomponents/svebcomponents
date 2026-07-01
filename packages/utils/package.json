@@ -3,7 +3,7 @@
   "version": "0.0.2",
   "repository": {
     "type": "git",
-    "url": "https://github.com/svebcomponents/svebcomponents",
+    "url": "git+https://github.com/svebcomponents/svebcomponents.git",
     "directory": "packages/utils"
   },
   "type": "module",
