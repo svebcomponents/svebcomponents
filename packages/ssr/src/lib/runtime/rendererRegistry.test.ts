@@ -118,4 +118,22 @@ describe("ElementRendererRegistry", () => {
 
     expect(retrieved).toBe(mockRenderer);
   });
+
+  test("has() searches prototype chain for renderer registered on base class", () => {
+    class BaseElement {}
+    class ExtendedElement extends BaseElement {}
+
+    const mockRenderer = class {} as ElementRendererCtor;
+
+    ElementRendererRegistry.set(BaseElement, mockRenderer);
+
+    expect(ElementRendererRegistry.has(ExtendedElement)).toBe(true);
+  });
+
+  test("has() returns false for unregistered classes", () => {
+    class UnregisteredBase {}
+    class UnregisteredExtended extends UnregisteredBase {}
+
+    expect(ElementRendererRegistry.has(UnregisteredExtended)).toBe(false);
+  });
 });
