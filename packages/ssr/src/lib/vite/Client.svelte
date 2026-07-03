@@ -14,7 +14,6 @@
   }: WebComponentWrapperProps = $props();
 </script>
 
-<p>client</p>
 <svelte:element this={tag} {...props}>
   {@render children?.()}
 </svelte:element>
