@@ -37,6 +37,12 @@ jobs:
       - name: install deps
         run: pnpm install
 
+      - name: install playwright chromium
+        run: pnpm --filter "@svebcomponents/e2e.basic" exec playwright install --with-deps chromium
+
+      - name: test
+        run: pnpm test
+
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@v1

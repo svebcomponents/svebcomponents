@@ -38,3 +38,8 @@ jobs:
       - name: build
         run: pnpm build
 
+      - name: install playwright chromium
+        run: pnpm --filter "@svebcomponents/e2e.basic" exec playwright install --with-deps chromium
+
+      - name: test
+        run: pnpm test
