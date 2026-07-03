@@ -46,6 +46,10 @@ Expose it from your component package:
 
 The browser entrypoint defines the custom element. The SSR entrypoint provides the renderer an app can register on the server.
 
+If the package's Svelte config enables Svelte async rendering, the generated
+`./ssr` renderer can yield async Lit `RenderResult` chunks. Async-capable host
+integrations should use the async Vite wrapper below.
+
 ## App-author Flow
 
 Install the Vite plugin in the consuming app:
@@ -70,6 +74,27 @@ import MyComponentRenderer from "my-component-package/ssr";
 
 ElementRendererRegistry.set("my-component", MyComponentRenderer);
 ```
+
+Async SSR requires the host Svelte compiler to opt into Svelte's experimental
+async mode:
+
+```ts
+export default defineConfig({
+  plugins: [
+    svebcomponentsSsr({ async: true }),
+    svelte({
+      compilerOptions: {
+        experimental: {
+          async: true,
+        },
+      },
+    }),
+  ],
+});
+```
+
+The async wrapper can consume both sync and async renderers. The sync wrapper
+can only consume renderers whose shadow output is fully synchronous.
 
 The app can then render Svelte markup containing the custom element:
 
@@ -135,3 +160,5 @@ The plugin also rewrites plain `slot` attributes inside custom elements to sprea
 - The consuming app must import the browser custom element module and register the matching SSR renderer.
 - Server-side attribute rendering is still incomplete.
 - The Vite plugin currently transforms Svelte files and injects a Svelte wrapper component.
+- Async SSR currently requires Svelte's experimental async compiler mode in the
+  consuming Svelte app.

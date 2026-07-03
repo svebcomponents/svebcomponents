@@ -28,6 +28,10 @@ const checkRenderResult = async (component: Element, props: Props) => {
   const enabled = shadowRoot.querySelector("#enabled");
   assert(enabled);
   expect(enabled.textContent).toBe(`Enabled: boolean-${props.enabled}`);
+
+  const asyncLabel = shadowRoot.querySelector("#async-label");
+  assert(asyncLabel);
+  expect(asyncLabel.textContent).toBe("Async: resolved");
 };
 
 test("web component renders correctly in the browser", async () => {

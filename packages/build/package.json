@@ -43,6 +43,7 @@
     "rolldown": "catalog:"
   },
   "dependencies": {
+    "@sveltejs/load-config": "catalog:",
     "@svebcomponents/auto-options": "workspace:*",
     "@svebcomponents/ssr": "workspace:*",
     "rollup-plugin-svelte": "catalog:",

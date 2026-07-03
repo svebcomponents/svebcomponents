@@ -12,6 +12,17 @@ import {
   type SvelteCustomElementPropDefinition,
 } from "./html.js";
 
+const isPromiseLike = <T>(value: unknown): value is PromiseLike<T> =>
+  typeof value === "object" &&
+  value !== null &&
+  "then" in value &&
+  typeof value.then === "function";
+
+type SvelteRenderResult = {
+  body: string;
+  head: string;
+};
+
 export interface SvelteClientCustomElement {
   new (): Omit<SvelteClientCustomElement, "new">;
   attributes: Record<string, string>;
@@ -71,11 +82,15 @@ export class SvelteCustomElementRenderer
   }
 
   override *renderShadow(_renderInfo: RenderInfo): RenderResult | undefined {
-    const { body, head } = render(this.svelteSsrComponent, {
+    const result = render(this.svelteSsrComponent, {
       props: this.svelteClientCustomElement.$$d,
-    });
-    yield head;
-    yield body;
+    }) as unknown as SvelteRenderResult | PromiseLike<SvelteRenderResult>;
+    if (isPromiseLike<SvelteRenderResult>(result)) {
+      yield Promise.resolve(result).then(({ body, head }) => [head, body]);
+      return;
+    }
+    yield result.head;
+    yield result.body;
   }
 
   private reflectPropertyToAttribute(name: string, value: unknown) {

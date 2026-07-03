@@ -1,6 +1,10 @@
 import svelte from "rollup-plugin-svelte";
 import autoOptions from "@svebcomponents/auto-options";
 import { Options } from "tsdown";
+import {
+  mergeCompilerOptions,
+  type SvelteBuildConfig,
+} from "./svelteConfig.js";
 
 interface SvebcomponentsOptions {
   /**
@@ -15,10 +19,11 @@ interface SvebcomponentsOptions {
    * Whether Svelte runtime imports should be left for Svelte-aware tooling to resolve.
    */
   externalSvelte?: boolean;
+  svelteConfig?: SvelteBuildConfig | undefined;
 }
 
 export const createTsdownConfig = (options: SvebcomponentsOptions) => {
-  const { entry, outDir, externalSvelte = false } = options;
+  const { entry, outDir, externalSvelte = false, svelteConfig } = options;
   return {
     entry,
     outDir,
@@ -28,9 +33,15 @@ export const createTsdownConfig = (options: SvebcomponentsOptions) => {
       autoOptions(),
       svelte({
         emitCss: false,
-        compilerOptions: {
+        ...(svelteConfig?.extensions
+          ? { extensions: svelteConfig.extensions }
+          : {}),
+        ...(svelteConfig?.preprocess
+          ? { preprocess: svelteConfig.preprocess }
+          : {}),
+        compilerOptions: mergeCompilerOptions(svelteConfig?.compilerOptions, {
           customElement: true,
-        },
+        }),
       }),
     ],
   } satisfies Options;

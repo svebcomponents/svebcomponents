@@ -5,8 +5,20 @@ import MagicString from "magic-string";
 
 const WRAPPER_COMPONENT_NAME = "CustomElementWrapper";
 const WRAPPER_SOURCE_PACKAGE = "@svebcomponents/ssr/wrapper-component";
+const ASYNC_WRAPPER_SOURCE_PACKAGE =
+  "@svebcomponents/ssr/async-wrapper-component";
 const WRAPPER_TAG_NAME_PROP = "_tagName";
-const IMPORT_STATEMENT = `import ${WRAPPER_COMPONENT_NAME} from '${WRAPPER_SOURCE_PACKAGE}';\n`;
+
+interface VitePluginSvebcomponentsSsrOptions {
+  /**
+   * Use the async SSR wrapper. Host Svelte apps must enable
+   * `compilerOptions.experimental.async` when this option is true.
+   *
+   * Svelte 6 TODO: revisit this option once async rendering is no longer
+   * configured through `compilerOptions.experimental.async`.
+   */
+  async?: boolean;
+}
 
 /**
  * Svelte 6 TODO: remove this helper once svelte no longer applies special transforms on slot attributes
@@ -60,7 +72,14 @@ const transformSlotAttribute = (
   );
 };
 
-function vitePluginSvebcomponentsSsr(): Plugin {
+function vitePluginSvebcomponentsSsr(
+  options: VitePluginSvebcomponentsSsrOptions = {},
+): Plugin {
+  const wrapperSourcePackage = options.async
+    ? ASYNC_WRAPPER_SOURCE_PACKAGE
+    : WRAPPER_SOURCE_PACKAGE;
+  const importStatement = `import ${WRAPPER_COMPONENT_NAME} from '${wrapperSourcePackage}';\n`;
+
   return {
     name: "vite-plugin-svelte-webcomponent-wrapper",
     enforce: "pre",
@@ -158,9 +177,9 @@ function vitePluginSvebcomponentsSsr(): Plugin {
         const scriptNode = instance;
         if (scriptNode) {
           const scriptTagEnd = code.indexOf(">", scriptNode.start);
-          magicString.appendLeft(scriptTagEnd + 1, IMPORT_STATEMENT);
+          magicString.appendLeft(scriptTagEnd + 1, importStatement);
         } else {
-          magicString.prepend(`<script>\n${IMPORT_STATEMENT}</script>\n`);
+          magicString.prepend(`<script>\n${importStatement}</script>\n`);
         }
       }
 

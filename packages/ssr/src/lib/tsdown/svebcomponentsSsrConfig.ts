@@ -3,6 +3,10 @@ import svelte from "rollup-plugin-svelte";
 
 import { pluginGenerateSsrEntry } from "../rollup/pluginGenerateSsrEntry.js";
 import { pluginOverrideSvelteSsrSlotImplementation } from "../rollup/pluginOverrideSvelteSsrSlotImplementation.js";
+import {
+  mergeCompilerOptions,
+  type SvelteBuildConfig,
+} from "./svelteConfig.js";
 
 interface SvebcomponentsSsrOptions {
   /**
@@ -25,6 +29,7 @@ interface SvebcomponentsSsrOptions {
    * Import path from the generated SSR renderer entrypoint to the client component module.
    */
   clientImportPath?: string;
+  svelteConfig?: SvelteBuildConfig | undefined;
 }
 
 const createSsrTsdownConfig = ({
@@ -33,6 +38,7 @@ const createSsrTsdownConfig = ({
   externalSvelte = false,
   serverImportPath,
   clientImportPath,
+  svelteConfig,
 }: SvebcomponentsSsrOptions) =>
   ({
     entry,
@@ -43,11 +49,17 @@ const createSsrTsdownConfig = ({
       pluginOverrideSvelteSsrSlotImplementation(),
       svelte({
         emitCss: false,
-        compilerOptions: {
+        ...(svelteConfig?.extensions
+          ? { extensions: svelteConfig.extensions }
+          : {}),
+        ...(svelteConfig?.preprocess
+          ? { preprocess: svelteConfig.preprocess }
+          : {}),
+        compilerOptions: mergeCompilerOptions(svelteConfig?.compilerOptions, {
           customElement: false,
           generate: "server",
           css: "injected",
-        },
+        }),
       }),
       pluginGenerateSsrEntry({
         ...(serverImportPath !== undefined ? { serverImportPath } : {}),
