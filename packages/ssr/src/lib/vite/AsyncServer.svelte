@@ -68,8 +68,6 @@
   const rendered = renderCustomElement(tag, props);
 </script>
 
-<p>server</p>
-
 {#if true}
   {@const renderedCustomElement = await rendered}
   <!-- eslint-disable-next-line svelte/no-at-html-tags -- tag name is validated above and attributes are escaped by the renderer -->
