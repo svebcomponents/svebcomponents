@@ -57,8 +57,6 @@
   const closeTag = `</${tag}>`;
 </script>
 
-<p>server</p>
-
 <!-- eslint-disable-next-line svelte/no-at-html-tags -- tag name is validated above and attributes are escaped by the renderer -->
 {@html openTag}
 <template shadowrootmode="open">

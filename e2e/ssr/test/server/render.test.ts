@@ -10,8 +10,8 @@ import SsrComponent from "./SsrComponent.svelte";
 
 const expectedRenderResult = {
   head: "",
-  body: '<!--[--><!--[!--><p>server</p> <!--1mdqziy--><simple-component title="SSR Test" count="5" enabled><!----> <template shadowrootmode="open"><!--164jyg1--><!--[--><div><h1>SSR Test</h1> <p id="count">Count: number-5</p> <p id="enabled">Enabled: boolean-true</p></div><!--]--><!----></template> <!----> <!--1llhvfc--></simple-component><!----><!--]--><!--]-->',
-  html: '<!--[--><!--[!--><p>server</p> <!--1mdqziy--><simple-component title="SSR Test" count="5" enabled><!----> <template shadowrootmode="open"><!--164jyg1--><!--[--><div><h1>SSR Test</h1> <p id="count">Count: number-5</p> <p id="enabled">Enabled: boolean-true</p></div><!--]--><!----></template> <!----> <!--1llhvfc--></simple-component><!----><!--]--><!--]-->',
+  body: '<!--[--><!--[!--><!--1mdqziy--><simple-component title="SSR Test" count="5" enabled><!----> <template shadowrootmode="open"><!--164jyg1--><!--[--><div><h1>SSR Test</h1> <p id="count">Count: number-5</p> <p id="enabled">Enabled: boolean-true</p></div><!--]--><!----></template> <!----> <!--1llhvfc--></simple-component><!----><!--]--><!--]-->',
+  html: '<!--[--><!--[!--><!--1mdqziy--><simple-component title="SSR Test" count="5" enabled><!----> <template shadowrootmode="open"><!--164jyg1--><!--[--><div><h1>SSR Test</h1> <p id="count">Count: number-5</p> <p id="enabled">Enabled: boolean-true</p></div><!--]--><!----></template> <!----> <!--1llhvfc--></simple-component><!----><!--]--><!--]-->',
 };
 
 test("rendering svelte", () => {
