@@ -2,6 +2,7 @@ import path from "node:path";
 import { defineConfig, DefineConfigOptions } from "./index.js";
 import { existsSync } from "node:fs";
 import { type Options } from "tsdown";
+import type { SvelteBuildConfig } from "./svelteConfig.js";
 
 type ExportValue = {
   types?: string;
@@ -31,7 +32,10 @@ const resolveSvebcomponentEntryPoint = (
   return tsEntry;
 };
 
-export const inferComponents = (packageJson: unknown): Options[] => {
+export const inferComponents = (
+  packageJson: unknown,
+  svelteConfig?: SvelteBuildConfig,
+): Options[] => {
   if (
     !(
       typeof packageJson === "object" &&
@@ -62,6 +66,7 @@ export const inferComponents = (packageJson: unknown): Options[] => {
     const config: DefineConfigOptions = {
       entry,
       outDir,
+      svelteConfig,
     };
     const sveltePath = value["svelte"];
     if (typeof sveltePath === "string") {

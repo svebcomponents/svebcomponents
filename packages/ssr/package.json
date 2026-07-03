@@ -36,6 +36,9 @@
       "types": "./dist/vite/CustomElementWrapper.svelte.d.ts",
       "svelte": "./dist/vite/CustomElementWrapper.svelte"
     },
+    "./async-wrapper-component": {
+      "svelte": "./dist/vite/AsyncCustomElementWrapper.svelte"
+    },
     "./vite": {
       "types": "./dist/vite/vitePluginSvebcomponentsSsr.d.ts",
       "import": "./dist/vite/vitePluginSvebcomponentsSsr.js"

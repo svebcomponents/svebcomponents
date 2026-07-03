@@ -1,12 +1,26 @@
 #!/usr/bin/env node
 import { build, type Options } from "tsdown";
-import { loadConfig } from "unconfig";
+import { loadConfig as loadSvelteConfig } from "@sveltejs/load-config";
+import { loadConfig as loadSvebcomponentsConfig } from "unconfig";
 
 import { defineConfig } from "./index.js";
 import { inferComponents } from "./inferComponents.js";
+import type { SvelteBuildConfig } from "./svelteConfig.js";
+
+const getSvelteConfig = async (): Promise<SvelteBuildConfig | undefined> => {
+  const result = await loadSvelteConfig(process.cwd());
+  if (!result) {
+    return undefined;
+  }
+  if ("error" in result) {
+    throw result.error;
+  }
+  return result.config;
+};
 
 async function main() {
-  const { config } = await loadConfig<Options[] | null>({
+  const svelteConfig = await getSvelteConfig();
+  const { config } = await loadSvebcomponentsConfig<Options[] | null>({
     sources: [
       {
         files: "svebcomponents.config",
@@ -15,7 +29,7 @@ async function main() {
       {
         files: "package.json",
         rewrite: (json) => {
-          return inferComponents(json);
+          return inferComponents(json, svelteConfig);
         },
       },
     ],
@@ -29,7 +43,7 @@ async function main() {
     );
   }
 
-  const tsdownOptions = hasConfig ? config : defineConfig({});
+  const tsdownOptions = hasConfig ? config : defineConfig({ svelteConfig });
 
   await Promise.all(tsdownOptions.map(build));
 }

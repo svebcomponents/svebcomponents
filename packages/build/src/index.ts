@@ -3,6 +3,7 @@ import svebcomponentsSsr from "@svebcomponents/ssr/tsdown";
 import { createTsdownConfig } from "./svebcomponentConfig.js";
 import { Options } from "tsdown";
 import path from "node:path";
+import type { SvelteBuildConfig } from "./svelteConfig.js";
 
 export interface DefineConfigOptions {
   /**
@@ -36,6 +37,7 @@ export interface DefineConfigOptions {
    * (e.g. "button-ssr") so the generated entries do not overwrite each other.
    */
   ssrEntryFileName?: string;
+  svelteConfig?: SvelteBuildConfig | undefined;
 }
 
 const toImportPath = (fromDirectory: string, toFile: string) => {
@@ -53,7 +55,7 @@ const entryOutputFile = (outDir: string, entry: string) =>
   );
 
 export const defineConfig = (options: DefineConfigOptions = {}) => {
-  const { ssr = true, entry = "src/index.ts" } = options;
+  const { ssr = true, entry = "src/index.ts", svelteConfig } = options;
   const outDir = options.outDir ?? "dist/client";
   const svelteOutDir = options.svelteOutDir;
   const ssrOutDir = options.ssrOutDir ?? "dist/server";
@@ -64,6 +66,7 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
     createTsdownConfig({
       entry,
       outDir,
+      svelteConfig,
     }),
   ];
 
@@ -73,6 +76,7 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
         entry,
         outDir: svelteOutDir,
         externalSvelte: true,
+        svelteConfig,
       }),
     );
   }
@@ -83,6 +87,7 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
         entry,
         outDir: ssrOutDir,
         ssrEntryFileName,
+        svelteConfig,
         serverImportPath: `./${path.posix.basename(entryOutputFile(ssrOutDir, entry))}`,
         clientImportPath: toImportPath(
           ssrOutDir,
@@ -98,6 +103,7 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
           outDir: ssrSvelteOutDir,
           externalSvelte: true,
           ssrEntryFileName,
+          svelteConfig,
           serverImportPath: `./${path.posix.basename(
             entryOutputFile(ssrSvelteOutDir, entry),
           )}`,

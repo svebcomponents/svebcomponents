@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
   import { isKebabCase, camelizeKebabCase } from "@svebcomponents/utils";
-  import { collectResultSync } from "@lit-labs/ssr/lib/render-result.js";
+  import { collectResult } from "@lit-labs/ssr/lib/render-result.js";
 
   import { isValidCustomElementTagName } from "../runtime/html.js";
   import { ElementRendererRegistry } from "../runtime/rendererRegistry.js";
@@ -12,13 +12,13 @@
     [key: string]: unknown;
   }
 
-  let {
+  const {
     children,
     _tagName: tag,
     ...props
   }: WebComponentWrapperProps = $props();
 
-  const renderCustomElement = (
+  const renderCustomElement = async (
     tagName: string,
     customElementProps: Record<string, unknown>,
   ) => {
@@ -32,7 +32,7 @@
     const CustomElementRendererCtor = ElementRendererRegistry.get(ctor);
     if (!CustomElementRendererCtor)
       throw new Error(`Custom element renderer for ${tagName} not found`);
-    const customElementRenderer = new CustomElementRendererCtor(tagName);
+    const customElementRenderer = new CustomElementRendererCtor();
 
     for (const [key, value] of Object.entries(customElementProps)) {
       if (key === "_tagName" || key === "children") continue;
@@ -53,8 +53,8 @@
     );
     if (!shadowStream)
       throw new Error(`Shadow stream for ${tagName} not found`);
-    const shadow = collectResultSync(shadowStream);
-    const attributes = collectResultSync(
+    const shadow = await collectResult(shadowStream);
+    const attributes = await collectResult(
       customElementRenderer.renderAttributes(),
     );
     return {
@@ -64,17 +64,21 @@
     };
   };
 
-  // eslint-disable-next-line svelte/no-unused-svelte-ignore -- svelte-check reports this warning, but eslint does not.
   // svelte-ignore state_referenced_locally -- SSR renders this wrapper once from the initial custom-element props.
   const rendered = renderCustomElement(tag, props);
 </script>
 
-<!-- eslint-disable-next-line svelte/no-at-html-tags -- tag name is validated above and attributes are escaped by the renderer -->
-{@html rendered.openTag}
-<template shadowrootmode="open">
-  <!-- eslint-disable-next-line -- it is the ElementRenderer's responsibility to ensure everything is properly sanitized -->
-  {@html rendered.shadow}
-</template>
-{@render children?.()}
-<!-- eslint-disable-next-line svelte/no-at-html-tags -- close tag contains only the validated tag name -->
-{@html rendered.closeTag}
+<p>server</p>
+
+{#if true}
+  {@const renderedCustomElement = await rendered}
+  <!-- eslint-disable-next-line svelte/no-at-html-tags -- tag name is validated above and attributes are escaped by the renderer -->
+  {@html renderedCustomElement.openTag}
+  <template shadowrootmode="open">
+    <!-- eslint-disable-next-line -- it is the ElementRenderer's responsibility to ensure everything is properly sanitized -->
+    {@html renderedCustomElement.shadow}
+  </template>
+  {@render children?.()}
+  <!-- eslint-disable-next-line svelte/no-at-html-tags -- close tag contains only the validated tag name -->
+  {@html renderedCustomElement.closeTag}
+{/if}

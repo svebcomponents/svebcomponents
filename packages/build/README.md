@@ -129,6 +129,15 @@ Set `svelteOutDir` and `ssrSvelteOutDir` to also emit Svelte-aware builds that e
 
 Set `ssr: false` to emit only the browser custom element build.
 
+Svebcomponents loads the package's Svelte configuration from `vite.config.*` or
+`svelte.config.*` and passes `preprocess`, `extensions`, and `compilerOptions`
+to the generated browser and SSR builds. Svebcomponents-owned compiler options
+such as `customElement` and `generate: "server"` still take precedence.
+
+If the loaded Svelte config enables `compilerOptions.experimental.async`, the
+generated browser and SSR outputs are async-compiled. Host apps that consume
+those SSR renderers must use an async-capable host integration.
+
 ## Options
 
 | Option            | Default          | Description                                                       |
