@@ -21,20 +21,20 @@ async function main() {
     ],
   });
 
-  if (config === null) {
+  const hasConfig = config != null && config.length > 0;
+
+  if (!hasConfig) {
     console.warn(
       "[svebcomponents]: no valid configuration found. Please ensure to either provide valid `exports` in package.json or a dedicated `svebcomponents.config.js` file.",
     );
   }
 
-  const tsdownOptions = config ?? defineConfig({});
+  const tsdownOptions = hasConfig ? config : defineConfig({});
 
   await Promise.all(tsdownOptions.map(build));
 }
 
-try {
-  main();
-} catch (error) {
+main().catch((error) => {
   console.error("[svebcomponents]: encountered error during build.", error);
   process.exit(1);
-}
+});
