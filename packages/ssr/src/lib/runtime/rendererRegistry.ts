@@ -3,7 +3,7 @@ import type { ElementRendererCtor } from "./types.js";
 declare const globalThis: {
   [REGISTRY_KEY]: _ElementRendererRegistry;
 };
-declare const HTMLElement: unknown;
+declare const HTMLElement: { prototype: unknown };
 
 const REGISTRY_KEY: unique symbol = Symbol.for("ElementRendererRegistry");
 
@@ -36,21 +36,13 @@ class _ElementRendererRegistry {
       }
     } while (
       (targetPrototype = Object.getPrototypeOf(targetPrototype)) &&
-      targetPrototype !== HTMLElement
+      targetPrototype !== HTMLElement.prototype
     );
     return null;
   }
 
   has(elementClass: Element): boolean {
-    const targetPrototype = elementClass.prototype;
-    if (this.renderers.has(targetPrototype)) {
-      return true;
-    }
-    if (targetPrototype === HTMLElement || targetPrototype === undefined) {
-      // not in the registry if null prototype or HTMLElement
-      return false;
-    }
-    return this.has(Object.getPrototypeOf(targetPrototype));
+    return this.get(elementClass) !== null;
   }
 
   getAll() {
