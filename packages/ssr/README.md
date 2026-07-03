@@ -95,6 +95,8 @@ ElementRendererRegistry.set("my-component", MyComponentRenderer);
 
 You can register by tag name or by constructor. Lookups walk the element prototype chain, so a renderer registered for a base element class can also serve subclasses.
 
+The registry is designed for the Svelte-generated renderers produced by this package. Registered renderers are instantiated with the resolved tag name, so stock Lit `ElementRenderer` classes now receive their `tagName`, but the Svelte wrapper still passes a minimal `RenderInfo` when rendering; full compatibility with arbitrary Lit renderers is therefore not guaranteed.
+
 ### `SvelteCustomElementRenderer`
 
 A base renderer for Svelte custom elements.
