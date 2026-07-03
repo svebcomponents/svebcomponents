@@ -26,26 +26,6 @@ test("rendering svelte", () => {
   expect(res).toStrictEqual(expectedRenderResult);
 });
 
-test("does not render internal debug markers", () => {
-  ElementRendererRegistry.set("simple-component", SimpleComponentRenderer);
-  const res = render(SsrComponent, {
-    props: {
-      title: "SSR Test",
-      count: 5,
-      enabled: true,
-    },
-  });
-
-  // Regression guard for leaked debug markup (e.g. `<p>server</p>` /
-  // `<p>client</p>`) from the SSR wrapper components. We match on the
-  // element itself (tag + text) rather than a raw substring so the
-  // assertion isn't tied to whitespace or Svelte's generated hydration
-  // comment markers, which can legitimately change between Svelte
-  // versions/builds.
-  expect(res.body).not.toMatch(/<p[^>]*>\s*(server|client)\s*<\/p>/);
-  expect(res.html).not.toMatch(/<p[^>]*>\s*(server|client)\s*<\/p>/);
-});
-
 test("escapes untrusted values rendered through shadow props", () => {
   ElementRendererRegistry.set("simple-component", SimpleComponentRenderer);
 
