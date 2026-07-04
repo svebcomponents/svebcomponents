@@ -25,6 +25,12 @@ interface SvebcomponentsSsrOptions {
    * Import path from the generated SSR renderer entrypoint to the client component module.
    */
   clientImportPath?: string;
+  /**
+   * The basename (without extension) of the generated SSR renderer entry file.
+   * Defaults to "ssr". Must be unique per component when several SSR components
+   * share an output directory (e.g. "button-ssr").
+   */
+  ssrEntryFileName?: string;
 }
 
 const createSsrTsdownConfig = ({
@@ -33,6 +39,7 @@ const createSsrTsdownConfig = ({
   externalSvelte = false,
   serverImportPath,
   clientImportPath,
+  ssrEntryFileName,
 }: SvebcomponentsSsrOptions) =>
   ({
     entry,
@@ -52,6 +59,9 @@ const createSsrTsdownConfig = ({
       pluginGenerateSsrEntry({
         ...(serverImportPath !== undefined ? { serverImportPath } : {}),
         ...(clientImportPath !== undefined ? { clientImportPath } : {}),
+        ...(ssrEntryFileName !== undefined
+          ? { entryFileName: ssrEntryFileName }
+          : {}),
       }),
     ],
   }) satisfies Options;

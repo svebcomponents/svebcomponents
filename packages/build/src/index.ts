@@ -29,6 +29,13 @@ export interface DefineConfigOptions {
    * The output directory for the Svelte-aware SSR build files.
    */
   ssrSvelteOutDir?: string;
+  /**
+   * The basename (without extension) of the generated SSR renderer entry file.
+   * Defaults to "ssr", producing `<ssrOutDir>/ssr.js`. When several SSR
+   * components share an SSR output directory this must be unique per component
+   * (e.g. "button-ssr") so the generated entries do not overwrite each other.
+   */
+  ssrEntryFileName?: string;
 }
 
 const toImportPath = (fromDirectory: string, toFile: string) => {
@@ -51,6 +58,7 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
   const svelteOutDir = options.svelteOutDir;
   const ssrOutDir = options.ssrOutDir ?? "dist/server";
   const ssrSvelteOutDir = options.ssrSvelteOutDir;
+  const ssrEntryFileName = options.ssrEntryFileName ?? "ssr";
 
   const tsdownOptions: Options[] = [
     createTsdownConfig({
@@ -74,6 +82,7 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
       svebcomponentsSsr({
         entry,
         outDir: ssrOutDir,
+        ssrEntryFileName,
         serverImportPath: `./${path.posix.basename(entryOutputFile(ssrOutDir, entry))}`,
         clientImportPath: toImportPath(
           ssrOutDir,
@@ -88,6 +97,7 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
           entry,
           outDir: ssrSvelteOutDir,
           externalSvelte: true,
+          ssrEntryFileName,
           serverImportPath: `./${path.posix.basename(
             entryOutputFile(ssrSvelteOutDir, entry),
           )}`,

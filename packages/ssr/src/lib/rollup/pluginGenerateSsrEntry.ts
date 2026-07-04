@@ -2,11 +2,18 @@ import fs from "fs/promises";
 import path from "path";
 import type { Plugin, NormalizedOutputOptions, PluginContext } from "rolldown";
 
-const ENTRY_FILE_NAME = "ssr";
+const DEFAULT_ENTRY_FILE_NAME = "ssr";
 
 interface GenerateSsrEntryPluginOptions {
   serverImportPath?: string;
   clientImportPath?: string;
+  /**
+   * The basename (without extension) of the generated SSR renderer entry file.
+   * Defaults to "ssr", producing 'ssr.js' / 'ssr.d.ts'. When multiple SSR
+   * components share an output directory this must be unique per component
+   * (e.g. "button-ssr") so the generated entries do not overwrite each other.
+   */
+  entryFileName?: string;
 }
 
 /**
@@ -20,6 +27,7 @@ export function pluginGenerateSsrEntry(
   const {
     serverImportPath = "./index.js",
     clientImportPath = "../client/index.js",
+    entryFileName = DEFAULT_ENTRY_FILE_NAME,
   } = options;
 
   return {
@@ -38,11 +46,11 @@ export function pluginGenerateSsrEntry(
 
       const ssrFilePath = path.resolve(
         outputOptions.dir,
-        `${ENTRY_FILE_NAME}.js`,
+        `${entryFileName}.js`,
       );
       const ssrTypesFilePath = path.resolve(
         outputOptions.dir,
-        `${ENTRY_FILE_NAME}.d.ts`,
+        `${entryFileName}.d.ts`,
       );
 
       const content = `import { SvelteCustomElementRenderer } from '@svebcomponents/ssr';

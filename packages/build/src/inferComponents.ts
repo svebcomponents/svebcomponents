@@ -73,6 +73,11 @@ export const inferComponents = (packageJson: unknown): Options[] => {
       }
       const ssrOutDir = path.dirname(ssrPath);
       config.ssrOutDir = path.normalize(ssrOutDir);
+      // The declared ssr export (e.g. "./dist/server/button-ssr.js") dictates the
+      // basename of the generated renderer entry file ("button-ssr"). Threading it
+      // through keeps the generated file matching the exported path and avoids
+      // collisions when several SSR components share one ssrOutDir.
+      config.ssrEntryFileName = path.basename(ssrPath, path.extname(ssrPath));
 
       const ssrSveltePath = ssrExport?.["svelte"];
       if (typeof ssrSveltePath === "string") {
