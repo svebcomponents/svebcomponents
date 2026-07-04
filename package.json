@@ -12,6 +12,7 @@
     "release": "turbo build && changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "turbo": "catalog:"
@@ -25,9 +26,6 @@
       "esbuild",
       "svelte-preprocess"
     ]
-  },
-  "dependencies": {
-    "@changesets/cli": "catalog:"
   },
   "overrides": {
     "@svebcomponents/build": "workspace:*",
