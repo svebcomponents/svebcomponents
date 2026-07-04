@@ -71,6 +71,8 @@ import MyComponentRenderer from "my-component-package/ssr";
 ElementRendererRegistry.set("my-component", MyComponentRenderer);
 ```
 
+> **Caution:** The `@svebcomponents/ssr` import must come first, before importing any custom-element package. Importing `@svebcomponents/ssr` installs the server DOM shims (`Element`, `HTMLElement`, `customElements`) as a side effect, and custom element packages call `customElements.define` at module scope. Importing the component module first crashes with `customElements is not defined` on the server.
+
 The app can then render Svelte markup containing the custom element:
 
 ```svelte
