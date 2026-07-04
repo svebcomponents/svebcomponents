@@ -30,6 +30,7 @@
       "import": "./dist/index.js"
     },
     "./wrapper-component": {
+      "types": "./dist/vite/CustomElementWrapper.svelte.d.ts",
       "svelte": "./dist/vite/CustomElementWrapper.svelte"
     },
     "./vite": {
