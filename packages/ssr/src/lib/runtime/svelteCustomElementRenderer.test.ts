@@ -265,6 +265,61 @@ describe("SvelteCustomElementRenderer", () => {
     expect(shadowContent).toContain("<div>Test content</div>");
   });
 
+  test("renderShadow drops non-style svelte:head content from the shadow root", () => {
+    // Mirrors what Svelte's server render() emits in `head` for a component
+    // using <svelte:head> when compiled with css: "injected": hydration
+    // markers, document metadata, and the injected component style.
+    mockRender.mockReturnValue({
+      body: '<!--[--><div class="both svelte-abc">both content</div><!--]-->',
+      head: '<!--[--><meta name="description" content="desc"> <link rel="canonical" href="https://example.com"><!--]--><title>Page Title</title><style id="svelte-abc">.both.svelte-abc {color:blue;}</style>',
+      html: "",
+    });
+
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+    );
+
+    const renderResult = renderer.renderShadow({} as RenderInfo);
+    assert(renderResult);
+    const shadowContent = Array.from(renderResult).join("");
+
+    expect(shadowContent).toContain(
+      '<style id="svelte-abc">.both.svelte-abc {color:blue;}</style>',
+    );
+    expect(shadowContent).toContain(
+      '<div class="both svelte-abc">both content</div>',
+    );
+    expect(shadowContent).not.toContain("<title>");
+    expect(shadowContent).not.toContain("<meta");
+    expect(shadowContent).not.toContain('rel="canonical"');
+  });
+
+  test("renderShadow keeps stylesheet links but drops other head links", () => {
+    mockRender.mockReturnValue({
+      body: "<div>content</div>",
+      head: '<link rel="stylesheet" href="/theme.css"><link rel="preconnect" href="https://example.com"><link rel="icon" href="/favicon.ico">',
+      html: "",
+    });
+
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+    );
+
+    const renderResult = renderer.renderShadow({} as RenderInfo);
+    assert(renderResult);
+    const shadowContent = Array.from(renderResult).join("");
+
+    expect(shadowContent).toContain(
+      '<link rel="stylesheet" href="/theme.css">',
+    );
+    expect(shadowContent).not.toContain('rel="preconnect"');
+    expect(shadowContent).not.toContain('rel="icon"');
+  });
+
   test("handles empty render result", () => {
     mockRender.mockReturnValue({
       body: "",

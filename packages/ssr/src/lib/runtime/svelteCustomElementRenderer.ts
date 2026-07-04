@@ -12,6 +12,27 @@ import {
   type SvelteCustomElementPropDefinition,
 } from "./html.js";
 
+const headStyleTagRegex = /<style\b[^>]*>[\s\S]*?<\/style\s*>|<link\b[^>]*>/gi;
+const relAttributeRegex = /\brel\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>=]+))/i;
+
+const isStylesheetLink = (tag: string): boolean => {
+  const match = relAttributeRegex.exec(tag);
+  const rel = match?.[1] ?? match?.[2] ?? match?.[3] ?? "";
+  return rel.toLowerCase().split(/\s+/).includes("stylesheet");
+};
+
+/**
+ * Svelte's server `render()` emits both injected component styles and
+ * `<svelte:head>` content into `head`. Only style resources are valid inside
+ * a shadow root, so we forward `<style>` and `<link rel="stylesheet">` tags
+ * and drop document metadata such as `<title>`, `<meta>`, or non-stylesheet
+ * `<link>` tags.
+ */
+export const extractShadowStylesFromHead = (head: string): string =>
+  (head.match(headStyleTagRegex) ?? [])
+    .filter((tag) => !/^<link/i.test(tag) || isStylesheetLink(tag))
+    .join("");
+
 export interface SvelteClientCustomElement {
   new (): Omit<SvelteClientCustomElement, "new">;
   attributes: Record<string, string>;
@@ -74,7 +95,10 @@ export class SvelteCustomElementRenderer
     const { body, head } = render(this.svelteSsrComponent, {
       props: this.svelteClientCustomElement.$$d,
     });
-    yield head;
+    // With `css: "injected"`, component styles land in `head` alongside any
+    // `<svelte:head>` content. Forward only the style resources into the
+    // shadow root; everything else would be invalid there.
+    yield extractShadowStylesFromHead(head);
     yield body;
   }
 

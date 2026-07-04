@@ -135,3 +135,4 @@ The plugin also rewrites plain `slot` attributes inside custom elements to sprea
 - The consuming app must import the browser custom element module and register the matching SSR renderer.
 - Server-side attribute rendering is still incomplete.
 - The Vite plugin currently transforms Svelte files and injects a Svelte wrapper component.
+- `<svelte:head>` content is not supported in SSR'd custom elements: only `<style>` and `<link rel="stylesheet">` tags from the component's server-rendered head output are forwarded into the shadow root; document metadata such as `<title>` or `<meta>` is dropped.
