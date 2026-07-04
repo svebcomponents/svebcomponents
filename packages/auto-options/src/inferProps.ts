@@ -33,8 +33,13 @@ const enhanceInferredProps = (
   // first we check if the propName is already in the inferred props
   const previouslyInferredProp = inferredProps[propName];
   // and then update the previously inferred props, trying to not overwrite previous (more valuable) information
+  // if no attribute name could be inferred from anywhere, fall back to the kebab-cased prop name,
+  // matching Svelte's own default attribute naming behavior
   inferredProps[propName] = {
-    attributeName: previouslyInferredProp?.attributeName ?? attributeName,
+    attributeName:
+      previouslyInferredProp?.attributeName ??
+      attributeName ??
+      kebabize(propName),
     type: previouslyInferredProp?.type ?? type,
     isReflected: previouslyInferredProp?.isReflected ?? isReflected,
   };
