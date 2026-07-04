@@ -22,7 +22,3 @@ export const isKebabCase = (str: string) => /^([a-z])+(-[a-z]+)*$/.test(str);
  */
 export const camelizeKebabCase = (str: string) =>
   str.replace(/-./g, (x) => x[1]!.toUpperCase());
-
-export const TODO = (description: string, ...args: unknown[]) => {
-  console.log(`TODO: ${description}`, ...args);
-};
