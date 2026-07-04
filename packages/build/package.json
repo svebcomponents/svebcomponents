@@ -29,9 +29,6 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "peerDependencies": {
-    "@svebcomponents/ssr": "^0.0.7"
-  },
   "devDependencies": {
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
