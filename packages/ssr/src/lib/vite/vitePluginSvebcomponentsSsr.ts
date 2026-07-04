@@ -120,21 +120,33 @@ function vitePluginSvebcomponentsSsr(): Plugin {
                   ` ${WRAPPER_TAG_NAME_PROP}="${originalTagName}"`,
                 );
 
-                // Find the ce's closing tag, searching backwards from the node's end (to avoid nested elements)
+                // Find the ce's closing tag, searching backwards from the
+                // node's last character (`node.end` is exclusive, so we use
+                // `node.end - 1` — otherwise a same-tag parent's closing tag,
+                // which starts exactly at a nested child's `node.end`, would be
+                // matched for the child and corrupt the mapping).
                 const closingTagStart = code.lastIndexOf(
                   `</${originalTagName}>`,
-                  node.end,
+                  node.end - 1,
                 );
-                const closingTagNameStart = closingTagStart + 2; // Index after '</'
-                const closingTagNameEnd =
-                  closingTagNameStart + originalTagName.length;
-                // replace ce closing tag with wrapper component closing tag
-                magicString.overwrite(
-                  closingTagNameStart,
-                  closingTagNameEnd,
-                  WRAPPER_COMPONENT_NAME,
-                  { storeName: true },
-                );
+                // If no closing tag exists within this element's range, it is
+                // self-closing (`<my-widget />`). `lastIndexOf` returns -1 in
+                // that case, or an index before this node's start when the only
+                // match belongs to an earlier same-tag sibling. Either way, skip
+                // the closing-tag overwrite: a self-closing
+                // `<CustomElementWrapper _tagName="..." ... />` is valid Svelte.
+                if (closingTagStart >= node.start) {
+                  const closingTagNameStart = closingTagStart + 2; // Index after '</'
+                  const closingTagNameEnd =
+                    closingTagNameStart + originalTagName.length;
+                  // replace ce closing tag with wrapper component closing tag
+                  magicString.overwrite(
+                    closingTagNameStart,
+                    closingTagNameEnd,
+                    WRAPPER_COMPONENT_NAME,
+                    { storeName: true },
+                  );
+                }
 
                 shouldAddImport = true;
               }
