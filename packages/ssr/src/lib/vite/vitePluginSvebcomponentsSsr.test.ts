@@ -151,3 +151,24 @@ describe("vitePluginSvebcomponentsSsr", () => {
     expect(output).toContain("<font-face></font-face>");
   });
 });
+
+describe("vitePluginSvebcomponentsSsr - slot attribute transform", () => {
+  test("transforms a plain slot attribute into the spread form", async () => {
+    const output = await transform(
+      `<my-widget><p slot="test">hi</p></my-widget>`,
+    );
+
+    expect(output).not.toBeNull();
+    expect(output).toContain(`{...{slot: "test"}}`);
+  });
+
+  test("safely escapes a slot name containing a single quote", async () => {
+    const output = await transform(
+      `<my-widget><p slot="it's">hi</p></my-widget>`,
+    );
+
+    expect(output).not.toBeNull();
+    // JSON.stringify escapes the single quote safely (no manual quoting injection)
+    expect(output).toContain(`{...{slot: ${JSON.stringify("it's")}}}`);
+  });
+});
