@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsc --watch",
-    "build": "tsc",
+    "build": "tsc && publint",
     "check": "tsc --noEmit",
     "lint": "pnpm /^lint:.*/",
     "lint:eslint": "eslint .",
@@ -18,16 +18,20 @@
     "fix:eslint": "eslint . --fix",
     "fix:format": "prettier --write ."
   },
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
   },
   "devDependencies": {
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
+    "publint": "catalog:",
     "svelte": "catalog:",
     "typescript": "catalog:"
   },
