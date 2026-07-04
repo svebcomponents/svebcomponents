@@ -38,6 +38,7 @@
     "@svebcomponents/typescript-config": "workspace:*",
     "@types/node": "catalog:",
     "svelte": "catalog:",
+    "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
     "rolldown": "catalog:"
@@ -46,8 +47,6 @@
     "@svebcomponents/auto-options": "workspace:*",
     "@svebcomponents/ssr": "workspace:*",
     "rollup-plugin-svelte": "catalog:",
-    "tslib": "catalog:",
-    "typescript": "catalog:",
     "unconfig": "catalog:",
     "tsdown": "catalog:"
   },
