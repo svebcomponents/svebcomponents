@@ -1,6 +1,8 @@
 // eslint-disable-next-line svelte/no-svelte-internal -- Reuse Svelte's SSR attribute serializer instead of maintaining our own escaping rules.
 import { attr } from "svelte/internal/server";
 
+export { isValidCustomElementTagName } from "../shared/customElementName.js";
+
 export const SvelteCustomElementPropType = {
   Array: "Array",
   Boolean: "Boolean",
@@ -19,16 +21,6 @@ export interface SvelteCustomElementPropDefinition {
 }
 
 const invalidAttributeNameCharsRegex = /[\s"'>/=]/;
-
-/**
- * ASCII subset of the HTML spec's PotentialCustomElementName grammar.
- * The wrapper only receives tag names produced from Svelte source, but this
- * keeps the raw SSR opening/closing tags from ever accepting tag-shaped input.
- *
- * @see https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name
- */
-export const isValidCustomElementTagName = (tagName: string) =>
-  /^[a-z][.0-9_a-z-]*-[.0-9_a-z-]*$/.test(tagName);
 
 /**
  * Reject characters that cannot appear in HTML attribute names.
