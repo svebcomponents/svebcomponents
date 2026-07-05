@@ -75,6 +75,14 @@ import MyComponentRenderer from "my-component-package/ssr";
 ElementRendererRegistry.set("my-component", MyComponentRenderer);
 ```
 
+:::caution
+The `@svebcomponents/ssr` import must come first, before importing any
+custom-element package. It installs the server DOM shims as a side effect,
+and custom element packages call `customElements.define` at module scope, so
+importing the component module first crashes with `customElements is not
+defined` on the server.
+:::
+
 The registry tells the server which renderer belongs to
 `<my-component>`.
 
