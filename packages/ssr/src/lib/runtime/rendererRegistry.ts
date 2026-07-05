@@ -57,3 +57,9 @@ if (!globalThis[REGISTRY_KEY]) {
 
 // Export a convenience accessor
 export const ElementRendererRegistry = globalThis[REGISTRY_KEY];
+
+// Export a factory for creating isolated registry instances, e.g. for tests
+// that need a fresh registry without mutating the shared global one.
+export function createElementRendererRegistry() {
+  return new _ElementRendererRegistry();
+}
