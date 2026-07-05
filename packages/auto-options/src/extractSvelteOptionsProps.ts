@@ -40,8 +40,8 @@ export const extractSvelteOptions = (
     expression.type !== "ObjectExpression" ||
     !("end" in expression && typeof expression["end"] === "number")
   ) {
-    console.log(
-      'Svelte Options with the format `<svelte:options customElement="tagName"/>` are currently not supported. Please switch to the object variant of defining custom element options.',
+    console.warn(
+      '[svebcomponents/auto-options] Svelte Options with the format `<svelte:options customElement="tagName"/>` are currently not supported. Please switch to the object variant of defining custom element options.',
     );
     return {
       attributeInjectIndex,
