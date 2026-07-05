@@ -26,10 +26,5 @@
       "esbuild",
       "svelte-preprocess"
     ]
-  },
-  "overrides": {
-    "@svebcomponents/build": "workspace:*",
-    "@svebcomponents/ssr": "workspace:*",
-    "@svebcomponents/example-component": "workspace:*"
   }
 }

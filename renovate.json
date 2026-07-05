@@ -1,10 +1,4 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
-  "packageRules": [
-    {
-      "matchDepTypes": ["pnpm.catalog.template"],
-      "enabled": false
-    }
-  ]
+  "extends": ["config:recommended"]
 }
