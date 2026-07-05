@@ -12,6 +12,9 @@ export interface SvelteOptionProp {
   attributeName?: string | undefined;
   isReflected?: boolean | undefined;
   type?: PrimitiveType | undefined;
+  // props with non-serializable types (functions, snippets) must not get attribute metadata,
+  // they are exposed as JS properties on the custom element only
+  isNonSerializable?: boolean | undefined;
 }
 
 export interface InferredSvelteOptionProps {
@@ -72,6 +75,23 @@ interface TSTypeLiteral extends AST.BaseNode {
   members: PropertySignature[];
 }
 
+interface TSUnionType extends AST.BaseNode {
+  type: "TSUnionType";
+  types: Type[];
+}
+
+interface TSFunctionType extends AST.BaseNode {
+  type: "TSFunctionType";
+}
+
+interface TSNullKeyword extends AST.BaseNode {
+  type: "TSNullKeyword";
+}
+
+interface TSUndefinedKeyword extends AST.BaseNode {
+  type: "TSUndefinedKeyword";
+}
+
 interface TypeAnnotation extends AST.BaseNode {
   typeAnnotation: Type;
 }
@@ -106,6 +126,10 @@ export type Type =
   | TSNumberKeyword
   | TSTypeLiteral
   | TSLiteralType
-  | TSBooleanKeyword;
+  | TSBooleanKeyword
+  | TSUnionType
+  | TSFunctionType
+  | TSNullKeyword
+  | TSUndefinedKeyword;
 
 export type TypeDeclaration = InterfaceDeclaration | TypeAliasDeclaration;

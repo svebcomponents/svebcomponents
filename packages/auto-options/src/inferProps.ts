@@ -9,6 +9,13 @@ import type {
 import { kebabize } from "@svebcomponents/utils";
 import type { SvelteOptions } from "./extractSvelteOptionsProps";
 
+const WARNING_PREFIX = "[svebcomponents/auto-options]";
+
+// marker for prop types that cannot be (de)serialized to an attribute value (functions, snippets)
+const NON_SERIALIZABLE = "NonSerializable";
+
+type ResolvedPropType = PrimitiveType | typeof NON_SERIALIZABLE;
+
 const primitiveTypes = {
   String: "String",
   Array: "Array",
@@ -32,6 +39,8 @@ const enhanceInferredProps = (
 ) => {
   // first we check if the propName is already in the inferred props
   const previouslyInferredProp = inferredProps[propName];
+  // props already known to be non-serializable (functions, snippets) never get attribute metadata
+  if (previouslyInferredProp?.isNonSerializable) return;
   // and then update the previously inferred props, trying to not overwrite previous (more valuable) information
   inferredProps[propName] = {
     attributeName: previouslyInferredProp?.attributeName ?? attributeName,
@@ -75,7 +84,7 @@ export const inferPropsFromSvelteOptions = (
 const resolvePrimitiveType = (
   type: Type,
   typeDeclarations: TypeDeclaration[],
-): PrimitiveType | null => {
+): ResolvedPropType | null => {
   // there are way to many ways to write simple types in TS.. T.T
   switch (type.type) {
     case "TSStringKeyword":
@@ -112,7 +121,13 @@ const resolvePrimitiveType = (
           return typeDeclaration.id.name === type.typeName.name;
         },
       );
-      if (!resolvedTypeDeclaration) return null;
+      if (!resolvedTypeDeclaration) {
+        // `Snippet` props (imported from "svelte") are render functions & cannot be expressed as attributes
+        if (type.typeName.name === "Snippet") {
+          return NON_SERIALIZABLE;
+        }
+        return null;
+      }
       if (resolvedTypeDeclaration?.type === "TSInterfaceDeclaration") {
         return "Object";
       }
@@ -121,10 +136,44 @@ const resolvePrimitiveType = (
         typeDeclarations,
       );
     }
+    case "TSUnionType": {
+      const resolvedMemberTypes = new Set<ResolvedPropType>();
+      for (const member of type.types) {
+        // `null` / `undefined` union members carry no type information for attribute handling,
+        // idiomatic unions like `string | null` should simply resolve to their meaningful member
+        if (
+          member.type === "TSNullKeyword" ||
+          member.type === "TSUndefinedKeyword"
+        ) {
+          continue;
+        }
+        const resolvedMemberType = resolvePrimitiveType(
+          member,
+          typeDeclarations,
+        );
+        if (resolvedMemberType === null) continue;
+        resolvedMemberTypes.add(resolvedMemberType);
+      }
+      const [firstResolvedMemberType] = resolvedMemberTypes;
+      // a union without resolvable meaningful members (e.g. `null | undefined`) tells us nothing
+      if (firstResolvedMemberType === undefined) return null;
+      // if all meaningful members resolve to the same type (e.g. `string | null` or `"a" | "b"`), use it
+      if (resolvedMemberTypes.size === 1) return firstResolvedMemberType;
+      console.warn(
+        `${WARNING_PREFIX} cannot infer a single attribute type for a union mixing [${[...resolvedMemberTypes].join(", ")}], falling back to "String". Specify the type explicitly via <svelte:options customElement={{ props }} /> to override.`,
+      );
+      return "String";
+    }
+    case "TSFunctionType":
+      return NON_SERIALIZABLE;
+    case "TSNullKeyword":
+    case "TSUndefinedKeyword":
+      // these carry no type information for attribute handling
+      return null;
     default:
       // at some point the switch statement should be exhaustive & this log never trigger
-      console.log(
-        "@svebcomponents/auto-options found unhandled type while trying to resolve primitive type: ",
+      console.warn(
+        `${WARNING_PREFIX} found unhandled type while trying to resolve primitive type:`,
         type,
       );
       return null;
@@ -158,8 +207,8 @@ export const inferPropsFromTypes = (
     switch (resolvedTypeDeclaration?.type) {
       case "TSTypeAliasDeclaration":
         if (resolvedTypeDeclaration?.typeAnnotation.type !== "TSTypeLiteral") {
-          console.log(
-            "@svebcomponents/auto-options could not resolve prop types since they were not of expected shape",
+          console.warn(
+            `${WARNING_PREFIX} could not resolve prop types since they were not of expected shape`,
           );
           return;
         }
@@ -183,16 +232,24 @@ export const inferPropsFromTypes = (
   }
 
   for (const { typeAnnotation, key } of typedProps) {
-    const resolvedPrimitiveType = resolvePrimitiveType(
+    const resolvedPropType = resolvePrimitiveType(
       typeAnnotation.typeAnnotation,
       typeDeclarations,
     );
     const propName = key.name;
+    if (resolvedPropType === NON_SERIALIZABLE) {
+      // function / snippet props cannot be reflected to or parsed from attributes;
+      // by omitting them from the generated custom element props, svelte exposes them
+      // as plain JS properties without any attribute handling.
+      // we still respect explicit user configuration from <svelte:options> if present.
+      inferredProps[propName] ??= { isNonSerializable: true };
+      continue;
+    }
     enhanceInferredProps(
       inferredProps,
       propName,
       kebabize(propName),
-      resolvedPrimitiveType ?? "String",
+      resolvedPropType ?? "String",
     );
   }
 };

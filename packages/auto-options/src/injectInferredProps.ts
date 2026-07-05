@@ -7,9 +7,14 @@ export const injectInferredProps = (
   svelteOptions: SvelteOptions | null,
   magicString: MagicString,
 ) => {
-  if (Object.keys(inferredProps).length === 0) return;
+  // non-serializable props (functions, snippets) are omitted from the generated props,
+  // svelte then exposes them as plain JS properties without any attribute handling
+  const serializableProps = Object.entries(inferredProps).filter(
+    ([, inferredProp]) => !inferredProp.isNonSerializable,
+  );
+  if (serializableProps.length === 0) return;
   let inferredPropsResult = "props: {\n";
-  for (const [propName, inferredProp] of Object.entries(inferredProps)) {
+  for (const [propName, inferredProp] of serializableProps) {
     inferredPropsResult += `${propName}: {attribute: "${inferredProp.attributeName}", reflect: ${inferredProp.isReflected}, type: "${inferredProp.type}"},\n`;
   }
   inferredPropsResult += "}";
