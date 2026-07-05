@@ -95,6 +95,38 @@ describe("pluginGenerateSsrEntry", () => {
     );
   });
 
+  test("uses a custom entry filename when provided", async () => {
+    const plugin = pluginGenerateSsrEntry({
+      entryFileName: "button-ssr",
+    }) as {
+      writeBundle: FunctionPluginHooks["writeBundle"];
+    };
+
+    const mockContext = {
+      error: vi.fn(),
+    } as unknown as PluginContext;
+
+    const outputOptions: NormalizedOutputOptions = {
+      dir: "dist/server",
+    } as NormalizedOutputOptions;
+
+    plugin.writeBundle.call(mockContext, outputOptions, outputBundle);
+
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/button-ssr.js"),
+      expect.any(String),
+    );
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/button-ssr.d.ts"),
+      expect.any(String),
+    );
+    // must not fall back to the default filename that would collide
+    expect(mockFs.writeFile).not.toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/ssr.js"),
+      expect.any(String),
+    );
+  });
+
   test("throws error when no output directory is provided", async () => {
     const plugin = pluginGenerateSsrEntry({}) as {
       writeBundle: FunctionPluginHooks["writeBundle"];

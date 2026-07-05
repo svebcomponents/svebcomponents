@@ -3,10 +3,57 @@ import type { Options } from "tsdown";
 import { inferComponents } from "./inferComponents";
 import { defineConfig } from "./index.js";
 import fs from "node:fs";
+import path from "node:path";
+import fsPromises from "fs/promises";
+import type { Options } from "tsdown";
 
 vi.mock("node:fs");
 const mockFs = fs as unknown as {
   existsSync: MockedFunction<typeof fs.existsSync>;
+};
+
+vi.mock("fs/promises", () => ({
+  default: { writeFile: vi.fn() },
+}));
+const mockWriteFile = fsPromises.writeFile as unknown as MockedFunction<
+  typeof fsPromises.writeFile
+>;
+
+/**
+ * Drive every generated SSR-entry plugin found in the given tsdown configs and
+ * collect the file paths it writes. This exercises the actual `writeBundle`
+ * side effect (which `JSON.stringify` comparisons cannot observe, since the
+ * entry filename is captured inside the plugin closure).
+ */
+const collectGeneratedSsrFiles = async (
+  configs: Options[],
+): Promise<string[]> => {
+  mockWriteFile.mockClear();
+  for (const config of configs) {
+    const plugins = (config.plugins ?? []) as Array<{
+      name?: string;
+      writeBundle?: (
+        this: { error: (msg: string) => never },
+        outputOptions: { dir?: string | undefined },
+      ) => unknown;
+    }>;
+    for (const plugin of plugins) {
+      if (
+        plugin?.name === "svebcomponents:generate-ssr-entry" &&
+        typeof plugin.writeBundle === "function"
+      ) {
+        await plugin.writeBundle.call(
+          {
+            error: (msg: string) => {
+              throw new Error(msg);
+            },
+          },
+          { dir: config.outDir },
+        );
+      }
+    }
+  }
+  return mockWriteFile.mock.calls.map((call) => String(call[0]));
 };
 
 const packageJson = {
@@ -88,6 +135,7 @@ const manualMultipleComponentsConfig = [
     entry: "src/componentA.js",
     outDir: "dist/client",
     ssr: true,
+    ssrEntryFileName: "componentA-ssr",
   }),
 ];
 
@@ -162,6 +210,28 @@ describe("infer components", () => {
       clientPipeline,
       ssrPipeline,
     ]);
+  });
+  it("generates the SSR entry filename from the declared ssr export", async () => {
+    mockFs.existsSync.mockReturnValue(true);
+    const inferredComponents = inferComponents(multipleComponentsPackageJson);
+    const generated = await collectGeneratedSsrFiles(inferredComponents);
+    // The `./componentA/ssr` export declares `./dist/server/componentA-ssr.js`,
+    // so the generated renderer entry (and its types) must use that basename.
+    expect(generated).toContain(
+      path.resolve("dist/server", "componentA-ssr.js"),
+    );
+    expect(generated).toContain(
+      path.resolve("dist/server", "componentA-ssr.d.ts"),
+    );
+    // and must NOT fall back to the hardcoded default that would collide.
+    expect(generated).not.toContain(path.resolve("dist/server", "ssr.js"));
+  });
+  it("keeps the default 'ssr' entry filename for single components", async () => {
+    mockFs.existsSync.mockReturnValue(true);
+    const inferredComponents = inferComponents(ssrPackageJson);
+    const generated = await collectGeneratedSsrFiles(inferredComponents);
+    expect(generated).toContain(path.resolve("dist/server", "ssr.js"));
+    expect(generated).toContain(path.resolve("dist/server", "ssr.d.ts"));
   });
   it("returns null if no exports are found", () => {
     const inferredComponents = inferComponents({ exports: {} });
