@@ -113,4 +113,41 @@ describe("vitePluginSvebcomponentsSsr", () => {
     // nothing to transform => plugin returns null (no changes)
     expect(output).toBeNull();
   });
+
+  test("does not wrap <font-face> nested inside <svg>", async () => {
+    const output = await transform(`<svg><font-face></font-face></svg>`);
+
+    // Nothing to wrap, so the transform should be a no-op.
+    expect(output).toBeNull();
+  });
+
+  test("does not wrap other spec-reserved SVG/MathML names", async () => {
+    const output = await transform(
+      [
+        "<svg>",
+        "<font-face-src></font-face-src>",
+        "<font-face-uri></font-face-uri>",
+        "<font-face-format></font-face-format>",
+        "<font-face-name></font-face-name>",
+        "<missing-glyph></missing-glyph>",
+        "</svg>",
+        "<annotation-xml></annotation-xml>",
+        "<color-profile></color-profile>",
+      ].join(""),
+    );
+
+    expect(output).toBeNull();
+  });
+
+  test("still wraps a real custom element that is a sibling of a reserved SVG name", async () => {
+    const output = await transform(
+      `<svg><font-face></font-face></svg><my-element></my-element>`,
+    );
+
+    expect(output).not.toBeNull();
+    expect(output).toContain("CustomElementWrapper");
+    expect(output).toContain('_tagName="my-element"');
+    // The reserved name must not have been touched.
+    expect(output).toContain("<font-face></font-face>");
+  });
 });

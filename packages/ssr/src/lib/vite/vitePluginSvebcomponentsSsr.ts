@@ -3,6 +3,11 @@ import { parse, type AST } from "svelte/compiler";
 import { walk } from "zimmerframe";
 import MagicString from "magic-string";
 
+import {
+  mayBeCustomElementTagName,
+  isValidCustomElementTagName,
+} from "../shared/customElementName.js";
+
 const WRAPPER_COMPONENT_NAME = "CustomElementWrapper";
 const WRAPPER_SOURCE_PACKAGE = "@svebcomponents/ssr/wrapper-component";
 const WRAPPER_TAG_NAME_PROP = "_tagName";
@@ -97,7 +102,15 @@ function vitePluginSvebcomponentsSsr(): Plugin {
                 transformSlotAttribute(node, magicString);
               }
               let originalTagName: string | undefined;
-              if (node.name.includes("-")) {
+              // Cheap fast path first (avoids the regex for the vast
+              // majority of elements), then fully validate against the HTML
+              // spec's PotentialCustomElementName grammar so reserved
+              // SVG/MathML names like `font-face` or `annotation-xml` aren't
+              // mistaken for custom elements.
+              if (
+                mayBeCustomElementTagName(node.name) &&
+                isValidCustomElementTagName(node.name)
+              ) {
                 originalTagName = node.name;
                 state.webComponents.push(originalTagName);
 
