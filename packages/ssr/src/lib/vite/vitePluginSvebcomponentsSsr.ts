@@ -52,7 +52,7 @@ const transformSlotAttribute = (
 
   const slotValueAssignment =
     slotValue.type === "Text"
-      ? `'${slotValue.data}'`
+      ? JSON.stringify(slotValue.data)
       : `${slotValue.expression}`;
   // replace the plain attribute with a spread
   magicString.overwrite(
