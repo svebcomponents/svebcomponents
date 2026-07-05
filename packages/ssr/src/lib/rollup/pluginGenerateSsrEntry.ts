@@ -62,8 +62,8 @@ if (!ctor) {
   throw new Error('Could not access custom element constructor');
 }
 class ComponentSpecificSvelteCustomElementRenderer extends SvelteCustomElementRenderer {
-  constructor() {
-    super(ServerSvelteComponent, ctor);
+  constructor(tagName) {
+    super(ServerSvelteComponent, ctor, tagName);
   }
 }
 
@@ -71,9 +71,8 @@ export default ComponentSpecificSvelteCustomElementRenderer;
 `;
 
       const typesContent = `import { SvelteCustomElementRenderer } from '@svebcomponents/ssr';
-import ServerSvelteComponent from '${serverImportPath}';
 declare class ComponentSpecificSvelteCustomElementRenderer extends SvelteCustomElementRenderer {
-  constructor();
+  constructor(tagName?: string);
 }
 export default ComponentSpecificSvelteCustomElementRenderer;
 `;

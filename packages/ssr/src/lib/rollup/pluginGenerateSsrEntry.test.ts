@@ -61,6 +61,22 @@ describe("pluginGenerateSsrEntry", () => {
         "import ClientSvelteComponent from '../client/index.js'",
       ),
     );
+
+    // The generated renderer must forward the tagName to the base renderer
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/ssr.js"),
+      expect.stringContaining("constructor(tagName)"),
+    );
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/ssr.js"),
+      expect.stringContaining("super(ServerSvelteComponent, ctor, tagName)"),
+    );
+
+    // The generated type declaration exposes the optional tagName parameter
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/ssr.d.ts"),
+      expect.stringContaining("constructor(tagName?: string)"),
+    );
   });
 
   test("uses custom import paths when provided", async () => {
