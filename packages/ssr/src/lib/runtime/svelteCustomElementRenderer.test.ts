@@ -90,7 +90,7 @@ describe("SvelteCustomElementRenderer", () => {
     );
   });
 
-  test("sets non-string attributes directly on $$d without calling attribute changed callback", () => {
+  test("removes attributes and notifies via attributeChangedCallback", () => {
     const mockElement = {
       attributes: {},
       attributeChangedCallback: vi.fn(),
@@ -105,11 +105,58 @@ describe("SvelteCustomElementRenderer", () => {
       tagName,
     );
 
-    const complexValue = { foo: "bar" };
-    renderer.setAttribute("test-prop", complexValue as unknown as string);
+    renderer.setAttribute("data-test", "value1");
+    renderer.setAttribute("aria-label", "value2");
+    renderer.removeAttribute("data-test");
 
-    assert("test-prop" in mockElement.$$d);
-    expect(mockElement.$$d["test-prop"]).toBe(complexValue);
+    expect(mockElement.attributeChangedCallback).toHaveBeenLastCalledWith(
+      "data-test",
+      "value1",
+      null,
+    );
+    expect(Array.from(renderer.renderAttributes())).toStrictEqual([
+      ' aria-label="value2"',
+    ]);
+  });
+
+  test("removes attributes case-insensitively", () => {
+    const mockElement = {
+      attributes: {},
+      attributeChangedCallback: vi.fn(),
+      $$d: {},
+      $$p_d: {},
+    };
+    mockClientElementCtor.mockReturnValue(mockElement);
+
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+    );
+
+    renderer.setAttribute("data-test", "value1");
+    renderer.removeAttribute("DATA-TEST");
+
+    expect(Array.from(renderer.renderAttributes())).toStrictEqual([]);
+  });
+
+  test("removing an absent attribute is a no-op and does not notify", () => {
+    const mockElement = {
+      attributes: {},
+      attributeChangedCallback: vi.fn(),
+      $$d: {},
+      $$p_d: {},
+    };
+    mockClientElementCtor.mockReturnValue(mockElement);
+
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+    );
+
+    renderer.removeAttribute("data-test");
+
     expect(mockElement.attributeChangedCallback).not.toHaveBeenCalled();
   });
 

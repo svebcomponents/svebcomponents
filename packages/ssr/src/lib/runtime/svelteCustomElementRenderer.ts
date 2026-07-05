@@ -17,8 +17,8 @@ export interface SvelteClientCustomElement {
   attributes: Record<string, string>;
   attributeChangedCallback: (
     name: string,
-    oldValue: string,
-    newValue: string,
+    oldValue: string | null,
+    newValue: string | null,
   ) => void;
   ["$$d"]: Record<string, unknown>;
   /**
@@ -49,14 +49,33 @@ export class SvelteCustomElementRenderer
   }
 
   override setAttribute(name: string, value: string) {
-    if (typeof value !== "string") {
-      this.svelteClientCustomElement.$$d[name] = value;
-      // maybe do something to reflect the prop to the attributes, perhaps 'this.$$me' does this out of the box for us?
-      return;
-    }
+    // All known callers honor the `value: string` contract: Lit's SSR
+    // pipeline stringifies attribute values before calling this, and our
+    // Server.svelte wrapper routes non-string values through `setProperty`.
     name = name.toLowerCase();
     this.ssrAttributes.set(name, value);
     this.svelteClientCustomElement.attributeChangedCallback(name, value, value);
+  }
+
+  /**
+   * Not part of Lit's `ElementRenderer` API (which never removes attributes),
+   * but mirrors the DOM's `Element.removeAttribute` so wrapper code can clear
+   * an attribute that was set earlier during rendering.
+   */
+  removeAttribute(name: string) {
+    name = name.toLowerCase();
+    const oldValue = this.ssrAttributes.get(name);
+    if (oldValue === undefined) {
+      // Mirrors browser behavior: removing an absent attribute is a no-op
+      // and does not fire attributeChangedCallback.
+      return;
+    }
+    this.ssrAttributes.delete(name);
+    this.svelteClientCustomElement.attributeChangedCallback(
+      name,
+      oldValue,
+      null,
+    );
   }
 
   override *renderAttributes(): RenderResult {
