@@ -29,8 +29,8 @@ export function pluginOverrideSvelteSsrSlotImplementation(): Plugin {
 // --- virtual module: ${VIRTUAL_MODULE_ID} ---
 // import & reexport everything from the original module.
 export * from 'svelte/internal/server';
-// use 'attr' from svelte internal, because we depend on internal anyways & it has escaping built-in
-import { attr } from 'svelte/internal/client';
+// use 'attr' from svelte internal server, because we depend on internal anyways & it has escaping built-in
+import { attr } from 'svelte/internal/server';
 
 /**
  * override the original slot function for usage with '@svebcomponents/ssr'.
