@@ -32,7 +32,7 @@
     const CustomElementRendererCtor = ElementRendererRegistry.get(ctor);
     if (!CustomElementRendererCtor)
       throw new Error(`Custom element renderer for ${tagName} not found`);
-    const customElementRenderer = new CustomElementRendererCtor();
+    const customElementRenderer = new CustomElementRendererCtor(tagName);
 
     for (const [key, value] of Object.entries(customElementProps)) {
       if (key === "_tagName" || key === "children") continue;
