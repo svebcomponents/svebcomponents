@@ -42,9 +42,3 @@ camelizeKebabCase("favorite-number"); // "favoriteNumber"
 ```
 
 Used by `@svebcomponents/ssr` when mapping non-string kebab-case values to component properties during server rendering.
-
-### `TODO(description, ...args)`
-
-Logs a runtime TODO marker.
-
-This is currently used only inside experimental SSR code paths where behavior is intentionally incomplete.
