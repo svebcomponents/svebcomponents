@@ -2,7 +2,7 @@ import path from "node:path";
 import { defineConfig, DefineConfigOptions } from "./index.js";
 import { existsSync } from "node:fs";
 import { type Options } from "tsdown";
-import type { SvelteBuildConfig } from "./svelteConfig.js";
+import type { SvelteBuildConfig } from "@svebcomponents/ssr/svelte-config";
 
 type ExportValue = {
   types?: string;

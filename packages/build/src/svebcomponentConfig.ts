@@ -4,7 +4,7 @@ import { Options } from "tsdown";
 import {
   mergeCompilerOptions,
   type SvelteBuildConfig,
-} from "./svelteConfig.js";
+} from "@svebcomponents/ssr/svelte-config";
 
 interface SvebcomponentsOptions {
   /**

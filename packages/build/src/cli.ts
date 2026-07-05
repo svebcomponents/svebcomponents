@@ -5,7 +5,7 @@ import { loadConfig as loadSvebcomponentsConfig } from "unconfig";
 
 import { defineConfig } from "./index.js";
 import { inferComponents } from "./inferComponents.js";
-import type { SvelteBuildConfig } from "./svelteConfig.js";
+import type { SvelteBuildConfig } from "@svebcomponents/ssr/svelte-config";
 
 const getSvelteConfig = async (): Promise<SvelteBuildConfig | undefined> => {
   const result = await loadSvelteConfig(process.cwd());
