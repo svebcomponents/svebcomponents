@@ -5,7 +5,6 @@ import { defineConfig } from "./index.js";
 import fs from "node:fs";
 import path from "node:path";
 import fsPromises from "fs/promises";
-import type { Options } from "tsdown";
 
 vi.mock("node:fs");
 const mockFs = fs as unknown as {
