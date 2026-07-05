@@ -12,6 +12,11 @@ export interface SvelteOptions {
       propValues: Record<string, Record<string, unknown>>;
     } | null;
   } | null;
+  // true when `<svelte:options customElement="tagName"/>` (the string variant) was found.
+  // This variant is currently not supported, and since a `customElement` attribute is already
+  // present, we must not inject a second one (which would be a Svelte compile error), so callers
+  // need to bail out of any further svelte:options mutation in this case.
+  hasUnsupportedStringCustomElement?: boolean;
 }
 
 export const extractSvelteOptions = (
@@ -23,8 +28,7 @@ export const extractSvelteOptions = (
   const attributeInjectIndex = svelteOptions.end - 2;
 
   const customElementSvelteOptions = svelteOptions?.attributes.find(
-    (attr): attr is AST.Attribute & { value: AST.ExpressionTag } =>
-      attr.name === "customElement",
+    (attr) => attr.name === "customElement",
   );
   if (!customElementSvelteOptions) {
     return {
@@ -33,10 +37,17 @@ export const extractSvelteOptions = (
     };
   }
 
-  const {
-    value: { expression },
-  } = customElementSvelteOptions;
+  // the value of a `customElement` attribute isn't always an `ExpressionTag`:
+  // - `customElement` (boolean shorthand) has a value of `true`
+  // - `customElement="tagName"` (the quoted string variant) has a value that is an array of `Text`/`ExpressionTag` nodes
+  // only the object variant `customElement={{...}}` has an `ExpressionTag` value with an `expression` we can inspect
+  const customElementValue = customElementSvelteOptions.value;
+  const expression =
+    customElementValue !== true && !Array.isArray(customElementValue)
+      ? customElementValue.expression
+      : undefined;
   if (
+    !expression ||
     expression.type !== "ObjectExpression" ||
     !("end" in expression && typeof expression["end"] === "number")
   ) {
@@ -46,6 +57,7 @@ export const extractSvelteOptions = (
     return {
       attributeInjectIndex,
       customElementOptions: null,
+      hasUnsupportedStringCustomElement: true,
     };
   }
   // if custom element options exist, but no props

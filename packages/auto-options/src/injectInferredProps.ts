@@ -13,6 +13,13 @@ export const injectInferredProps = (
     ([, inferredProp]) => !inferredProp.isNonSerializable,
   );
   if (serializableProps.length === 0) return;
+
+  // if the user already declared `<svelte:options customElement="tagName"/>` (the currently
+  // unsupported string variant), a `customElement` attribute is already present on svelte:options.
+  // We must not inject a second `customElement={{...}}` attribute, since that would be a Svelte
+  // compile error, so we leave svelte:options untouched entirely.
+  if (svelteOptions?.hasUnsupportedStringCustomElement) return;
+
   let inferredPropsResult = "props: {\n";
   for (const [propName, inferredProp] of serializableProps) {
     inferredPropsResult += `${propName}: {attribute: "${inferredProp.attributeName}", reflect: ${inferredProp.isReflected}, type: "${inferredProp.type}"},\n`;
