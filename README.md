@@ -27,5 +27,5 @@ the version-compatibility tradeoff.
 - [`@svebcomponents/auto-options`]
   - automatically generate type converter & attribute settings from your props leveraging the typescript AST
 - [`@svebcomponents/ssr`]
-  - allows you to build SSR-able web components via `auto-options`
+  - lets `@svebcomponents/build` produce a server-renderable build (via tsdown) alongside the browser one
   - render web components that provide an `ElementRenderer` in SvelteKit (or other vite based SSR frameworks)

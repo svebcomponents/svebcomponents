@@ -24,3 +24,25 @@ pnpm install
 ```bash
 pnpm build
 ```
+
+## Running Tests
+
+```bash
+pnpm test
+```
+
+The browser e2e tests use Playwright with Chromium. On first-time setup, install the browser binary:
+
+```bash
+pnpm --filter "@svebcomponents/e2e.basic" exec playwright install chromium
+```
+
+## Changesets
+
+If your change affects a published package, describe it with a changeset before opening a PR:
+
+```bash
+pnpm changeset
+```
+
+Follow the prompts to select the affected package(s) and describe the change; commit the generated file in `.changeset/` along with your change.
