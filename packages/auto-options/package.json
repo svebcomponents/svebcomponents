@@ -7,7 +7,7 @@
     "directory": "packages/auto-options"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc",
+    "build": "rm -rf dist && tsc && publint",
     "check": "tsc --noEmit",
     "lint": "pnpm /^lint:.*/",
     "lint:eslint": "eslint .",
@@ -39,6 +39,7 @@
     "@svebcomponents/typescript-config": "workspace:*",
     "@types/estree": "catalog:",
     "@types/node": "catalog:",
+    "publint": "catalog:",
     "rolldown": "catalog:",
     "svelte": "catalog:",
     "vitest": "catalog:",

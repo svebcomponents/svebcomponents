@@ -365,6 +365,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.14.1
+      publint:
+        specifier: 'catalog:'
+        version: 0.3.21
       rolldown:
         specifier: 'catalog:'
         version: 1.0.0-beta.29
@@ -417,6 +420,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.14.1
+      publint:
+        specifier: 'catalog:'
+        version: 0.3.21
       rolldown:
         specifier: 'catalog:'
         version: 1.0.0-beta.29
@@ -508,6 +514,9 @@ importers:
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
+      publint:
+        specifier: 'catalog:'
+        version: 0.3.21
       svelte:
         specifier: 'catalog:'
         version: 5.28.2
