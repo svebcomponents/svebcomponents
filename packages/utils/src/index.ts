@@ -12,10 +12,13 @@ export const kebabize = (str: string) =>
  * Example:
  * kebab-case → true
  * word -> true
+ * col-2 → true
+ * heading2 → true
  * --css-variable → false
  * camelCase → false
  */
-export const isKebabCase = (str: string) => /^([a-z])+(-[a-z]+)*$/.test(str);
+export const isKebabCase = (str: string) =>
+  /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(str);
 
 /**
  * A utility to convert kebab-case to camelCase
