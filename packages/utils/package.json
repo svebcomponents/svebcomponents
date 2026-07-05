@@ -1,6 +1,9 @@
 {
   "name": "@svebcomponents/utils",
   "version": "0.0.2",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/svebcomponents/svebcomponents.git",
