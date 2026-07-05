@@ -30,7 +30,9 @@ describe("ElementRendererRegistry", () => {
   test("sets and gets renderer for element class", () => {
     class MockElement {}
 
-    const mockRenderer = class {} as ElementRendererCtor;
+    const mockRenderer = class {
+      constructor(_tagName: string) {}
+    } as ElementRendererCtor;
 
     ElementRendererRegistry.set(MockElement, mockRenderer);
     const retrieved = ElementRendererRegistry.get(MockElement);
@@ -40,7 +42,9 @@ describe("ElementRendererRegistry", () => {
 
   test("sets renderer using string tag name", () => {
     const mockElementClass = class {};
-    const mockRenderer = class {} as ElementRendererCtor;
+    const mockRenderer = class {
+      constructor(_tagName: string) {}
+    } as ElementRendererCtor;
     const tagName = "custom-element";
 
     mockCustomElements.get.mockReturnValue(mockElementClass);
@@ -52,7 +56,9 @@ describe("ElementRendererRegistry", () => {
   });
 
   test("throws error when custom element not found by tag name", () => {
-    const mockRenderer = class {} as ElementRendererCtor;
+    const mockRenderer = class {
+      constructor(_tagName: string) {}
+    } as ElementRendererCtor;
     const tagName = "non-existent-element";
 
     mockCustomElements.get.mockReturnValue(undefined);
@@ -68,8 +74,12 @@ describe("ElementRendererRegistry", () => {
     class MockElement1 {}
     class MockElement2 {}
 
-    const mockRenderer1 = class {} as ElementRendererCtor;
-    const mockRenderer2 = class {} as ElementRendererCtor;
+    const mockRenderer1 = class {
+      constructor(_tagName: string) {}
+    } as ElementRendererCtor;
+    const mockRenderer2 = class {
+      constructor(_tagName: string) {}
+    } as ElementRendererCtor;
 
     ElementRendererRegistry.set(MockElement1, mockRenderer1);
     ElementRendererRegistry.set(MockElement2, mockRenderer2);
@@ -92,7 +102,9 @@ describe("ElementRendererRegistry", () => {
   test("checks if renderer exists for element", () => {
     class MockElement {}
 
-    const mockRenderer = class {} as ElementRendererCtor;
+    const mockRenderer = class {
+      constructor(_tagName: string) {}
+    } as ElementRendererCtor;
 
     expect(ElementRendererRegistry.has(MockElement)).toBe(false);
 
@@ -105,7 +117,9 @@ describe("ElementRendererRegistry", () => {
     class BaseElement {}
     class ExtendedElement extends BaseElement {}
 
-    const mockRenderer = class {} as ElementRendererCtor;
+    const mockRenderer = class {
+      constructor(_tagName: string) {}
+    } as ElementRendererCtor;
 
     ElementRendererRegistry.set(BaseElement, mockRenderer);
     const retrieved = ElementRendererRegistry.get(ExtendedElement);
@@ -117,7 +131,9 @@ describe("ElementRendererRegistry", () => {
     class BaseElement {}
     class ExtendedElement extends BaseElement {}
 
-    const mockRenderer = class {} as ElementRendererCtor;
+    const mockRenderer = class {
+      constructor(_tagName: string) {}
+    } as ElementRendererCtor;
 
     ElementRendererRegistry.set(BaseElement, mockRenderer);
 
