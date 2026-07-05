@@ -3,7 +3,7 @@ import svebcomponentsSsr from "@svebcomponents/ssr/tsdown";
 import { createTsdownConfig } from "./svebcomponentConfig.js";
 import { Options } from "tsdown";
 import path from "node:path";
-import type { SvelteBuildConfig } from "./svelteConfig.js";
+import type { SvelteBuildConfig } from "@svebcomponents/ssr/svelte-config";
 
 export interface DefineConfigOptions {
   /**

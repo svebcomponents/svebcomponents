@@ -46,6 +46,10 @@
     "./tsdown": {
       "types": "./dist/tsdown/svebcomponentsSsrConfig.d.ts",
       "import": "./dist/tsdown/svebcomponentsSsrConfig.js"
+    },
+    "./svelte-config": {
+      "types": "./dist/tsdown/svelteConfig.d.ts",
+      "import": "./dist/tsdown/svelteConfig.js"
     }
   },
   "peerDependencies": {
