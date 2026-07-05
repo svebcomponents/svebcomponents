@@ -236,4 +236,19 @@ describe("infer components", () => {
     const inferredComponents = inferComponents({ exports: {} });
     expect(inferredComponents).toStrictEqual([]);
   });
+  it("emits posix (forward slash) paths for outDir and entry", () => {
+    // `exports` paths are always posix and the inferred values flow into
+    // generated import specifiers, so they must never contain backslashes,
+    // even when this code runs on Windows (guards against a regression where
+    // `path.normalize` re-introduces platform-native separators).
+    mockFs.existsSync.mockReturnValue(true);
+    const inferredComponents = inferComponents(svelteConditionPackageJson);
+    // stringify the whole config graph so every path-bearing field is checked
+    const serialized = JSON.stringify(inferredComponents);
+    expect(serialized).not.toContain("\\");
+    expect(serialized).toContain("dist/client");
+    expect(serialized).toContain("dist/server");
+    expect(serialized).toContain("dist/client-svelte");
+    expect(serialized).toContain("dist/server-svelte");
+  });
 });

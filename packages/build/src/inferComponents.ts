@@ -14,11 +14,15 @@ const resolveSvebcomponentEntryPoint = (
   entryPath: string,
   type: "client" | "server",
 ) => {
+  // `entryPath` originates from package.json `exports`, which are always posix
+  // ("./dist/client/index.js"). We therefore treat every path here as posix.
+  // The `existsSync` filesystem checks are safe with posix separators because
+  // Node's fs APIs accept forward slashes on Windows as well.
   const entry = entryPath.replace(`dist/${type}`, "src");
   if (existsSync(entry)) {
     return entry;
   }
-  const tsEntry = entry.replace(path.extname(entry), ".ts");
+  const tsEntry = entry.replace(path.posix.extname(entry), ".ts");
   if (!existsSync(tsEntry)) {
     throw new Error(
       `[svebcomponents]: could not find entry file for component at ${entry} or ${tsEntry}. Please ensure that the entry file exists.`,
@@ -48,8 +52,11 @@ export const inferComponents = (packageJson: unknown): Options[] => {
     if (typeof esmPath !== "string" || !esmPath.includes("dist/client")) {
       return undefined;
     }
-    const outDir = path.normalize(path.dirname(esmPath));
-    const entry = path.normalize(
+    // All values below are derived from posix `exports` paths and flow into
+    // generated import specifiers, so we must keep them posix (forward slashes)
+    // on every platform, including Windows.
+    const outDir = path.posix.normalize(path.posix.dirname(esmPath));
+    const entry = path.posix.normalize(
       resolveSvebcomponentEntryPoint(esmPath, "client"),
     );
     const config: DefineConfigOptions = {
@@ -58,7 +65,9 @@ export const inferComponents = (packageJson: unknown): Options[] => {
     };
     const sveltePath = value["svelte"];
     if (typeof sveltePath === "string") {
-      config.svelteOutDir = path.normalize(path.dirname(sveltePath));
+      config.svelteOutDir = path.posix.normalize(
+        path.posix.dirname(sveltePath),
+      );
     }
     const ssrExportDeclaration = `${key}/ssr`;
     const ssr = ssrExportDeclaration in exports;
@@ -71,17 +80,22 @@ export const inferComponents = (packageJson: unknown): Options[] => {
           "[svebcomponents]: could not find expected ESM ssr export.",
         );
       }
-      const ssrOutDir = path.dirname(ssrPath);
-      config.ssrOutDir = path.normalize(ssrOutDir);
+      const ssrOutDir = path.posix.dirname(ssrPath);
+      config.ssrOutDir = path.posix.normalize(ssrOutDir);
       // The declared ssr export (e.g. "./dist/server/button-ssr.js") dictates the
       // basename of the generated renderer entry file ("button-ssr"). Threading it
       // through keeps the generated file matching the exported path and avoids
       // collisions when several SSR components share one ssrOutDir.
-      config.ssrEntryFileName = path.basename(ssrPath, path.extname(ssrPath));
+      config.ssrEntryFileName = path.posix.basename(
+        ssrPath,
+        path.posix.extname(ssrPath),
+      );
 
       const ssrSveltePath = ssrExport?.["svelte"];
       if (typeof ssrSveltePath === "string") {
-        config.ssrSvelteOutDir = path.normalize(path.dirname(ssrSveltePath));
+        config.ssrSvelteOutDir = path.posix.normalize(
+          path.posix.dirname(ssrSveltePath),
+        );
       }
     }
     return config;

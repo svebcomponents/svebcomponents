@@ -10,7 +10,7 @@
     "directory": "packages/auto-options"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc && publint",
+    "build": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\" && tsc && publint",
     "check": "tsc --noEmit",
     "lint": "pnpm /^lint:.*/",
     "lint:eslint": "eslint .",
