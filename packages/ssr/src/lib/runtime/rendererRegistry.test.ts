@@ -1,5 +1,5 @@
 import { expect, test, describe, beforeEach, vi } from "vitest";
-import { ElementRendererRegistry } from "./rendererRegistry";
+import { createElementRendererRegistry } from "./rendererRegistry";
 import type { ElementRendererCtor } from "./types";
 
 const { mockCustomElements } = vi.hoisted(() => {
@@ -8,17 +8,6 @@ const { mockCustomElements } = vi.hoisted(() => {
     get: vi.fn(),
     set: vi.fn(),
   };
-
-  // ElementRendererRegistry uses a Map to store renderers, but since it is a private property, we can't clear it from the outside.
-  // So we stub "Map" with an AutoClearingMap that automatically clear itself before each test.
-  class AutoClearingMap extends Map {
-    constructor() {
-      super();
-      beforeEach(() => this.clear());
-    }
-  }
-
-  vi.stubGlobal("Map", AutoClearingMap);
 
   vi.stubGlobal("customElements", mockCustomElements);
 
@@ -29,8 +18,13 @@ const { mockCustomElements } = vi.hoisted(() => {
 });
 
 describe("ElementRendererRegistry", () => {
+  // Create a fresh registry instance for each test instead of relying on the
+  // shared global singleton, so tests don't leak state into one another.
+  let ElementRendererRegistry: ReturnType<typeof createElementRendererRegistry>;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    ElementRendererRegistry = createElementRendererRegistry();
   });
 
   test("sets and gets renderer for element class", () => {

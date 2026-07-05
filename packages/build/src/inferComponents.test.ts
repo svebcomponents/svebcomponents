@@ -1,4 +1,5 @@
 import { describe, expect, it, type MockedFunction, vi } from "vitest";
+import type { Options } from "tsdown";
 import { inferComponents } from "./inferComponents";
 import { defineConfig } from "./index.js";
 import fs from "node:fs";
@@ -90,38 +91,77 @@ const manualMultipleComponentsConfig = [
   }),
 ];
 
+/**
+ * Extracts the ordered plugin names of a tsdown `Options` entry.
+ * `JSON.stringify` drops the plugin objects (their hooks are functions), so
+ * plugin pipelines have to be asserted explicitly via their names.
+ */
+const pluginNames = (options: Options): string[] => {
+  const plugins = options.plugins;
+  expect(Array.isArray(plugins)).toBe(true);
+  return (plugins as { name: string }[]).map((plugin) => plugin.name);
+};
+
+const clientPipeline = ["svebcomponents:auto-options", "svelte"];
+const ssrPipeline = [
+  "svebcomponents:override-svelte-ssr-slot-implementation",
+  "svelte",
+  "svebcomponents:generate-ssr-entry",
+];
+
+/**
+ * Asserts that `inferred` matches `expected` both in its serializable fields
+ * (via JSON, which silently drops functions like plugin hooks) and in its
+ * plugin pipelines (via plugin names, which the JSON comparison cannot see).
+ */
+const expectConfigsToMatch = (
+  inferred: Options[],
+  expected: Options[],
+  expectedPipelines: string[][],
+) => {
+  // use `JSON.stringify` to compare the plain fields without comparing
+  // method references
+  expect(JSON.stringify(inferred)).toEqual(JSON.stringify(expected));
+  // additionally assert each config's plugin pipeline explicitly
+  expect(inferred).toHaveLength(expectedPipelines.length);
+  for (const [index, pipeline] of expectedPipelines.entries()) {
+    expect(pluginNames(inferred[index]!)).toEqual(pipeline);
+    expect(pluginNames(expected[index]!)).toEqual(pipeline);
+  }
+};
+
 describe("infer components", () => {
   it("parses components from package.json", () => {
     mockFs.existsSync.mockReturnValue(true);
     const inferredComponents = inferComponents(packageJson);
-    // use `JSON.stringify` to avoid comparing method references
-    expect(JSON.stringify(inferredComponents)).toEqual(
-      JSON.stringify(manualConfig),
-    );
+    expectConfigsToMatch(inferredComponents, manualConfig, [clientPipeline]);
   });
   it("parses SSR components from package.json", () => {
     mockFs.existsSync.mockReturnValue(true);
     const inferredComponents = inferComponents(ssrPackageJson);
-    // use `JSON.stringify` to avoid comparing method references
-    expect(JSON.stringify(inferredComponents)).toEqual(
-      JSON.stringify(manualSSRConfig),
-    );
+    expectConfigsToMatch(inferredComponents, manualSSRConfig, [
+      clientPipeline,
+      ssrPipeline,
+    ]);
   });
   it("parses Svelte conditional exports from package.json", () => {
     mockFs.existsSync.mockReturnValue(true);
     const inferredComponents = inferComponents(svelteConditionPackageJson);
-    // use `JSON.stringify` to avoid comparing method references
-    expect(JSON.stringify(inferredComponents)).toEqual(
-      JSON.stringify(manualSvelteConditionConfig),
-    );
+    expectConfigsToMatch(inferredComponents, manualSvelteConditionConfig, [
+      clientPipeline,
+      clientPipeline,
+      ssrPipeline,
+      ssrPipeline,
+    ]);
   });
   it("parses multiple components from package.json", () => {
     mockFs.existsSync.mockReturnValue(true);
     const inferredComponents = inferComponents(multipleComponentsPackageJson);
-    // use `JSON.stringify` to avoid comparing method references
-    expect(JSON.stringify(inferredComponents)).toEqual(
-      JSON.stringify(manualMultipleComponentsConfig),
-    );
+    expectConfigsToMatch(inferredComponents, manualMultipleComponentsConfig, [
+      clientPipeline,
+      clientPipeline,
+      ssrPipeline,
+    ]);
   });
   it("returns null if no exports are found", () => {
     const inferredComponents = inferComponents({ exports: {} });
