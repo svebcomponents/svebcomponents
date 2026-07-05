@@ -4,7 +4,7 @@ Browsers know how to instantiate custom elements, but server renderers usually o
 
 The design is modeled after Lit's server-side rendering system: custom elements are rendered by `ElementRenderer` classes, and the server uses declarative shadow DOM to serialize the rendered shadow root.
 
-This package is still experimental. It is useful for exploration and integration tests, but the runtime API and generated output may still change. It has not yet been hardened against XSS or other injection attacks, so do not use it with untrusted content in production.
+This package is still experimental. It is useful for exploration and integration tests, but the runtime API and generated output may still change. Attribute values/names and tag names are validated and escaped through Svelte's own SSR serializer, and this is covered by XSS regression tests, but the package has not had an independent security audit, and shadow-root content rendered via `{@html}` relies on the renderer's escaping. Treat it as experimental and avoid untrusted content in production.
 
 ## What It Provides
 
@@ -132,8 +132,7 @@ The plugin also rewrites plain `slot` attributes inside custom elements to sprea
 ## Current Limitations
 
 - This package is experimental and not recommended for production yet.
-- The generated HTML and shadow DOM output have not yet been audited or hardened against XSS.
+- Attribute values/names and tag names are validated/escaped via Svelte's SSR serializer and covered by XSS regression tests, but the generated HTML and shadow DOM output have not had an independent security audit.
 - Custom element tags are detected by the presence of a dash in the tag name.
 - The consuming app must import the browser custom element module and register the matching SSR renderer.
-- Server-side attribute rendering is still incomplete.
 - The Vite plugin currently transforms Svelte files and injects a Svelte wrapper component.

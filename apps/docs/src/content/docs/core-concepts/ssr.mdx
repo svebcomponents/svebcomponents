@@ -4,8 +4,12 @@ description: How experimental server rendering works for Svelte-built custom ele
 ---
 
 :::danger
-Svebcomponents SSR is experimental, has not been hardened against injection
-attacks, and is not recommended for production use.
+Svebcomponents SSR is experimental and not recommended for production use.
+Attribute values/names and tag names are validated and escaped through
+Svelte's own SSR serializer, and this is covered by XSS regression tests, but
+the package has not had an independent security audit, and shadow-root
+content rendered via `{@html}` relies on the renderer's escaping. Avoid
+untrusted content in production.
 :::
 
 Browsers know how to instantiate custom elements. A server renderer usually
