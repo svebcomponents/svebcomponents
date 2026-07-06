@@ -53,9 +53,20 @@ export function pluginGenerateSsrEntry(
         `${entryFileName}.d.ts`,
       );
 
-      const content = `import { SvelteCustomElementRenderer } from '@svebcomponents/ssr';
+      const content = `// The DOM shim must be installed before the client custom-element bundle
+// evaluates: the compiled custom element (and svelte's client runtime it
+// bundles) captures \`HTMLElement\` at module-evaluation time.
+import '@svebcomponents/ssr/shim';
+import { SvelteCustomElementRenderer } from '@svebcomponents/ssr';
 import ServerSvelteComponent from '${serverImportPath}';
-import ClientSvelteComponent from '${clientImportPath}';
+
+// Import the client bundle dynamically instead of statically: bundlers that
+// code-split (e.g. rollup in a SvelteKit server build) may hoist a statically
+// imported module into a shared chunk that executes before this module's own
+// imports, evaluating the custom-element code before the shim above has
+// installed. Evaluation of a dynamic import can never be hoisted above the
+// importing module's body, so this is ordering-safe under any chunking.
+const ClientSvelteComponent = (await import('${clientImportPath}')).default;
 
 const ctor = ClientSvelteComponent.element;
 if (!ctor) {

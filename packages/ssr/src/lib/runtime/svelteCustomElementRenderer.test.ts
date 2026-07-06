@@ -345,6 +345,133 @@ describe("SvelteCustomElementRenderer", () => {
     expect(shadowContent).toEqual("");
   });
 
+  test("renderShadow renders svelte >=5.36 thenable RenderOutput synchronously via its lazy getters", () => {
+    // svelte >= 5.36 render() results are *always* thenable, but expose lazy
+    // sync `head`/`body` getters for synchronous components.
+    const renderOutput = {
+      get head() {
+        return "<style>/* lazy styles */</style>";
+      },
+      get body() {
+        return "<div>Lazy content</div>";
+      },
+      then: vi.fn(),
+    };
+    mockRender.mockReturnValue(
+      renderOutput as unknown as ReturnType<typeof render>,
+    );
+
+    const mockElement = {
+      attributes: {},
+      attributeChangedCallback: vi.fn(),
+      $$d: {},
+      $$p_d: {},
+    };
+    mockClientElementCtor.mockReturnValue(mockElement);
+
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+    );
+
+    const renderResult = renderer.renderShadow({} as RenderInfo);
+    assert(renderResult);
+    // synchronous consumption must work (this is what collectResultSync does)
+    const chunks = Array.from(renderResult);
+    expect(chunks.every((chunk) => typeof chunk === "string")).toBe(true);
+    expect(chunks.join("")).toBe(
+      "<style>/* lazy styles */</style><div>Lazy content</div>",
+    );
+    // the promise path must not be taken for synchronous components
+    expect(renderOutput.then).not.toHaveBeenCalled();
+  });
+
+  test("renderShadow falls back to the promise path when sync access throws await_invalid", async () => {
+    // simulates a genuinely async component rendered with svelte >= 5.36:
+    // sync getters throw `await_invalid`, awaiting resolves.
+    const awaitInvalid = new Error(
+      "await_invalid\nEncountered asynchronous work while rendering synchronously.\nhttps://svelte.dev/e/await_invalid",
+    );
+    const renderOutput = {
+      get head(): string {
+        throw awaitInvalid;
+      },
+      get body(): string {
+        throw awaitInvalid;
+      },
+      then: (
+        onfulfilled: (value: { head: string; body: string }) => unknown,
+      ) => {
+        return Promise.resolve(
+          onfulfilled({
+            head: "<style>/* awaited styles */</style>",
+            body: "<div>Awaited content</div>",
+          }),
+        );
+      },
+    };
+    mockRender.mockReturnValue(
+      renderOutput as unknown as ReturnType<typeof render>,
+    );
+
+    const mockElement = {
+      attributes: {},
+      attributeChangedCallback: vi.fn(),
+      $$d: {},
+      $$p_d: {},
+    };
+    mockClientElementCtor.mockReturnValue(mockElement);
+
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+    );
+
+    const renderResult = renderer.renderShadow({} as RenderInfo);
+    assert(renderResult);
+    const shadowContent = await collectResult(renderResult);
+
+    expect(shadowContent).toBe(
+      "<style>/* awaited styles */</style><div>Awaited content</div>",
+    );
+  });
+
+  test("renderShadow rethrows genuine render errors from sync getters", () => {
+    const renderError = new Error("something exploded inside the component");
+    const renderOutput = {
+      get head(): string {
+        throw renderError;
+      },
+      get body(): string {
+        throw renderError;
+      },
+      then: vi.fn(),
+    };
+    mockRender.mockReturnValue(
+      renderOutput as unknown as ReturnType<typeof render>,
+    );
+
+    const mockElement = {
+      attributes: {},
+      attributeChangedCallback: vi.fn(),
+      $$d: {},
+      $$p_d: {},
+    };
+    mockClientElementCtor.mockReturnValue(mockElement);
+
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+    );
+
+    const renderResult = renderer.renderShadow({} as RenderInfo);
+    assert(renderResult);
+    expect(() => Array.from(renderResult)).toThrow(renderError);
+  });
+
   test("renderShadow resolves async svelte render results", async () => {
     mockRender.mockReturnValue(
       Promise.resolve({
