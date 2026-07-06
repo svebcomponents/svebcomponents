@@ -66,7 +66,27 @@ export const injectInferredProps = (
 
   // 1: custom element options already exist on svelte:options
   if (svelteOptions?.customElementOptions) {
-    const { propertyInjectIndex, props } = svelteOptions.customElementOptions;
+    const { propertyInjectIndex, lastPropertyEnd, props } =
+      svelteOptions.customElementOptions;
+    // an appended entry needs a leading comma only when the object has
+    // properties AND doesn't already end in a trailing comma — otherwise
+    // we'd emit `..., , extend` (a parse error) or `...} extend` (missing
+    // separator). A single leading comma covers all appended entries since
+    // each appended entry ends without one.
+    let appendSeparator =
+      lastPropertyEnd > 0 &&
+      !magicString.original
+        .slice(lastPropertyEnd, propertyInjectIndex)
+        .includes(",")
+        ? ",\n"
+        : "\n";
+    const append = (entry: string) => {
+      magicString.appendLeft(
+        propertyInjectIndex,
+        `${appendSeparator}${entry},`,
+      );
+      appendSeparator = "\n";
+    };
     if (inferredPropsResult !== null) {
       if (props) {
         // 1-a: prop options exist, replace only them with the inferred props
@@ -77,15 +97,11 @@ export const injectInferredProps = (
         );
       } else {
         // 1-b: no prop options yet, append the prop options
-        // since we append to other entries inside an object, we can't forget the comma
-        magicString.appendLeft(
-          propertyInjectIndex,
-          `,\n${inferredPropsResult}`,
-        );
+        append(inferredPropsResult);
       }
     }
     if (extendResult !== null) {
-      magicString.appendLeft(propertyInjectIndex, `,\n${extendResult}`);
+      append(extendResult);
     }
     return;
   }

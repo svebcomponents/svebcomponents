@@ -39,6 +39,9 @@
     __initialProps = {},
   }: Props = $props();
 
+  // Deliberately a one-time snapshot: later updates flow through setProps.
+  // eslint-disable-next-line svelte/no-unused-svelte-ignore -- the warning fires in consumer builds (rollup-plugin-svelte), not in this package's lint compile
+  // svelte-ignore state_referenced_locally
   const componentProps: Record<string, unknown> = $state({ ...__initialProps });
 
   /**

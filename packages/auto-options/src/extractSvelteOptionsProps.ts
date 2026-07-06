@@ -6,6 +6,9 @@ export interface SvelteOptions {
   attributeInjectIndex: number;
   customElementOptions: {
     propertyInjectIndex: number;
+    // position right after the last existing property (0 for an empty
+    // object) — used to detect an existing trailing comma before appending
+    lastPropertyEnd: number;
     // true when the user already provides their own `extend` — we must not inject a second one
     hasExtend: boolean;
     props: {
@@ -88,11 +91,23 @@ export const extractSvelteOptions = (
   // `{fuga: 'hoge'}` we want to inject properties left of the last closing bracket,
   // so the property inject index is the index of closing bracket
   const propertyInjectIndex = expression.end - 1;
+  // the byte position right after the last existing property — anything
+  // between here and the closing bracket can only be whitespace or a
+  // trailing comma, which injectors must inspect before adding their own
+  const lastPropertyEnd = expression.properties.reduce(
+    (end, property) =>
+      "end" in property && typeof property.end === "number"
+        ? Math.max(end, property.end)
+        : end,
+    // empty object: appended entries need no leading comma
+    0,
+  );
   if (!propsOptions || propsOptions.value.type !== "ObjectExpression") {
     return {
       attributeInjectIndex,
       customElementOptions: {
         propertyInjectIndex,
+        lastPropertyEnd,
         hasExtend,
         props: null,
       },
@@ -128,6 +143,7 @@ export const extractSvelteOptions = (
     attributeInjectIndex,
     customElementOptions: {
       propertyInjectIndex,
+      lastPropertyEnd,
       hasExtend,
       props: {
         propsStart,

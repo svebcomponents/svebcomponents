@@ -45,6 +45,29 @@ ${component}`;
   expect(result.code.match(/customElement=\{\{/g)).toHaveLength(1);
 });
 
+test("injects extend after user options ending in a trailing comma", async () => {
+  // regression: a trailing comma in the user's customElement object used to
+  // produce `..., , extend` — a svelte parse error
+  const withTrailingComma = `<svelte:options
+  customElement={{
+    props: {
+      title: { attribute: "title", reflect: false, type: "String" },
+    },
+  }}
+/>
+${component}`;
+  const result = await transform(withTrailingComma);
+  assert(result);
+
+  expect(result.code).not.toMatch(/,\s*,/);
+  expect(result.code).toContain("extend: (ceClass) =>");
+  const { compile } = await import("svelte/compiler");
+  // must compile cleanly as a custom element
+  expect(() =>
+    compile(result.code, { customElement: true, generate: "client" }),
+  ).not.toThrow();
+});
+
 test("respects a user-provided extend", async () => {
   const withExtend = `<svelte:options customElement={{ extend: (Class) => Class }} />
 ${component}`;
