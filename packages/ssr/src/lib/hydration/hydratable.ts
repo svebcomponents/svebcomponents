@@ -1,3 +1,4 @@
+import { DEV } from "esm-env";
 import { hydrate, unmount, type Component } from "svelte";
 
 import {
@@ -132,6 +133,15 @@ export const hydratable = <T extends CustomElementConstructor>(
           !this.$$svebHasClientRendered &&
           !this.$$c
         ) {
+          if (DEV && this.$$s.length > 0) {
+            // surfaced so nobody mistakes the deliberate fallback for broken
+            // hydration — see the hydration docs' slot caveat
+            console.info(
+              `[svebcomponents] <${this.tagName.toLowerCase()}> declares slots and was mounted instead of hydrated. ` +
+                "Slot hydration is expected to become possible with Svelte 6; until then, slotted components re-render on upgrade. " +
+                "See https://svebcomponents.dev/core-concepts/hydration/#limitations",
+            );
+          }
           // non-hydratable SSR content: clear it so svelte's mount path
           // doesn't render *after* the server content
           ssrRoot.replaceChildren();
