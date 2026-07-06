@@ -13,3 +13,9 @@
   <p id="count">Count: {typeof count}-{count}</p>
   <p id="enabled">Enabled: {typeof enabled}-{enabled}</p>
 </div>
+
+<style>
+  h1 {
+    color: rgb(0, 128, 0);
+  }
+</style>

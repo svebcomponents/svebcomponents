@@ -36,6 +36,15 @@
       "types": "./dist/runtime/installShim.d.ts",
       "import": "./dist/runtime/installShim.js"
     },
+    "./hydration": {
+      "types": "./dist/hydration/hydratable.d.ts",
+      "import": "./dist/hydration/hydratable.js"
+    },
+    "./hydration-host": {
+      "types": "./dist/hydration/HydrationHost.svelte.d.ts",
+      "svelte": "./dist/hydration/HydrationHost.svelte",
+      "default": "./dist/hydration/HydrationHost.svelte"
+    },
     "./wrapper-component": {
       "types": "./dist/vite/CustomElementWrapper.svelte.d.ts",
       "svelte": "./dist/vite/CustomElementWrapper.svelte"

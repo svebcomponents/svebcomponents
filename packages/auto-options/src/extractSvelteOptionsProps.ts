@@ -6,6 +6,8 @@ export interface SvelteOptions {
   attributeInjectIndex: number;
   customElementOptions: {
     propertyInjectIndex: number;
+    // true when the user already provides their own `extend` — we must not inject a second one
+    hasExtend: boolean;
     props: {
       propsStart: number;
       propsEnd: number;
@@ -60,6 +62,13 @@ export const extractSvelteOptions = (
       hasUnsupportedStringCustomElement: true,
     };
   }
+  const hasExtend = expression.properties.some(
+    (property) =>
+      property.type === "Property" &&
+      "name" in property.key &&
+      property.key.name === "extend",
+  );
+
   // if custom element options exist, but no props
   const propsOptions = expression.properties.find(
     (
@@ -84,6 +93,7 @@ export const extractSvelteOptions = (
       attributeInjectIndex,
       customElementOptions: {
         propertyInjectIndex,
+        hasExtend,
         props: null,
       },
     };
@@ -118,6 +128,7 @@ export const extractSvelteOptions = (
     attributeInjectIndex,
     customElementOptions: {
       propertyInjectIndex,
+      hasExtend,
       props: {
         propsStart,
         propsEnd,

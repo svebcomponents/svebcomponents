@@ -1,4 +1,6 @@
-import svebcomponentsSsr from "@svebcomponents/ssr/tsdown";
+import svebcomponentsSsr, {
+  createHydrationHostTsdownConfig,
+} from "@svebcomponents/ssr/tsdown";
 
 import { createTsdownConfig } from "./svebcomponentConfig.js";
 import { Options } from "tsdown";
@@ -14,6 +16,13 @@ export interface DefineConfigOptions {
    * Whether to generate an SSR entry file for the web component.
    */
   ssr?: boolean;
+  /**
+   * Whether the compiled custom element hydrates server-rendered declarative
+   * shadow DOM instead of wiping and re-rendering it. Requires `ssr` (the
+   * hydration-aware SSR entry and the client wrapper are two halves of the
+   * same feature). Defaults to true.
+   */
+  hydratable?: boolean;
   /**
    * The output directory for the build files.
    */
@@ -61,11 +70,15 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
   const ssrOutDir = options.ssrOutDir ?? "dist/server";
   const ssrSvelteOutDir = options.ssrSvelteOutDir;
   const ssrEntryFileName = options.ssrEntryFileName ?? "ssr";
+  // hydration only makes sense when there is server-rendered output to hydrate
+  const hydratable = ssr && (options.hydratable ?? true);
+  const hydrationHostEntryName = `${ssrEntryFileName}-hydration-host`;
 
   const tsdownOptions: Options[] = [
     createTsdownConfig({
       entry,
       outDir,
+      hydratable,
       svelteConfig,
     }),
   ];
@@ -76,6 +89,7 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
         entry,
         outDir: svelteOutDir,
         externalSvelte: true,
+        hydratable,
         svelteConfig,
       }),
     );
@@ -93,8 +107,21 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
           ssrOutDir,
           entryOutputFile(outDir, entry),
         ),
+        ...(hydratable
+          ? { hydrationHostImportPath: `./${hydrationHostEntryName}.js` }
+          : {}),
       }),
     );
+
+    if (hydratable) {
+      tsdownOptions.push(
+        createHydrationHostTsdownConfig({
+          outDir: ssrOutDir,
+          entryName: hydrationHostEntryName,
+          svelteConfig,
+        }),
+      );
+    }
 
     if (ssrSvelteOutDir) {
       tsdownOptions.push(
@@ -111,8 +138,22 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
             ssrSvelteOutDir,
             entryOutputFile(svelteOutDir ?? outDir, entry),
           ),
+          ...(hydratable
+            ? { hydrationHostImportPath: `./${hydrationHostEntryName}.js` }
+            : {}),
         }),
       );
+
+      if (hydratable) {
+        tsdownOptions.push(
+          createHydrationHostTsdownConfig({
+            outDir: ssrSvelteOutDir,
+            entryName: hydrationHostEntryName,
+            externalSvelte: true,
+            svelteConfig,
+          }),
+        );
+      }
     }
   }
 

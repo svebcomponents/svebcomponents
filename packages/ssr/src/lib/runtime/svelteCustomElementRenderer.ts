@@ -83,6 +83,14 @@ export class SvelteCustomElementRenderer
       new (): SvelteClientCustomElement;
     },
     tagName: string,
+    /**
+     * Server-compiled HydrationHost component. When provided, the shadow
+     * content is rendered through it so the markup structure matches what the
+     * client-side `hydratable` wrapper hydrates (same host component on both
+     * sides). Omitted for non-hydratable builds, which render the component
+     * directly as before.
+     */
+    private hydrationHostComponent?: Component,
   ) {
     super(tagName);
     this.svelteClientCustomElement = new SvelteClientCustomElementCtor();
@@ -130,9 +138,17 @@ export class SvelteCustomElementRenderer
   }
 
   override *renderShadow(_renderInfo: RenderInfo): RenderResult | undefined {
-    const result = render(this.svelteSsrComponent, {
-      props: this.svelteClientCustomElement.$$d,
-    }) as unknown as SvelteRenderResult | PromiseLike<SvelteRenderResult>;
+    const result = (this.hydrationHostComponent
+      ? render(this.hydrationHostComponent, {
+          props: {
+            __component: this.svelteSsrComponent,
+            __propDefinitions: this.svelteClientCustomElement.$$p_d,
+            __initialProps: { ...this.svelteClientCustomElement.$$d },
+          },
+        })
+      : render(this.svelteSsrComponent, {
+          props: this.svelteClientCustomElement.$$d,
+        })) as unknown as SvelteRenderResult | PromiseLike<SvelteRenderResult>;
     if (isPromiseLike<SvelteRenderResult>(result)) {
       const syncResult = tryRenderSync(result);
       if (syncResult) {

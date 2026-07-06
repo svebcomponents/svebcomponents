@@ -6,7 +6,7 @@ export const baseConfig = {
       {
         test: {
           setupFiles: ["test/client/setup.ts"],
-          include: ["test/client/component.test.ts"],
+          include: ["test/client/*.test.ts"],
           browser: {
             screenshotFailures: false,
             enabled: true,

@@ -19,6 +19,8 @@ export default defineConfig({
   ],
   test: {
     ...vitestConfig?.test,
+    // renders the DSD fixture the browser-side hydration test consumes
+    globalSetup: ["test/hydrationFixture.globalSetup.ts"],
     projects: [
       ...(vitestConfig?.test?.projects ?? []),
       // The default consumer configuration: sync wrapper, no async option,

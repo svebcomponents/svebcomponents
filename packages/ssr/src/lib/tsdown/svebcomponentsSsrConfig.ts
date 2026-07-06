@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+
 import type { Options } from "tsdown";
 import svelte from "rollup-plugin-svelte";
 
@@ -7,6 +9,15 @@ import {
   mergeCompilerOptions,
   type SvelteBuildConfig,
 } from "./svelteConfig.js";
+
+/**
+ * Resolved relative to this module so it works from the built package
+ * (dist/tsdown/ → dist/hydration/) without export-map resolution, which node
+ * couldn't apply to a .svelte file anyway.
+ */
+const HYDRATION_HOST_SVELTE_PATH = fileURLToPath(
+  new URL("../hydration/HydrationHost.svelte", import.meta.url),
+);
 
 interface SvebcomponentsSsrOptions {
   /**
@@ -35,6 +46,13 @@ interface SvebcomponentsSsrOptions {
    * share an output directory (e.g. "button-ssr").
    */
   ssrEntryFileName?: string;
+  /**
+   * Import path (relative to the generated SSR entry) of the server-compiled
+   * HydrationHost, built via `createHydrationHostTsdownConfig`. When set, the
+   * generated renderer renders through it so its markup can be hydrated by
+   * the client-side `hydratable` wrapper.
+   */
+  hydrationHostImportPath?: string;
   svelteConfig?: SvelteBuildConfig | undefined;
 }
 
@@ -45,6 +63,7 @@ const createSsrTsdownConfig = ({
   serverImportPath,
   clientImportPath,
   ssrEntryFileName,
+  hydrationHostImportPath,
   svelteConfig,
 }: SvebcomponentsSsrOptions) =>
   ({
@@ -78,6 +97,62 @@ const createSsrTsdownConfig = ({
         ...(ssrEntryFileName !== undefined
           ? { entryFileName: ssrEntryFileName }
           : {}),
+        ...(hydrationHostImportPath !== undefined
+          ? { hydrationHostImportPath }
+          : {}),
+      }),
+    ],
+  }) satisfies Options;
+
+interface HydrationHostTsdownOptions {
+  /**
+   * Output directory — should match the component's SSR outDir so the
+   * generated SSR entry can import the compiled host relatively.
+   */
+  outDir: string;
+  /** Output basename (without extension), e.g. "ssr-hydration-host". */
+  entryName: string;
+  /**
+   * Whether Svelte runtime imports should be left for Svelte-aware tooling to resolve.
+   */
+  externalSvelte?: boolean;
+  svelteConfig?: SvelteBuildConfig | undefined;
+}
+
+/**
+ * Builds the server-compiled HydrationHost component into the component's
+ * SSR output directory, so the generated SSR entry can render through it and
+ * produce markup the client-side `hydratable` wrapper can hydrate. This is a
+ * separate tsdown config because dts generation must be disabled for a
+ * .svelte entry.
+ */
+export const createHydrationHostTsdownConfig = ({
+  outDir,
+  entryName,
+  externalSvelte = false,
+  svelteConfig,
+}: HydrationHostTsdownOptions) =>
+  ({
+    entry: { [entryName]: HYDRATION_HOST_SVELTE_PATH },
+    outDir,
+    dts: false,
+    // shared output directories are cleaned once by the svebcomponents CLI
+    clean: false,
+    ...(externalSvelte ? { external: [/^svelte(\/.*)?$/] } : {}),
+    plugins: [
+      svelte({
+        emitCss: false,
+        ...(svelteConfig?.extensions
+          ? { extensions: svelteConfig.extensions }
+          : {}),
+        ...(svelteConfig?.preprocess
+          ? { preprocess: svelteConfig.preprocess }
+          : {}),
+        compilerOptions: mergeCompilerOptions(svelteConfig?.compilerOptions, {
+          customElement: false,
+          generate: "server",
+          css: "injected",
+        }),
       }),
     ],
   }) satisfies Options;

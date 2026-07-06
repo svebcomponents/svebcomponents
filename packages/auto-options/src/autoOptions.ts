@@ -14,11 +14,24 @@ import {
 import { injectInferredProps } from "./injectInferredProps.js";
 import { extractSvelteOptions } from "./extractSvelteOptionsProps.js";
 
+export interface AutoOptionsPluginOptions {
+  /**
+   * When true, injects `extend: hydratable` (imported from
+   * `@svebcomponents/ssr/hydration`) into the generated custom element
+   * options, so a server-rendered declarative shadow root is hydrated
+   * instead of being wiped and re-rendered. Skipped for components that
+   * already declare their own `extend`.
+   */
+  hydratable?: boolean;
+}
+
 // In svelte web component land, even simple things such as exposing props as attributes have to be
 // manually configured using <svelte:options customElement={}/>
 // to help with this, @svebcomponents/auto-options provides a rollup plugin that tries to cover at least the basic use cases
 // out of the box
-export const autoOptions = () => {
+export const autoOptions = ({
+  hydratable = false,
+}: AutoOptionsPluginOptions = {}) => {
   return {
     name: "svebcomponents:auto-options",
     enforce: "pre",
@@ -27,13 +40,19 @@ export const autoOptions = () => {
       if (!id.endsWith(".svelte")) {
         return null;
       }
+      // infrastructure components (like @svebcomponents/ssr's HydrationHost)
+      // opt out of processing — transforming them would inject bogus custom
+      // element options and, worse, circular imports back into the runtime
+      if (code.includes("svebcomponents:auto-options-ignore")) {
+        return null;
+      }
       const { instance, options } = parse(code, {
         filename: id,
         modern: true,
       });
 
-      // if the component doesn't have a script, there are no props we need to add to the custom element,
-      // so we can skip processing altogether
+      // without a script there are no props to expose, and no instance script
+      // to inject the hydration import into, so we skip processing altogether
       if (!instance) {
         return null;
       }
@@ -71,8 +90,9 @@ export const autoOptions = () => {
         },
       });
 
-      // if we don't have any props, there's nothing to do
-      if (!propsDeclaration) {
+      // without props there is nothing to infer — but a hydratable component
+      // still needs its `extend` injected
+      if (!propsDeclaration && !hydratable) {
         return null;
       }
 
@@ -87,17 +107,24 @@ export const autoOptions = () => {
 
       inferPropsFromSvelteOptions(inferredProps, svelteOptions);
 
-      // 2. If the user uses TypeScript & we have types available, they are the next valuable information we can infer
-      // we want to preferrably use them over what is being destructured
-      // since the destructuring might use {...rest} or not destructure at all
-      inferPropsFromTypes(inferredProps, propsDeclaration, typeDeclarations);
+      if (propsDeclaration) {
+        // 2. If the user uses TypeScript & we have types available, they are the next valuable information we can infer
+        // we want to preferrably use them over what is being destructured
+        // since the destructuring might use {...rest} or not destructure at all
+        inferPropsFromTypes(inferredProps, propsDeclaration, typeDeclarations);
 
-      // 3. Finally, we use prop declaration javascript destructuring to at least infer the props' names
-      inferPropsFromComponentPropDeclaration(inferredProps, propsDeclaration);
+        // 3. Finally, we use prop declaration javascript destructuring to at least infer the props' names
+        inferPropsFromComponentPropDeclaration(inferredProps, propsDeclaration);
+      }
 
       const magicString = new MagicString(code);
 
-      injectInferredProps(inferredProps, svelteOptions, magicString);
+      injectInferredProps(inferredProps, svelteOptions, magicString, {
+        hydratable: hydratable
+          ? // the instance script's content starts right after its opening tag's `>`
+            { scriptContentStart: code.indexOf(">", instance.start) + 1 }
+          : undefined,
+      });
 
       if (!magicString.hasChanged()) {
         return null;

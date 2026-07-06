@@ -155,6 +155,8 @@ const ssrPipeline = [
   "svelte",
   "svebcomponents:generate-ssr-entry",
 ];
+// the server-compiled HydrationHost build accompanying each SSR config
+const hydrationHostPipeline = ["svelte"];
 
 /**
  * Asserts that `inferred` matches `expected` both in its serializable fields
@@ -189,6 +191,7 @@ describe("infer components", () => {
     expectConfigsToMatch(inferredComponents, manualSSRConfig, [
       clientPipeline,
       ssrPipeline,
+      hydrationHostPipeline,
     ]);
   });
   it("parses Svelte conditional exports from package.json", () => {
@@ -198,7 +201,9 @@ describe("infer components", () => {
       clientPipeline,
       clientPipeline,
       ssrPipeline,
+      hydrationHostPipeline,
       ssrPipeline,
+      hydrationHostPipeline,
     ]);
   });
   it("parses multiple components from package.json", () => {
@@ -208,6 +213,7 @@ describe("infer components", () => {
       clientPipeline,
       clientPipeline,
       ssrPipeline,
+      hydrationHostPipeline,
     ]);
   });
   it("generates the SSR entry filename from the declared ssr export", async () => {

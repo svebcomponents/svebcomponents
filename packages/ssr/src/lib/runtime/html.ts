@@ -2,23 +2,12 @@
 import { attr } from "svelte/internal/server";
 
 export { isValidCustomElementTagName } from "../shared/customElementName.js";
-
-export const SvelteCustomElementPropType = {
-  Array: "Array",
-  Boolean: "Boolean",
-  Number: "Number",
-  Object: "Object",
-  String: "String",
-} as const;
-
-export type SvelteCustomElementPropType =
-  (typeof SvelteCustomElementPropType)[keyof typeof SvelteCustomElementPropType];
-
-export interface SvelteCustomElementPropDefinition {
-  attribute?: string;
-  reflect?: boolean;
-  type?: SvelteCustomElementPropType;
-}
+export {
+  SvelteCustomElementPropType,
+  attributeValueToPropValue,
+  propValueToAttributeValue,
+  type SvelteCustomElementPropDefinition,
+} from "../shared/propConversion.js";
 
 const invalidAttributeNameCharsRegex = /[\s"'>/=]/;
 
@@ -52,36 +41,4 @@ export const renderSsrAttribute = (name: string, value: string) => {
   // Svelte's attr helper signature is attr(name, value, is_boolean). Passing
   // `true` with `is_boolean=true` emits a bare boolean attribute, e.g. ` enabled`.
   return value === "" ? attr(name, true, true) : attr(name, value);
-};
-
-/**
- * Mirrors Svelte's generated custom-element prop-to-attribute conversion.
- * Svelte stores this metadata on the generated element instance as `$$p_d`.
- */
-export const propValueToAttributeValue = (
-  value: unknown,
-  propDefinition: SvelteCustomElementPropDefinition,
-): string | null => {
-  if (
-    propDefinition.type === SvelteCustomElementPropType.Boolean &&
-    typeof value !== "boolean"
-  ) {
-    value = value != null;
-  }
-
-  if (value == null) {
-    return null;
-  }
-
-  switch (propDefinition.type) {
-    case SvelteCustomElementPropType.Array:
-    case SvelteCustomElementPropType.Object:
-      return JSON.stringify(value);
-    case SvelteCustomElementPropType.Boolean:
-      return value ? "" : null;
-    case SvelteCustomElementPropType.Number:
-      return String(value);
-    default:
-      return String(value);
-  }
 };
