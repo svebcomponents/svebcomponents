@@ -1,5 +1,62 @@
 # @svebcomponents/build
 
+## 0.0.9
+
+### Patch Changes
+
+- 257e5b0: Load package Svelte config during builds and support async SSR when that config enables Svelte's experimental async compiler mode. Host apps can opt into the async Vite wrapper for Svelte async SSR.
+- 257e5b0: Share the Svelte build config helpers (`SvelteBuildConfig`, `mergeCompilerOptions`) from a single home in `@svebcomponents/ssr` via a new `@svebcomponents/ssr/svelte-config` export, instead of duplicating them in `@svebcomponents/build`. This removes the risk of the two copies drifting apart.
+- fd39f2c: Fix the CLI silently exiting with no output when no component exports could be inferred, and fix the error handler so build failures are reported and exit with a non-zero code.
+- 4efae18: Remove a duplicate `import type { Options } from "tsdown"` in `inferComponents.test.ts` that broke `tsc` for the package (introduced by a merge conflict resolution in #79).
+- a6370a2: Remove conflicting peerDependency on `@svebcomponents/ssr`, keeping only the regular workspace dependency since it is imported directly and unconditionally.
+- 2c2510b: Generate the SSR renderer entry filename from the declared package export instead of hardcoding `ssr.js`.
+
+  Previously every SSR build wrote `<ssrOutDir>/ssr.js` regardless of the declared export. This meant the multi-component setup documented in the build README (e.g. `"./button/ssr": "./dist/server/button-ssr.js"`) produced a dangling export, and two SSR components sharing an output directory overwrote each other's generated entry.
+
+  `inferComponents` now derives the entry basename from the declared ssr export path, and a new `ssrEntryFileName` option on `defineConfig` (defaulting to `"ssr"`) threads it through `svebcomponentsSsr` into `pluginGenerateSsrEntry`. Single-component behavior is unchanged.
+
+- 724f00a: Declare supported Node versions (`engines.node: ">=20.19.0"`) so consumers get a clear error instead of an opaque runtime failure on unsupported Node versions.
+- e7e4adf: Fix publint compliance: put the `types` export condition first so TypeScript resolves declarations as published, add `files` fields so tarballs only ship `dist` (and `bin.js` for the build package), and run publint as part of every publishable package's build.
+- 8913436: Drop test and build tooling from runtime dependencies: `vitest`, `rolldown`, `typescript`, and `tslib` are no longer installed when consuming `@svebcomponents/ssr`, and `typescript`/`tslib` are no longer installed when consuming `@svebcomponents/build`. These were only used for tests, type-only imports, or package builds and are now devDependencies (or removed entirely).
+- ac6e095: Fix Windows portability issues:
+
+  - `@svebcomponents/build` now uses `path.posix` consistently in
+    `inferComponents`. The values flowing through it come from package.json
+    `exports` (always posix) and become generated import specifiers, which must
+    stay posix. Previously `path.normalize` could flip them to backslashes on
+    win32. `existsSync` filesystem checks remain safe because Node's fs APIs
+    accept forward slashes on Windows.
+  - `@svebcomponents/auto-options` build script no longer relies on `rm -rf`,
+    which fails on Windows cmd/PowerShell. It now uses a portable `node -e`
+    `fs.rmSync` call to clean stale `dist` output before `tsc`.
+
+- Updated dependencies [257e5b0]
+- Updated dependencies [257e5b0]
+- Updated dependencies [f02d6ee]
+- Updated dependencies [cefe6cb]
+- Updated dependencies [bea7309]
+- Updated dependencies [742c433]
+- Updated dependencies [2c2510b]
+- Updated dependencies [724f00a]
+- Updated dependencies [e7e4adf]
+- Updated dependencies [303541d]
+- Updated dependencies [0d74921]
+- Updated dependencies [94530d0]
+- Updated dependencies [4ca91b2]
+- Updated dependencies [8913436]
+- Updated dependencies [d51f92b]
+- Updated dependencies [2f11d81]
+- Updated dependencies [f8970a8]
+- Updated dependencies [4c038c3]
+- Updated dependencies [5c8d636]
+- Updated dependencies [ac6e095]
+- Updated dependencies [e4fe34f]
+- Updated dependencies [1e14cc5]
+- Updated dependencies [f75af70]
+- Updated dependencies [3a4d68e]
+  - @svebcomponents/ssr@0.0.8
+  - @svebcomponents/auto-options@0.0.5
+
 ## 0.0.8
 
 ### Patch Changes
