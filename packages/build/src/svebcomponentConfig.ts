@@ -43,6 +43,11 @@ export const createTsdownConfig = (options: SvebcomponentsOptions) => {
     // root export otherwise resolves to its server entry, whose `hydrate`
     // and `mount` are unavailable-on-the-server stubs)
     platform: "browser",
+    // The self-contained build (svelte bundled in) is a final-form browser
+    // artifact — the CDN drop-in — so ship it minified (sourcemaps cover
+    // debugging). The svelte-aware variant is compiled into the consuming
+    // app's build and stays readable.
+    minify: !externalSvelte,
     // Several component configs may share an output directory and are built
     // in parallel by the svebcomponents CLI; tsdown's per-build clean would
     // race and delete other builds' output. The CLI cleans once up front.
