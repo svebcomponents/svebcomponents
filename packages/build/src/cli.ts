@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import fs from "node:fs/promises";
+
 import { build, type Options } from "tsdown";
 import { loadConfig as loadSvelteConfig } from "@sveltejs/load-config";
 import { loadConfig as loadSvebcomponentsConfig } from "unconfig";
@@ -44,6 +46,21 @@ async function main() {
   }
 
   const tsdownOptions = hasConfig ? config : defineConfig({ svelteConfig });
+
+  // Configs are built in parallel and several components may share an output
+  // directory (e.g. dist/client), so per-build cleaning (tsdown's `clean`)
+  // would race and delete sibling builds' output. Our config factories set
+  // `clean: false`; instead, clean each distinct output directory once here.
+  const outDirs = new Set(
+    tsdownOptions
+      .map((options) => options.outDir)
+      .filter((outDir): outDir is string => typeof outDir === "string"),
+  );
+  await Promise.all(
+    [...outDirs].map((outDir) =>
+      fs.rm(outDir, { recursive: true, force: true }),
+    ),
+  );
 
   await Promise.all(tsdownOptions.map(build));
 }
