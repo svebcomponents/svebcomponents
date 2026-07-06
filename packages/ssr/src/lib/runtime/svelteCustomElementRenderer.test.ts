@@ -10,6 +10,7 @@ import {
 import { SvelteCustomElementRenderer } from "./svelteCustomElementRenderer";
 import { render } from "svelte/server";
 import type { RenderInfo } from "@lit-labs/ssr";
+import { collectResult } from "@lit-labs/ssr/lib/render-result.js";
 import { SvelteCustomElementPropType } from "./html";
 
 // Mock svelte/server
@@ -41,9 +42,10 @@ describe("SvelteCustomElementRenderer", () => {
 
     mockRender.mockReturnValue({
       body: "<div>Test content</div>",
+      hashes: { script: [] },
       head: "<style>/* test styles */</style>",
       html: "<style>/* test styles */</style>",
-    });
+    } as unknown as ReturnType<typeof render>);
   });
 
   test("creates renderer with correct tag name", () => {
@@ -258,7 +260,7 @@ describe("SvelteCustomElementRenderer", () => {
     renderer.setProperty("count", 5);
 
     expect(Array.from(renderer.renderAttributes())).toStrictEqual([
-      " enabled",
+      ' enabled=""',
       ' count="5"',
     ]);
   });
@@ -285,7 +287,7 @@ describe("SvelteCustomElementRenderer", () => {
     expect(mockElement.$$d.testProp).toBe(testValue);
   });
 
-  test("renderShadow method prints shadow content including expected content", () => {
+  test("renderShadow method synchronously prints shadow content including expected content", () => {
     const mockElement = {
       attributes: {},
       attributeChangedCallback: vi.fn(),
@@ -312,12 +314,15 @@ describe("SvelteCustomElementRenderer", () => {
     expect(shadowContent).toContain("<div>Test content</div>");
   });
 
-  test("handles empty render result", () => {
-    mockRender.mockReturnValue({
-      body: "",
-      head: "",
-      html: "",
-    });
+  test("handles empty render result", async () => {
+    mockRender.mockReturnValue(
+      Promise.resolve({
+        body: "",
+        hashes: { script: [] },
+        head: "",
+        html: "",
+      }) as unknown as ReturnType<typeof render>,
+    );
 
     const mockElement = {
       attributes: {},
@@ -335,8 +340,40 @@ describe("SvelteCustomElementRenderer", () => {
 
     const renderResult = renderer.renderShadow({} as RenderInfo);
     assert(renderResult);
-    const shadowContent = Array.from(renderResult).join("");
+    const shadowContent = await collectResult(renderResult);
 
     expect(shadowContent).toEqual("");
+  });
+
+  test("renderShadow resolves async svelte render results", async () => {
+    mockRender.mockReturnValue(
+      Promise.resolve({
+        body: "<div>Async content</div>",
+        hashes: { script: [] },
+        head: "<style>/* async styles */</style>",
+        html: "<style>/* async styles */</style><div>Async content</div>",
+      }) as unknown as ReturnType<typeof render>,
+    );
+
+    const mockElement = {
+      attributes: {},
+      attributeChangedCallback: vi.fn(),
+      $$d: {},
+      $$p_d: {},
+    };
+    mockClientElementCtor.mockReturnValue(mockElement);
+
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+    );
+
+    const renderResult = renderer.renderShadow({} as RenderInfo);
+    assert(renderResult);
+    const shadowContent = await collectResult(renderResult);
+
+    expect(shadowContent).toContain("<style>/* async styles */</style>");
+    expect(shadowContent).toContain("<div>Async content</div>");
   });
 });

@@ -6,5 +6,15 @@ import vitestConfig from "@svebcomponents/vitest-config/ssr";
 
 export default defineConfig({
   ...vitestConfig,
-  plugins: [...(vitestConfig?.plugins ?? []), svebcomponents(), svelte({})],
+  plugins: [
+    ...(vitestConfig?.plugins ?? []),
+    svebcomponents({ async: true }),
+    svelte({
+      compilerOptions: {
+        experimental: {
+          async: true,
+        },
+      },
+    }),
+  ],
 });
