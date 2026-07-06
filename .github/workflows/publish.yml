@@ -1,20 +1,26 @@
-name: Release
+name: Publish
 
 on:
   push:
     branches:
       - main
+    paths:
+      - "packages/*/package.json"
+      - "packages/*/CHANGELOG.md"
+      - "configs/*/package.json"
+      - "configs/*/CHANGELOG.md"
 
 permissions:
   contents: write
-  pull-requests: write
+  id-token: write
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  release:
-    name: Create Release Pull Request
+  publish:
+    name: Publish to npm
     runs-on: ubuntu-latest
+    environment: npm-publish
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -33,13 +39,9 @@ jobs:
       - name: install deps
         run: pnpm install
 
-      - name: install playwright chromium
-        run: pnpm --filter "@svebcomponents/e2e.basic" exec playwright install --with-deps chromium
-
-      - name: test
-        run: pnpm test
-
-      - name: Create Release Pull Request
+      - name: Publish to npm
         uses: changesets/action@v1
+        with:
+          publish: pnpm release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
