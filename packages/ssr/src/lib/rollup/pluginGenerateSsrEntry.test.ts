@@ -55,10 +55,16 @@ describe("pluginGenerateSsrEntry", () => {
       expect.stringContaining("dist/server/ssr.js"),
       expect.stringContaining("import ServerSvelteComponent from './index.js'"),
     );
+    // The shim must be imported before anything can evaluate the client bundle
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/ssr.js"),
+      expect.stringContaining("import '@svebcomponents/ssr/shim'"),
+    );
+    // The client bundle must be imported dynamically (chunk-order safety)
     expect(mockFs.writeFile).toHaveBeenCalledWith(
       expect.stringContaining("dist/server/ssr.js"),
       expect.stringContaining(
-        "import ClientSvelteComponent from '../client/index.js'",
+        "const ClientSvelteComponent = (await import('../client/index.js')).default",
       ),
     );
 
@@ -105,9 +111,7 @@ describe("pluginGenerateSsrEntry", () => {
     );
     expect(mockFs.writeFile).toHaveBeenCalledWith(
       expect.any(String),
-      expect.stringContaining(
-        "import ClientSvelteComponent from './custom-client.js'",
-      ),
+      expect.stringContaining("await import('./custom-client.js')"),
     );
   });
 

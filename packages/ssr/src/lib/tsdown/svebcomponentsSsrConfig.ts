@@ -51,6 +51,10 @@ const createSsrTsdownConfig = ({
     entry,
     outDir,
     dts: true,
+    // Several component configs may share an output directory and are built
+    // in parallel by the svebcomponents CLI; tsdown's per-build clean would
+    // race and delete other builds' output. The CLI cleans once up front.
+    clean: false,
     ...(externalSvelte ? { external: [/^svelte(\/.*)?$/] } : {}),
     plugins: [
       pluginOverrideSvelteSsrSlotImplementation(),

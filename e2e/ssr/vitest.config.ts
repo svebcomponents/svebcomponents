@@ -17,4 +17,20 @@ export default defineConfig({
       },
     }),
   ],
+  test: {
+    ...vitestConfig?.test,
+    projects: [
+      ...(vitestConfig?.test?.projects ?? []),
+      // The default consumer configuration: sync wrapper, no async option,
+      // no `experimental.async`. Deliberately does NOT extend the root
+      // config so the async plugins above don't leak in.
+      {
+        plugins: [svebcomponents(), svelte()],
+        test: {
+          name: "server-sync",
+          include: ["test/sync/*.test.ts"],
+        },
+      },
+    ],
+  },
 });

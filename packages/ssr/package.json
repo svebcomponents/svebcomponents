@@ -32,6 +32,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./shim": {
+      "types": "./dist/runtime/installShim.d.ts",
+      "import": "./dist/runtime/installShim.js"
+    },
     "./wrapper-component": {
       "types": "./dist/vite/CustomElementWrapper.svelte.d.ts",
       "svelte": "./dist/vite/CustomElementWrapper.svelte"

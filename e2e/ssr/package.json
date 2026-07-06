@@ -17,6 +17,14 @@
       "types": "./dist/server/ssr.d.ts",
       "svelte": "./dist/server-svelte/ssr.js",
       "default": "./dist/server/ssr.js"
+    },
+    "./sync": {
+      "types": "./dist/client/sync.d.ts",
+      "default": "./dist/client/sync.js"
+    },
+    "./sync/ssr": {
+      "types": "./dist/server/sync-ssr.d.ts",
+      "default": "./dist/server/sync-ssr.js"
     }
   },
   "devDependencies": {

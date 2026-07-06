@@ -23,6 +23,35 @@ type SvelteRenderResult = {
   head: string;
 };
 
+/**
+ * Since svelte 5.36, `render()` returns a lazily-evaluated `RenderOutput`
+ * that is *always* thenable — even for fully synchronous components. Its
+ * `head`/`body` getters render synchronously and throw svelte's
+ * `await_invalid` error only when the component performs genuinely
+ * asynchronous work. Preferring the getters keeps synchronous components
+ * renderable through the sync wrapper (`collectResultSync`); only genuinely
+ * async components fall back to the promise path, which requires the async
+ * wrapper.
+ */
+const tryRenderSync = (
+  result: PromiseLike<SvelteRenderResult>,
+): SvelteRenderResult | undefined => {
+  try {
+    const { head, body } = result as unknown as SvelteRenderResult;
+    if (typeof head === "string" && typeof body === "string") {
+      return { head, body };
+    }
+    // a plain promise (no sync getters) — must be awaited
+    return undefined;
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("await_invalid")) {
+      return undefined;
+    }
+    // genuine render errors must not be swallowed
+    throw error;
+  }
+};
+
 export interface SvelteClientCustomElement {
   new (): Omit<SvelteClientCustomElement, "new">;
   attributes: Record<string, string>;
@@ -105,6 +134,12 @@ export class SvelteCustomElementRenderer
       props: this.svelteClientCustomElement.$$d,
     }) as unknown as SvelteRenderResult | PromiseLike<SvelteRenderResult>;
     if (isPromiseLike<SvelteRenderResult>(result)) {
+      const syncResult = tryRenderSync(result);
+      if (syncResult) {
+        yield syncResult.head;
+        yield syncResult.body;
+        return;
+      }
       yield Promise.resolve(result).then(({ body, head }) => [head, body]);
       return;
     }
