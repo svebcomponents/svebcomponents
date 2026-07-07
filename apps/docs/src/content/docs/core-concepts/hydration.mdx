@@ -38,6 +38,17 @@ compiler output:
    expects, both sides render the component through the same internal
    `HydrationHost` component: the generated SSR entry uses a server-compiled
    copy, the client hydrates against it.
+5. The same symmetry principle protects the element inside **hydrating
+   Svelte host apps** (e.g. SvelteKit): the SSR wrapper and the browser
+   wrapper render structurally identical `<svelte:element>` fragments
+   (selected per environment via export conditions rather than a runtime
+   branch), so the host's hydration _claims_ the server-rendered element
+   instead of re-creating it — which would otherwise discard the shadow root
+   before the element could hydrate it.
+6. Rich (non-attribute) props the server rendered with are serialized into
+   the shadow output and ported back before hydrating, so host frameworks
+   that only re-supply props after their own asynchronous hydration don't
+   cause a mismatch.
 
 ## Graceful Degradation
 
@@ -89,17 +100,6 @@ elements flow through Svelte's normal — hydration-aware — element path, and
 this limitation should lift with little or no change on our side. We chose
 not to build elaborate slot-claiming machinery on top of a compilation path
 that is already scheduled for removal.
-
-### Hydrating Svelte host applications
-
-When the page _around_ the component is itself a hydrating Svelte app (e.g.
-SvelteKit), the SSR wrapper pair currently produces asymmetric hydration
-structures — the host's hydration re-creates the custom element instead of
-claiming it, which discards the server-rendered shadow root before the
-element can hydrate it. The component still renders correctly via the mount
-fallback (identical to pre-hydration behavior). Static sites and non-Svelte
-hosts are unaffected and get full hydration. Restoring wrapper symmetry is
-the next planned improvement.
 
 ### Legacy component events
 

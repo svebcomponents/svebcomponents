@@ -21,7 +21,7 @@ const invalidAttributeNameCharsRegex = /[\s"'>/=]/;
  *
  * @see https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
  */
-const isValidAttributeName = (name: string) =>
+export const isValidAttributeName = (name: string) =>
   name.length > 0 &&
   !invalidAttributeNameCharsRegex.test(name) &&
   !Array.from(name).some((char) => {

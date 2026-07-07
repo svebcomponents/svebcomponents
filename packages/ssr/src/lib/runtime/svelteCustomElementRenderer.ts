@@ -8,6 +8,7 @@ import { render } from "svelte/server";
 
 import {
   propValueToAttributeValue,
+  isValidAttributeName,
   renderSsrAttribute,
   type SvelteCustomElementPropDefinition,
 } from "./html.js";
@@ -130,6 +131,23 @@ export class SvelteCustomElementRenderer
     for (const [name, value] of this.ssrAttributes) {
       yield renderSsrAttribute(name, value);
     }
+  }
+
+  /**
+   * The host attributes as a raw name→value record, for wrappers that let
+   * svelte serialize the element (`<svelte:element {...attributes}>`).
+   * Values are unescaped — svelte's own attribute serialization escapes
+   * them; names are validated here since they bypass `renderSsrAttribute`.
+   */
+  getSsrAttributes(): Record<string, string> {
+    const attributes: Record<string, string> = {};
+    for (const [name, value] of this.ssrAttributes) {
+      if (!isValidAttributeName(name)) {
+        throw new Error(`Invalid SSR attribute name: ${name}`);
+      }
+      attributes[name] = value;
+    }
+    return attributes;
   }
 
   /**

@@ -46,11 +46,18 @@
       "default": "./dist/hydration/HydrationHost.svelte"
     },
     "./wrapper-component": {
-      "types": "./dist/vite/CustomElementWrapper.svelte.d.ts",
-      "svelte": "./dist/vite/CustomElementWrapper.svelte"
+      "types": "./dist/vite/Client.svelte.d.ts",
+      "browser": {
+        "svelte": "./dist/vite/Client.svelte"
+      },
+      "svelte": "./dist/vite/Server.svelte"
     },
     "./async-wrapper-component": {
-      "svelte": "./dist/vite/AsyncCustomElementWrapper.svelte"
+      "types": "./dist/vite/Client.svelte.d.ts",
+      "browser": {
+        "svelte": "./dist/vite/Client.svelte"
+      },
+      "svelte": "./dist/vite/AsyncServer.svelte"
     },
     "./vite": {
       "types": "./dist/vite/vitePluginSvebcomponentsSsr.d.ts",
