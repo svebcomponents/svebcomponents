@@ -1,6 +1,8 @@
 import svelte from "rollup-plugin-svelte";
 import autoOptions from "@svebcomponents/auto-options";
 import { Options } from "tsdown";
+
+import { pluginDedupe } from "./pluginDedupe.js";
 import {
   mergeCompilerOptions,
   type SvelteBuildConfig,
@@ -54,6 +56,7 @@ export const createTsdownConfig = (options: SvebcomponentsOptions) => {
     clean: false,
     ...(externalSvelte ? { external: [/^svelte(\/.*)?$/] } : {}),
     plugins: [
+      ...(externalSvelte ? [] : [pluginDedupe(["svelte", "esm-env"])]),
       autoOptions({ hydratable }),
       svelte({
         emitCss: false,

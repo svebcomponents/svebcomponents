@@ -90,6 +90,17 @@ this limitation should lift with little or no change on our side. We chose
 not to build elaborate slot-claiming machinery on top of a compilation path
 that is already scheduled for removal.
 
+### Hydrating Svelte host applications
+
+When the page _around_ the component is itself a hydrating Svelte app (e.g.
+SvelteKit), the SSR wrapper pair currently produces asymmetric hydration
+structures — the host's hydration re-creates the custom element instead of
+claiming it, which discards the server-rendered shadow root before the
+element can hydrate it. The component still renders correctly via the mount
+fallback (identical to pre-hydration behavior). Static sites and non-Svelte
+hosts are unaffected and get full hydration. Restoring wrapper symmetry is
+the next planned improvement.
+
 ### Legacy component events
 
 `createEventDispatcher` events are not forwarded through the hydration host.

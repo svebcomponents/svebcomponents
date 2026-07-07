@@ -149,7 +149,13 @@ const pluginNames = (options: Options): string[] => {
   return (plugins as { name: string }[]).map((plugin) => plugin.name);
 };
 
-const clientPipeline = ["svebcomponents:auto-options", "svelte"];
+const clientPipeline = [
+  "svebcomponents:dedupe",
+  "svebcomponents:auto-options",
+  "svelte",
+];
+// the svelte-aware variant externalizes svelte, so it needs no dedupe
+const svelteAwareClientPipeline = ["svebcomponents:auto-options", "svelte"];
 const ssrPipeline = [
   "svebcomponents:override-svelte-ssr-slot-implementation",
   "svelte",
@@ -199,7 +205,7 @@ describe("infer components", () => {
     const inferredComponents = inferComponents(svelteConditionPackageJson);
     expectConfigsToMatch(inferredComponents, manualSvelteConditionConfig, [
       clientPipeline,
-      clientPipeline,
+      svelteAwareClientPipeline,
       ssrPipeline,
       hydrationHostPipeline,
       ssrPipeline,
