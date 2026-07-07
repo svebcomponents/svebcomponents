@@ -40,7 +40,7 @@
   }: Props = $props();
 
   // Deliberately a one-time snapshot: later updates flow through setProps.
-   
+
   // svelte-ignore state_referenced_locally
   const componentProps: Record<string, unknown> = $state({ ...__initialProps });
 
