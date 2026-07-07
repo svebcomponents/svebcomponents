@@ -30,6 +30,9 @@ export default async function setup(): Promise<void> {
   renderer.setAttribute("title", "Hydration Test");
   renderer.setAttribute("count", "3");
   renderer.setAttribute("enabled", "");
+  // rich prop with no attribute representation: must round-trip through the
+  // serialized-props channel for the client to hydrate without a mismatch
+  renderer.setProperty("meta", { note: "rich prop survived" });
 
   const shadow = collectStrings(
     // the render info object is unused by our renderer

@@ -132,9 +132,45 @@ export class SvelteCustomElementRenderer
     }
   }
 
+  /**
+   * Names of props that arrived via `setProperty` (rich values with no
+   * attribute representation). For hydratable output these are serialized
+   * into the shadow DOM, because the client-side wrapper hydrates *before* a
+   * host framework re-supplies them — hydrating without them would mismatch
+   * the server markup and force a re-mount.
+   */
+  private readonly richPropNames = new Set<string>();
+
   override setProperty(name: string, value: unknown) {
     this.svelteClientCustomElement.$$d[name] = value;
+    this.richPropNames.add(name);
     this.reflectPropertyToAttribute(name, value);
+  }
+
+  /**
+   * Serializes rich props into an inert script element appended after the
+   * shadow content (outside the hydration markers, so claiming ignores it).
+   * The client-side `hydratable` wrapper ports these back into `$$d` before
+   * hydrating and removes the element.
+   */
+  private serializeRichProps(): string {
+    if (!this.hydrationHostComponent || this.richPropNames.size === 0) {
+      return "";
+    }
+    const richProps: Record<string, unknown> = {};
+    for (const name of this.richPropNames) {
+      richProps[name] = this.svelteClientCustomElement.$$d[name];
+    }
+    let json: string;
+    try {
+      json = JSON.stringify(richProps);
+    } catch {
+      // non-serializable props (functions, cycles): fall back to hydration
+      // without them — worst case is svelte's recovery re-mount
+      return "";
+    }
+    // escape `<` so `</script>` or `<!--` inside values cannot break parsing
+    return `<script type="application/json" data-svebcomponents-ssr-props>${json.replaceAll("<", "\\u003C")}</script>`;
   }
 
   override *renderShadow(_renderInfo: RenderInfo): RenderResult | undefined {
@@ -154,13 +190,19 @@ export class SvelteCustomElementRenderer
       if (syncResult) {
         yield syncResult.head;
         yield syncResult.body;
+        yield this.serializeRichProps();
         return;
       }
-      yield Promise.resolve(result).then(({ body, head }) => [head, body]);
+      yield Promise.resolve(result).then(({ body, head }) => [
+        head,
+        body,
+        this.serializeRichProps(),
+      ]);
       return;
     }
     yield result.head;
     yield result.body;
+    yield this.serializeRichProps();
   }
 
   private reflectPropertyToAttribute(name: string, value: unknown) {

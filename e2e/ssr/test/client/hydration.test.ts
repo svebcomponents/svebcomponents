@@ -47,6 +47,16 @@ test("hydrates server-rendered declarative shadow DOM, reusing its nodes", async
   // styles were adopted, not duplicated (svelte dedupes by style id)
   expect(shadowRoot.querySelectorAll("style")).toHaveLength(1);
 
+  // the rich prop (no attribute representation) round-tripped through the
+  // serialized-props channel — without it, hydration would have mismatched
+  expect(shadowRoot.querySelector("#note")?.textContent).toBe(
+    "rich prop survived",
+  );
+  // and the transport script element was consumed
+  expect(
+    shadowRoot.querySelector("script[data-svebcomponents-ssr-props]"),
+  ).toBeNull();
+
   // and the hydrated component is fully reactive
   component.setAttribute("count", "7");
   await nextMacrotask();

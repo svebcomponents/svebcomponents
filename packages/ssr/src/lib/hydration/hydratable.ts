@@ -167,6 +167,28 @@ export const hydratable = <T extends CustomElementConstructor>(
             : attribute.value;
         }
       }
+      // port rich props the server serialized into the shadow DOM: host
+      // frameworks re-supply them only after their own (async) hydration,
+      // which would be too late — hydrating without them would mismatch the
+      // server markup
+      const serializedProps = ssrRoot.querySelector(
+        'script[type="application/json"][data-svebcomponents-ssr-props]',
+      );
+      if (serializedProps) {
+        try {
+          const richProps = JSON.parse(
+            serializedProps.textContent ?? "",
+          ) as Record<string, unknown> | null;
+          for (const [key, value] of Object.entries(richProps ?? {})) {
+            if (!(key in this.$$d)) {
+              this.$$d[key] = value;
+            }
+          }
+        } catch {
+          // malformed payload: hydrate without it (worst case: re-mount)
+        }
+        serializedProps.remove();
+      }
       // port properties set programmatically before the element upgraded
       for (const key in this.$$p_d) {
         const preUpgradeValue = (this as Record<string, unknown>)[key];
