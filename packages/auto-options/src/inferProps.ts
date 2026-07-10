@@ -28,14 +28,22 @@ const isPrimitiveType = (type: string): type is PrimitiveType => {
   return type in primitiveTypes;
 };
 
+// Only scalar props are reflected to attributes by default. Reflecting
+// `Object`/`Array` props serializes the whole value into an attribute on
+// every change — an anti-pattern (and, for large values, ruinous). Callers
+// pass `isReflected: false` for props whose type couldn't be resolved, since
+// an unresolved (typically imported) type is almost never a plain scalar.
+const isReflectableByDefault = (type: PrimitiveType): boolean =>
+  type === "String" || type === "Number" || type === "Boolean";
+
 const enhanceInferredProps = (
   inferredProps: InferredSvelteOptionProps,
   propName: string,
   attributeName?: string,
   // if the type is omitted, we assume it's a string, because that's the type attribute values have by default
   type: PrimitiveType = "String",
-  // attributes are reflected by default
-  isReflected: boolean = true,
+  // scalars reflect by default; objects/arrays/unresolved types do not
+  isReflected: boolean = isReflectableByDefault(type),
 ) => {
   // first we check if the propName is already in the inferred props
   const previouslyInferredProp = inferredProps[propName];
@@ -255,6 +263,10 @@ export const inferPropsFromTypes = (
       propName,
       kebabize(propName),
       resolvedPropType ?? "String",
+      // an unresolved type reference (e.g. an imported interface) falls back
+      // to the `String` converter, but must not reflect — it is almost always
+      // a complex value, not a scalar meant for an attribute.
+      resolvedPropType === null ? false : undefined,
     );
   }
 };

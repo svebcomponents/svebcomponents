@@ -1,6 +1,6 @@
 <svelte:options customElement={{
 props: {
-objectProp: {attribute: "object-prop", reflect: true, type: "Object"},
+objectProp: {attribute: "object-prop", reflect: false, type: "Object"},
 }
 }} />
 <script lang="ts">

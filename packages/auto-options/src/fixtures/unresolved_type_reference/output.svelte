@@ -1,11 +1,12 @@
 <svelte:options customElement={{
 props: {
-objectProp: {attribute: "object-prop", reflect: false, type: "Object"},
+data: {attribute: "data", reflect: false, type: "String"},
 }
 }} />
 <script lang="ts">
+  import type { SomeImportedType } from "./elsewhere";
   interface Props {
-    objectProp: {'key': string};
+    data: SomeImportedType;
   }
   let props: Props = $props();
 </script>
