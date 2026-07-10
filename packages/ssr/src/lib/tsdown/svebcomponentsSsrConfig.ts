@@ -5,6 +5,7 @@ import svelte from "rollup-plugin-svelte";
 
 import { pluginGenerateSsrEntry } from "../rollup/pluginGenerateSsrEntry.js";
 import { pluginOverrideSvelteSsrSlotImplementation } from "../rollup/pluginOverrideSvelteSsrSlotImplementation.js";
+import { pluginStripCustomElementOptions } from "../rollup/pluginStripCustomElementOptions.js";
 import {
   mergeCompilerOptions,
   type SvelteBuildConfig,
@@ -76,6 +77,7 @@ const createSsrTsdownConfig = ({
     clean: false,
     ...(externalSvelte ? { external: [/^svelte(\/.*)?$/] } : {}),
     plugins: [
+      pluginStripCustomElementOptions(),
       pluginOverrideSvelteSsrSlotImplementation(),
       svelte({
         emitCss: false,

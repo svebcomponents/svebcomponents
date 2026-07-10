@@ -157,6 +157,7 @@ const clientPipeline = [
 // the svelte-aware variant externalizes svelte, so it needs no dedupe
 const svelteAwareClientPipeline = ["svebcomponents:auto-options", "svelte"];
 const ssrPipeline = [
+  "svebcomponents:strip-custom-element-options",
   "svebcomponents:override-svelte-ssr-slot-implementation",
   "svelte",
   "svebcomponents:generate-ssr-entry",
