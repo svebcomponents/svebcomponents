@@ -44,6 +44,15 @@
   // svelte-ignore state_referenced_locally
   const componentProps: Record<string, unknown> = $state({ ...__initialProps });
 
+  // Svelte compiles `$host()` to `$$props.$$host`, and its own custom-element
+  // wrapper passes `$$host: this` when mounting. Do the same for the hydrated
+  // path so `$host()` returns the custom element after hydration. (During SSR
+  // there is no `__host`; the server compile turns `$host()` into `undefined`
+  // anyway, so the prop is never read.) One-time by design: the host element
+  // identity never changes for the lifetime of this component.
+  // svelte-ignore state_referenced_locally
+  const hostProp = __host ? { $$host: __host } : {};
+
   /**
    * Applies prop updates from the custom element facade ($set), keeping the
    * spread below reactive.
@@ -67,4 +76,4 @@
   });
 </script>
 
-<UserComponent {...componentProps} />
+<UserComponent {...componentProps} {...hostProp} />

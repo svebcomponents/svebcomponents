@@ -62,6 +62,69 @@ describe("pluginStripCustomElementOptions", () => {
     expect(transform(`export const x = 1;`, "foo.ts")).toBeNull();
   });
 
+  it("replaces $host() calls in the instance script with undefined", () => {
+    const code = codeOf(
+      transform(
+        `<script>\n  const emit = () => $host().dispatchEvent(new CustomEvent("x"));\n</script>\n<p>hi</p>`,
+      ),
+    );
+    expect(code).not.toContain("$host");
+    expect(code).toContain(`undefined.dispatchEvent(new CustomEvent("x"))`);
+  });
+
+  it("replaces $host() calls inside template expressions", () => {
+    const code = codeOf(
+      transform(
+        `<button onclick={() => $host()?.dispatchEvent(new CustomEvent("x"))}>go</button>`,
+      ),
+    );
+    expect(code).not.toContain("$host");
+    expect(code).toContain("undefined?.dispatchEvent");
+  });
+
+  it("handles $host() and the customElement option in one pass", () => {
+    const code = codeOf(
+      transform(
+        `<svelte:options customElement="my-el" />\n<script>\n  const el = $host();\n</script>\n<p>hi</p>`,
+      ),
+    );
+    expect(code).not.toContain("customElement");
+    expect(code).not.toContain("$host");
+    expect(code).toContain("const el = undefined;");
+  });
+
+  it("lets a $host()-using component compile for the server", async () => {
+    const { compile } = await import("svelte/compiler");
+
+    // without <svelte:options customElement> (the auto-options case), a
+    // server compile rejects $host outright…
+    const bare = `<script>\n  const emit = () => $host()?.dispatchEvent(new CustomEvent("x"));\n</script>\n<button onclick={emit} class="x">go</button>\n<style>.x{color:red}</style>`;
+    expect(() =>
+      compile(bare, { generate: "server", css: "injected" }),
+    ).toThrow(/host/);
+    // …and after stripping it compiles, with its CSS
+    const bareStripped = compile(codeOf(transform(bare)), {
+      generate: "server",
+      css: "injected",
+    });
+    expect(bareStripped.js.code.includes("css.add")).toBe(true);
+
+    // with <svelte:options customElement>, the untransformed server compile
+    // accepts $host but silently drops the CSS (the FOUC this plugin fixes)…
+    const withOptions = `<svelte:options customElement="my-el" />\n${bare}`;
+    const unstripped = compile(withOptions, {
+      generate: "server",
+      css: "injected",
+    });
+    expect(unstripped.js.code.includes("css.add")).toBe(false);
+    // …and after stripping both constructs, it compiles WITH the CSS
+    const stripped = compile(codeOf(transform(withOptions)), {
+      generate: "server",
+      css: "injected",
+    });
+    expect(stripped.js.code.includes("css.add")).toBe(true);
+  });
+
   it("lets the stripped component emit its CSS in a server compile", async () => {
     const { compile } = await import("svelte/compiler");
     const source = `<svelte:options customElement={{ props: {} }} />\n<b class="x">hi</b>\n<style>.x{color:red}</style>`;

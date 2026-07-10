@@ -18,6 +18,15 @@
   {#if meta}
     <p id="note">{meta.note}</p>
   {/if}
+  <!-- exercises $host(): must reach the upgraded custom element on the
+       client (hydrated AND fresh-mounted) and compile away during SSR -->
+  <button
+    id="emit"
+    onclick={() =>
+      $host()?.dispatchEvent(
+        new CustomEvent("sync-emitted", { detail: "from-host" }),
+      )}>emit</button
+  >
 </div>
 
 <style>

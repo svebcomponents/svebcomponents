@@ -65,6 +65,15 @@ test("hydrates server-rendered declarative shadow DOM, reusing its nodes", async
   expect(count.textContent).toBe("Count: number-7");
   // the update reused the hydrated DOM as well
   expect(shadowRoot.querySelector("h1")).toBe(ssrH1);
+
+  // $host() must resolve to the upgraded custom element in the hydrated
+  // path: the event dispatched via $host() fires on <sync-component> itself
+  const events: Event[] = [];
+  component.addEventListener("sync-emitted", (event) => events.push(event));
+  (shadowRoot.querySelector("#emit") as HTMLButtonElement).click();
+  expect(events).toHaveLength(1);
+  expect((events[0] as CustomEvent).detail).toBe("from-host");
+  expect(events[0]?.target).toBe(component);
 });
 
 test("falls back to a fresh mount when there is no server-rendered content", async () => {
@@ -82,4 +91,11 @@ test("falls back to a fresh mount when there is no server-rendered content", asy
   const h1 = shadowRoot.querySelector("h1");
   assert(h1);
   expect(h1.textContent).toBe("Mounted");
+
+  // $host() works in svelte's own fresh-mount path too (parity check)
+  const events: Event[] = [];
+  component.addEventListener("sync-emitted", (event) => events.push(event));
+  (shadowRoot.querySelector("#emit") as HTMLButtonElement).click();
+  expect(events).toHaveLength(1);
+  expect(events[0]?.target).toBe(component);
 });
