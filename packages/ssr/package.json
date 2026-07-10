@@ -73,7 +73,21 @@
     }
   },
   "peerDependencies": {
-    "svelte": "^5.0.0"
+    "svelte": "^5.0.0",
+    "vite": "^6.0.0 || ^7.0.0",
+    "tsdown": ">=0.15.0",
+    "rolldown": ">=1.0.0-beta.0"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    },
+    "tsdown": {
+      "optional": true
+    },
+    "rolldown": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@svebcomponents/typescript-config": "workspace:*",

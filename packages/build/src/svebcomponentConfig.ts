@@ -29,7 +29,9 @@ interface SvebcomponentsOptions {
   svelteConfig?: SvelteBuildConfig | undefined;
 }
 
-export const createTsdownConfig = (options: SvebcomponentsOptions) => {
+// explicit return type: the inferred type references rollup's plugin types
+// through non-portable .pnpm paths (TS2742) in the emitted declarations
+export const createTsdownConfig = (options: SvebcomponentsOptions): Options => {
   const {
     entry,
     outDir,
