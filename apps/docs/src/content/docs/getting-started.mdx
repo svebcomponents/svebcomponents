@@ -55,21 +55,19 @@ attribute from a string to a number.
 The package entrypoint imports the Svelte component and registers the generated custom element constructor:
 
 ```ts
+import { defineElement } from "@svebcomponents/utils";
 import ExampleComponent from "./ExampleComponent.svelte";
 
 export default ExampleComponent;
-
-if (!customElements.get("example-component") && "element" in ExampleComponent) {
-  customElements.define(
-    "example-component",
-    ExampleComponent.element as CustomElementConstructor,
-  );
-}
+defineElement("example-component", ExampleComponent);
 ```
 
 :::note
 When Svelte compiles a component as a custom element, it exposes the
-constructor as `Component.element`.
+constructor as `Component.element`. `defineElement` registers it safely: it
+no-ops when there is no constructor (the server compile), no
+`customElements` registry (SSR before the DOM shim installs), or the tag is
+already registered (first registration wins).
 :::
 
 :::note
