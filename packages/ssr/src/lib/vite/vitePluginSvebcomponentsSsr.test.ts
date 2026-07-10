@@ -1,6 +1,6 @@
 import { expect, test, describe } from "vitest";
 import vitePluginSvebcomponentsSsr from "./vitePluginSvebcomponentsSsr";
-import type { Plugin } from "vite";
+import type { Plugin, ResolvedConfig } from "vite";
 
 type TransformFn = (
   code: string,
@@ -14,8 +14,27 @@ type TransformFn = (
 const getTransform = (plugin: Plugin): TransformFn =>
   plugin.transform as unknown as TransformFn;
 
-const transform = async (code: string, id = "Test.svelte") => {
-  const plugin = vitePluginSvebcomponentsSsr();
+/** a fake resolved vite config carrying vite-plugin-svelte's plugin api */
+const fakeConfigWithSvelteAsync = (async: boolean): ResolvedConfig =>
+  ({
+    plugins: [
+      { name: "vite-plugin-svelte" },
+      {
+        name: "vite-plugin-svelte:config",
+        api: { options: { compilerOptions: { experimental: { async } } } },
+      },
+    ],
+  }) as unknown as ResolvedConfig;
+
+const transform = async (
+  code: string,
+  id = "Test.svelte",
+  plugin = vitePluginSvebcomponentsSsr(),
+  config?: ResolvedConfig,
+) => {
+  if (config) {
+    (plugin.configResolved as unknown as (c: ResolvedConfig) => void)(config);
+  }
   const result = await getTransform(plugin)(code, id);
   return result?.code ?? null;
 };
@@ -170,5 +189,55 @@ describe("vitePluginSvebcomponentsSsr - slot attribute transform", () => {
     expect(output).not.toBeNull();
     // JSON.stringify escapes the single quote safely (no manual quoting injection)
     expect(output).toContain(`{...{slot: ${JSON.stringify("it's")}}}`);
+  });
+});
+
+describe("async wrapper selection", () => {
+  const source = `<my-widget>hi</my-widget>`;
+  const SYNC_IMPORT = "from '@svebcomponents/ssr/wrapper-component'";
+  const ASYNC_IMPORT = "from '@svebcomponents/ssr/async-wrapper-component'";
+
+  test("defaults to the sync wrapper without any config", async () => {
+    const output = await transform(source);
+    expect(output).toContain(SYNC_IMPORT);
+  });
+
+  test("uses the async wrapper when async: true is passed", async () => {
+    const output = await transform(
+      source,
+      "Test.svelte",
+      vitePluginSvebcomponentsSsr({ async: true }),
+    );
+    expect(output).toContain(ASYNC_IMPORT);
+  });
+
+  test("auto-detects experimental.async from vite-plugin-svelte", async () => {
+    const output = await transform(
+      source,
+      "Test.svelte",
+      vitePluginSvebcomponentsSsr(),
+      fakeConfigWithSvelteAsync(true),
+    );
+    expect(output).toContain(ASYNC_IMPORT);
+  });
+
+  test("auto-detection respects experimental.async: false", async () => {
+    const output = await transform(
+      source,
+      "Test.svelte",
+      vitePluginSvebcomponentsSsr(),
+      fakeConfigWithSvelteAsync(false),
+    );
+    expect(output).toContain(SYNC_IMPORT);
+  });
+
+  test("an explicit async: false overrides a detected true", async () => {
+    const output = await transform(
+      source,
+      "Test.svelte",
+      vitePluginSvebcomponentsSsr({ async: false }),
+      fakeConfigWithSvelteAsync(true),
+    );
+    expect(output).toContain(SYNC_IMPORT);
   });
 });
