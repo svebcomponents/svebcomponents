@@ -1,4 +1,4 @@
-import type { Plugin } from "vite";
+import type { Plugin, ResolvedConfig } from "vite";
 import { parse, type AST } from "svelte/compiler";
 import { walk } from "zimmerframe";
 import MagicString from "magic-string";
@@ -16,14 +16,44 @@ const WRAPPER_TAG_NAME_PROP = "_tagName";
 
 interface VitePluginSvebcomponentsSsrOptions {
   /**
-   * Use the async SSR wrapper. Host Svelte apps must enable
-   * `compilerOptions.experimental.async` when this option is true.
+   * Use the async SSR wrapper. When omitted, this is auto-detected from the
+   * host app's vite-plugin-svelte options: an app compiled with
+   * `compilerOptions.experimental.async` needs the async wrapper (the sync
+   * wrapper's render path rejects async component output), and an app
+   * without it cannot compile the async wrapper. Set explicitly only to
+   * override the detection.
    *
-   * Svelte 6 TODO: revisit this option once async rendering is no longer
-   * configured through `compilerOptions.experimental.async`.
+   * Svelte 6 TODO: revisit once async rendering is no longer configured
+   * through `compilerOptions.experimental.async`.
    */
   async?: boolean;
 }
+
+/**
+ * Reads whether the host app compiles with `experimental.async` from
+ * vite-plugin-svelte's plugin api (populated in its `configResolved`, so it
+ * must only be called from later hooks such as `transform`).
+ */
+const detectExperimentalAsync = (
+  config: ResolvedConfig | undefined,
+): boolean => {
+  for (const plugin of config?.plugins ?? []) {
+    if (!plugin.name.startsWith("vite-plugin-svelte")) continue;
+    const api = (
+      plugin as {
+        api?: {
+          options?: {
+            compilerOptions?: { experimental?: { async?: boolean } };
+          };
+        };
+      }
+    ).api;
+    const experimentalAsync =
+      api?.options?.compilerOptions?.experimental?.async;
+    if (experimentalAsync !== undefined) return experimentalAsync === true;
+  }
+  return false;
+};
 
 /**
  * Svelte 6 TODO: remove this helper once svelte no longer applies special transforms on slot attributes
@@ -80,14 +110,25 @@ const transformSlotAttribute = (
 function vitePluginSvebcomponentsSsr(
   options: VitePluginSvebcomponentsSsrOptions = {},
 ): Plugin {
-  const wrapperSourcePackage = options.async
-    ? ASYNC_WRAPPER_SOURCE_PACKAGE
-    : WRAPPER_SOURCE_PACKAGE;
-  const importStatement = `import ${WRAPPER_COMPONENT_NAME} from '${wrapperSourcePackage}';\n`;
+  let resolvedConfig: ResolvedConfig | undefined;
+  // resolved lazily on first use: an explicit option wins; otherwise detect
+  // from vite-plugin-svelte, whose api is populated during configResolved
+  let useAsyncWrapper: boolean | undefined = options.async;
+  const importStatement = () => {
+    useAsyncWrapper ??= detectExperimentalAsync(resolvedConfig);
+    const wrapperSourcePackage = useAsyncWrapper
+      ? ASYNC_WRAPPER_SOURCE_PACKAGE
+      : WRAPPER_SOURCE_PACKAGE;
+    return `import ${WRAPPER_COMPONENT_NAME} from '${wrapperSourcePackage}';\n`;
+  };
 
   return {
     name: "vite-plugin-svelte-webcomponent-wrapper",
     enforce: "pre",
+
+    configResolved(config) {
+      resolvedConfig = config;
+    },
 
     async transform(code, id) {
       if (!id.endsWith(".svelte")) {
@@ -202,9 +243,9 @@ function vitePluginSvebcomponentsSsr(
         const scriptNode = instance;
         if (scriptNode) {
           const scriptTagEnd = code.indexOf(">", scriptNode.start);
-          magicString.appendLeft(scriptTagEnd + 1, importStatement);
+          magicString.appendLeft(scriptTagEnd + 1, importStatement());
         } else {
-          magicString.prepend(`<script>\n${importStatement}</script>\n`);
+          magicString.prepend(`<script>\n${importStatement()}</script>\n`);
         }
       }
 

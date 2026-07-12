@@ -36,12 +36,28 @@
       "types": "./dist/runtime/installShim.d.ts",
       "import": "./dist/runtime/installShim.js"
     },
+    "./hydration": {
+      "types": "./dist/hydration/hydratable.d.ts",
+      "import": "./dist/hydration/hydratable.js"
+    },
+    "./hydration-host": {
+      "types": "./dist/hydration/HydrationHost.svelte.d.ts",
+      "svelte": "./dist/hydration/HydrationHost.svelte",
+      "default": "./dist/hydration/HydrationHost.svelte"
+    },
     "./wrapper-component": {
-      "types": "./dist/vite/CustomElementWrapper.svelte.d.ts",
-      "svelte": "./dist/vite/CustomElementWrapper.svelte"
+      "types": "./dist/vite/Client.svelte.d.ts",
+      "browser": {
+        "svelte": "./dist/vite/Client.svelte"
+      },
+      "svelte": "./dist/vite/Server.svelte"
     },
     "./async-wrapper-component": {
-      "svelte": "./dist/vite/AsyncCustomElementWrapper.svelte"
+      "types": "./dist/vite/Client.svelte.d.ts",
+      "browser": {
+        "svelte": "./dist/vite/Client.svelte"
+      },
+      "svelte": "./dist/vite/AsyncServer.svelte"
     },
     "./vite": {
       "types": "./dist/vite/vitePluginSvebcomponentsSsr.d.ts",
@@ -57,7 +73,21 @@
     }
   },
   "peerDependencies": {
-    "svelte": "^5.0.0"
+    "svelte": "^5.0.0",
+    "vite": "^6.0.0 || ^7.0.0",
+    "tsdown": ">=0.15.0",
+    "rolldown": ">=1.0.0-beta.0"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    },
+    "tsdown": {
+      "optional": true
+    },
+    "rolldown": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@svebcomponents/typescript-config": "workspace:*",

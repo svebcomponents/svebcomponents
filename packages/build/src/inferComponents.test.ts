@@ -149,12 +149,21 @@ const pluginNames = (options: Options): string[] => {
   return (plugins as { name: string }[]).map((plugin) => plugin.name);
 };
 
-const clientPipeline = ["svebcomponents:auto-options", "svelte"];
+const clientPipeline = [
+  "svebcomponents:dedupe",
+  "svebcomponents:auto-options",
+  "svelte",
+];
+// the svelte-aware variant externalizes svelte, so it needs no dedupe
+const svelteAwareClientPipeline = ["svebcomponents:auto-options", "svelte"];
 const ssrPipeline = [
+  "svebcomponents:strip-custom-element-options",
   "svebcomponents:override-svelte-ssr-slot-implementation",
   "svelte",
   "svebcomponents:generate-ssr-entry",
 ];
+// the server-compiled HydrationHost build accompanying each SSR config
+const hydrationHostPipeline = ["svelte"];
 
 /**
  * Asserts that `inferred` matches `expected` both in its serializable fields
@@ -189,6 +198,7 @@ describe("infer components", () => {
     expectConfigsToMatch(inferredComponents, manualSSRConfig, [
       clientPipeline,
       ssrPipeline,
+      hydrationHostPipeline,
     ]);
   });
   it("parses Svelte conditional exports from package.json", () => {
@@ -196,9 +206,11 @@ describe("infer components", () => {
     const inferredComponents = inferComponents(svelteConditionPackageJson);
     expectConfigsToMatch(inferredComponents, manualSvelteConditionConfig, [
       clientPipeline,
-      clientPipeline,
+      svelteAwareClientPipeline,
       ssrPipeline,
+      hydrationHostPipeline,
       ssrPipeline,
+      hydrationHostPipeline,
     ]);
   });
   it("parses multiple components from package.json", () => {
@@ -208,6 +220,7 @@ describe("infer components", () => {
       clientPipeline,
       clientPipeline,
       ssrPipeline,
+      hydrationHostPipeline,
     ]);
   });
   it("generates the SSR entry filename from the declared ssr export", async () => {

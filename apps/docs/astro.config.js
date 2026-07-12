@@ -35,6 +35,7 @@ export default defineConfig({
                   slug: "core-concepts/auto-options",
                 },
                 { label: "SSR", slug: "core-concepts/ssr" },
+                { label: "Hydration", slug: "core-concepts/hydration" },
               ],
             },
           ],

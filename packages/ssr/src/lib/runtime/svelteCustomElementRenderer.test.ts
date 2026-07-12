@@ -438,6 +438,89 @@ describe("SvelteCustomElementRenderer", () => {
     );
   });
 
+  test("serializes rich props into the shadow output in hydration-host mode", () => {
+    const mockElement = {
+      attributes: {},
+      attributeChangedCallback: vi.fn(),
+      $$d: {},
+      $$p_d: {},
+    };
+    mockClientElementCtor.mockReturnValue(mockElement);
+    const mockHost = {};
+
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock host component
+      mockHost as any,
+    );
+
+    renderer.setAttribute("title", "from attribute");
+    renderer.setProperty("threadData", { items: [1, 2] });
+
+    const shadow = Array.from(
+      renderer.renderShadow({} as RenderInfo) ?? [],
+    ).join("");
+    expect(shadow).toContain(
+      '<script type="application/json" data-svebcomponents-ssr-props>',
+    );
+    const json = /data-svebcomponents-ssr-props>(.*?)<\/script>/.exec(
+      shadow,
+    )?.[1];
+    expect(JSON.parse(json ?? "")).toEqual({ threadData: { items: [1, 2] } });
+    // attribute-provided values are recoverable from the DOM — not serialized
+    expect(json).not.toContain("from attribute");
+  });
+
+  test("escapes markup-breaking characters in serialized rich props", () => {
+    const mockElement = {
+      attributes: {},
+      attributeChangedCallback: vi.fn(),
+      $$d: {},
+      $$p_d: {},
+    };
+    mockClientElementCtor.mockReturnValue(mockElement);
+
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock host component
+      {} as any,
+    );
+    renderer.setProperty("payload", { html: "</script><img src=x>" });
+
+    const shadow = Array.from(
+      renderer.renderShadow({} as RenderInfo) ?? [],
+    ).join("");
+    // exactly one script element: the payload cannot terminate it early
+    expect(shadow.match(/<\/script>/g)).toHaveLength(1);
+    expect(shadow).toContain("\\u003C/script>");
+  });
+
+  test("does not serialize rich props without a hydration host", () => {
+    const mockElement = {
+      attributes: {},
+      attributeChangedCallback: vi.fn(),
+      $$d: {},
+      $$p_d: {},
+    };
+    mockClientElementCtor.mockReturnValue(mockElement);
+
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+    );
+    renderer.setProperty("threadData", { items: [] });
+
+    const shadow = Array.from(
+      renderer.renderShadow({} as RenderInfo) ?? [],
+    ).join("");
+    expect(shadow).not.toContain("data-svebcomponents-ssr-props");
+  });
+
   test("renderShadow rethrows genuine render errors from sync getters", () => {
     const renderError = new Error("something exploded inside the component");
     const renderOutput = {

@@ -14,6 +14,13 @@ interface GenerateSsrEntryPluginOptions {
    * (e.g. "button-ssr") so the generated entries do not overwrite each other.
    */
   entryFileName?: string;
+  /**
+   * Import path (relative to the generated entry) of the server-compiled
+   * HydrationHost component. When set, the generated renderer passes it to
+   * `SvelteCustomElementRenderer`, so the SSR output structurally matches
+   * what the client-side `hydratable` wrapper hydrates.
+   */
+  hydrationHostImportPath?: string;
 }
 
 /**
@@ -28,6 +35,7 @@ export function pluginGenerateSsrEntry(
     serverImportPath = "./index.js",
     clientImportPath = "../client/index.js",
     entryFileName = DEFAULT_ENTRY_FILE_NAME,
+    hydrationHostImportPath,
   } = options;
 
   return {
@@ -59,7 +67,11 @@ export function pluginGenerateSsrEntry(
 import '@svebcomponents/ssr/shim';
 import { SvelteCustomElementRenderer } from '@svebcomponents/ssr';
 import ServerSvelteComponent from '${serverImportPath}';
-
+${
+  hydrationHostImportPath
+    ? `import HydrationHostComponent from '${hydrationHostImportPath}';\n`
+    : ""
+}
 // Import the client bundle dynamically instead of statically: bundlers that
 // code-split (e.g. rollup in a SvelteKit server build) may hoist a statically
 // imported module into a shared chunk that executes before this module's own
@@ -74,7 +86,9 @@ if (!ctor) {
 }
 class ComponentSpecificSvelteCustomElementRenderer extends SvelteCustomElementRenderer {
   constructor(tagName) {
-    super(ServerSvelteComponent, ctor, tagName);
+    super(ServerSvelteComponent, ctor, tagName${
+      hydrationHostImportPath ? ", HydrationHostComponent" : ""
+    });
   }
 }
 

@@ -28,7 +28,8 @@ test("renders a synchronous component through the sync wrapper", () => {
     '<sync-component title="Sync Test" count="3" enabled="">',
   );
   expect(res.body).toContain('<template shadowrootmode="open">');
-  expect(res.body).toContain("<h1>Sync Test</h1>");
+  // the h1 carries svelte's scoped-css class, so match tolerantly
+  expect(res.body).toContain(">Sync Test</h1>");
   expect(res.body).toContain('<p id="count">Count: number-3</p>');
   expect(res.body).toContain('<p id="enabled">Enabled: boolean-true</p>');
 });

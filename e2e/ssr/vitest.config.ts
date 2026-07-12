@@ -19,13 +19,19 @@ export default defineConfig({
   ],
   test: {
     ...vitestConfig?.test,
+    // renders the DSD fixture the browser-side hydration test consumes
+    globalSetup: ["test/hydrationFixture.globalSetup.ts"],
     projects: [
       ...(vitestConfig?.test?.projects ?? []),
       // The default consumer configuration: sync wrapper, no async option,
       // no `experimental.async`. Deliberately does NOT extend the root
-      // config so the async plugins above don't leak in.
+      // config so the async plugins above don't leak in — and ignores this
+      // repo's svelte.config.js (`configFile: false`), whose
+      // `experimental.async` exists for the async projects above and would
+      // otherwise make the svebcomponents plugin auto-detect the async
+      // wrapper here.
       {
-        plugins: [svebcomponents(), svelte()],
+        plugins: [svebcomponents(), svelte({ configFile: false })],
         test: {
           name: "server-sync",
           include: ["test/sync/*.test.ts"],

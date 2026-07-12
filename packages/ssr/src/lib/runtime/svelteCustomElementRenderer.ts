@@ -8,6 +8,7 @@ import { render } from "svelte/server";
 
 import {
   propValueToAttributeValue,
+  isValidAttributeName,
   renderSsrAttribute,
   type SvelteCustomElementPropDefinition,
 } from "./html.js";
@@ -83,6 +84,14 @@ export class SvelteCustomElementRenderer
       new (): SvelteClientCustomElement;
     },
     tagName: string,
+    /**
+     * Server-compiled HydrationHost component. When provided, the shadow
+     * content is rendered through it so the markup structure matches what the
+     * client-side `hydratable` wrapper hydrates (same host component on both
+     * sides). Omitted for non-hydratable builds, which render the component
+     * directly as before.
+     */
+    private hydrationHostComponent?: Component,
   ) {
     super(tagName);
     this.svelteClientCustomElement = new SvelteClientCustomElementCtor();
@@ -124,27 +133,94 @@ export class SvelteCustomElementRenderer
     }
   }
 
+  /**
+   * The host attributes as a raw name→value record, for wrappers that let
+   * svelte serialize the element (`<svelte:element {...attributes}>`).
+   * Values are unescaped — svelte's own attribute serialization escapes
+   * them; names are validated here since they bypass `renderSsrAttribute`.
+   */
+  getSsrAttributes(): Record<string, string> {
+    const attributes: Record<string, string> = {};
+    for (const [name, value] of this.ssrAttributes) {
+      if (!isValidAttributeName(name)) {
+        throw new Error(`Invalid SSR attribute name: ${name}`);
+      }
+      attributes[name] = value;
+    }
+    return attributes;
+  }
+
+  /**
+   * Names of props that arrived via `setProperty` (rich values with no
+   * attribute representation). For hydratable output these are serialized
+   * into the shadow DOM, because the client-side wrapper hydrates *before* a
+   * host framework re-supplies them — hydrating without them would mismatch
+   * the server markup and force a re-mount.
+   */
+  private readonly richPropNames = new Set<string>();
+
   override setProperty(name: string, value: unknown) {
     this.svelteClientCustomElement.$$d[name] = value;
+    this.richPropNames.add(name);
     this.reflectPropertyToAttribute(name, value);
   }
 
+  /**
+   * Serializes rich props into an inert script element appended after the
+   * shadow content (outside the hydration markers, so claiming ignores it).
+   * The client-side `hydratable` wrapper ports these back into `$$d` before
+   * hydrating and removes the element.
+   */
+  private serializeRichProps(): string {
+    if (!this.hydrationHostComponent || this.richPropNames.size === 0) {
+      return "";
+    }
+    const richProps: Record<string, unknown> = {};
+    for (const name of this.richPropNames) {
+      richProps[name] = this.svelteClientCustomElement.$$d[name];
+    }
+    let json: string;
+    try {
+      json = JSON.stringify(richProps);
+    } catch {
+      // non-serializable props (functions, cycles): fall back to hydration
+      // without them — worst case is svelte's recovery re-mount
+      return "";
+    }
+    // escape `<` so `</script>` or `<!--` inside values cannot break parsing
+    return `<script type="application/json" data-svebcomponents-ssr-props>${json.replaceAll("<", "\\u003C")}</script>`;
+  }
+
   override *renderShadow(_renderInfo: RenderInfo): RenderResult | undefined {
-    const result = render(this.svelteSsrComponent, {
-      props: this.svelteClientCustomElement.$$d,
-    }) as unknown as SvelteRenderResult | PromiseLike<SvelteRenderResult>;
+    const result = (this.hydrationHostComponent
+      ? render(this.hydrationHostComponent, {
+          props: {
+            __component: this.svelteSsrComponent,
+            __propDefinitions: this.svelteClientCustomElement.$$p_d,
+            __initialProps: { ...this.svelteClientCustomElement.$$d },
+          },
+        })
+      : render(this.svelteSsrComponent, {
+          props: this.svelteClientCustomElement.$$d,
+        })) as unknown as SvelteRenderResult | PromiseLike<SvelteRenderResult>;
     if (isPromiseLike<SvelteRenderResult>(result)) {
       const syncResult = tryRenderSync(result);
       if (syncResult) {
         yield syncResult.head;
         yield syncResult.body;
+        yield this.serializeRichProps();
         return;
       }
-      yield Promise.resolve(result).then(({ body, head }) => [head, body]);
+      yield Promise.resolve(result).then(({ body, head }) => [
+        head,
+        body,
+        this.serializeRichProps(),
+      ]);
       return;
     }
     yield result.head;
     yield result.body;
+    yield this.serializeRichProps();
   }
 
   private reflectPropertyToAttribute(name: string, value: unknown) {

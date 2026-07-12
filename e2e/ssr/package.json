@@ -39,5 +39,8 @@
     "vitest": "catalog:",
     "playwright": "catalog:",
     "typescript": "catalog:"
+  },
+  "dependencies": {
+    "@svebcomponents/utils": "workspace:*"
   }
 }

@@ -100,7 +100,9 @@ and rewrites them to a wrapper component. The wrapper:
 3. Emits the rendered shadow root as declarative shadow DOM.
 
 On the client, the wrapper renders the original custom element tag so the
-browser can upgrade it normally.
+browser can upgrade it normally. When the element upgrades, the
+server-rendered shadow DOM is [hydrated](/core-concepts/hydration/) — adopted
+in place — rather than wiped and re-rendered.
 
 For runtime APIs, direct package usage, transform details, and the complete
 list of limitations, see the
