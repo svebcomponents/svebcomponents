@@ -11,7 +11,7 @@ on:
       - "configs/*/CHANGELOG.md"
 
 permissions:
-  contents: write
+  contents: read
   id-token: write
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
@@ -40,8 +40,4 @@ jobs:
         run: pnpm install
 
       - name: Publish to npm
-        uses: changesets/action@v1
-        with:
-          publish: pnpm release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm release
