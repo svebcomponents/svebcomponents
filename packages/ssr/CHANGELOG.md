@@ -1,5 +1,64 @@
 # @svebcomponents/ssr
 
+## 0.1.0
+
+### Minor Changes
+
+- c2f1b6c: Auto-detect the async SSR wrapper from the host app's svelte config.
+
+  `svebcomponents({ async: true })` duplicated a fact the build already knows: an app compiled with `compilerOptions.experimental.async` needs the async wrapper, and an app without it cannot compile the async wrapper. Keeping the two in sync manually was an easy way to produce wrapper-mismatch hydration bugs.
+
+  The vite plugin now reads `experimental.async` from vite-plugin-svelte's resolved options and picks the wrapper variant automatically. The explicit `async` option remains as an override.
+
+- c2f1b6c: Support Svelte's `$host()` rune in hydratable components.
+
+  Previously `$host()` was unusable in svebcomponents components: the SSR build compiles with `customElement: false`, where Svelte hard-errors on `$host()` (`host_invalid_placement`), and even on the client the hydrated path never supplied a host — Svelte compiles `$host()` to `$props.$host`, which only Svelte's own fresh-mount custom-element wrapper passed. Component authors had to fall back to dispatching `composed: true` events from an inner node and hoping they retarget.
+
+  Now:
+
+  - **Server**: the SSR source transform replaces `$host()` calls with `undefined` — behavior-identical to Svelte's own server transform (`$host()` → `void 0`). Components using `$host()` compile for SSR whether or not they declare `<svelte:options customElement>`.
+  - **Client**: the hydration host passes the custom element through as `$host`, so `$host()` returns the upgraded element after hydration — exactly as it does in Svelte's fresh-mount path.
+
+  `$host()` returns `undefined` during SSR (there is no host element), so guard uses that can run server-side (`$host()?.dispatchEvent(...)`) — event handlers, `onMount`, and `$effect` bodies never run during SSR and need no guard.
+
+  Note for editor tooling: Svelte's language server still reports `host_invalid_placement` unless the component declares `<svelte:options customElement>` in source. Declaring it is safe — the SSR build strips it (and since the reflect-defaults change, a bare `customElement="tag-name"` needs no prop overrides).
+
+- c2f1b6c: Hydratable custom elements: server-rendered declarative shadow DOM is now **hydrated** instead of being wiped and re-rendered when the element upgrades.
+
+  Previously, svelte's generated custom element always called `attachShadow` (clearing the declarative shadow root per spec) and then `mount`ed the component from scratch — losing the server-rendered DOM, transient state, and re-creating every node. Now, `@svebcomponents/build` compiles components as hydratable by default:
+
+  - `@svebcomponents/auto-options` injects svelte's official `customElement.extend` hook wired to the new `hydratable` wrapper from `@svebcomponents/ssr/hydration`.
+  - The wrapper claims the declarative shadow root before svelte can clear it and hydrates it via svelte's public `hydrate()` API — the server-rendered nodes are adopted in place, styles are deduped by svelte itself, and the component is fully reactive afterwards.
+  - On the server, the generated SSR entry renders through a `HydrationHost` component (also used on the client) so the markup structure matches by construction.
+  - Anything non-hydratable — no declarative shadow root, slotted components, reconnection after teardown — falls back to svelte's untouched mount path, and svelte's own hydration mismatch recovery re-mounts, so a failed hydration degrades to exactly the previous behavior.
+
+  Opt out per package with `defineConfig({ hydratable: false })` (or per component by declaring your own `extend`). Client custom-element bundles are now built with `platform: "browser"`, so browser export conditions resolve correctly.
+
+  Known limitations (fall back to mount): components with slots (expected to become hydratable with Svelte 6, when slots are no longer compiled through the legacy transformation — a dev-mode `console.info` makes the fallback visible); legacy `createEventDispatcher` events on hydrated elements (native `$host()` events are unaffected); component `export`s are not exposed on hydrated hosts. See the new [Hydration docs](https://svebcomponents.dev/core-concepts/hydration/) for details.
+
+### Patch Changes
+
+- 8bceff0: Fix a race that could corrupt build output when several components share an output directory (e.g. multiple components inferred from package.json `exports` writing to `dist/client`): component configs are built in parallel and tsdown's default per-build `clean` deleted sibling builds' output. The config factories now set `clean: false` and the `svebcomponents` CLI cleans each distinct output directory once before building.
+- 8bceff0: Fix SSR breakage with svelte >= 5.36 and a chunk-ordering crash in production SvelteKit builds:
+
+  - `SvelteCustomElementRenderer.renderShadow` now recognizes svelte's lazily-evaluated `RenderOutput` (always thenable since svelte 5.36) and renders synchronous components through its sync `head`/`body` getters. This un-breaks the sync wrapper (`collectResultSync` previously threw `Promises not supported in collectResultSync` for every component); only genuinely asynchronous components now require the async wrapper.
+  - The generated SSR entry (`dist/server/ssr.js`) now installs the DOM shim via the new `@svebcomponents/ssr/shim` subpath export **before** loading the client custom-element bundle, and loads that bundle with a dynamic import. Previously, bundlers that code-split (e.g. rollup in a SvelteKit `adapter-node` build) could hoist the client bundle into a shared chunk that evaluated before the shim installed, crashing at startup with `Class extends value undefined is not a constructor or null` (svelte's `SvelteElement` captures `HTMLElement` at module-evaluation time). Dev mode was unaffected, which made the crash easy to miss.
+
+- c2f1b6c: Fix a flash of unstyled content (FOUC) when a component declares an explicit `<svelte:options customElement={{ ... }}>`.
+
+  The SSR build compiles components with `customElement: false` (it renders the shadow _content_, not a custom element). But when the source declares `<svelte:options customElement>`, Svelte treats the component's `<style>` as belonging to a custom element's shadow root and drops it entirely from the server render — the compiler emits no `css.add`, so the server output carries scoped class names with no `<style>`. The result is server-rendered shadow DOM that stays unstyled until the client bundle injects the styles at hydration.
+
+  A new build step (`pluginStripCustomElementOptions`) removes the `customElement` option from `<svelte:options>` before the server compile, so the CSS is emitted and placed inside the declarative shadow root — styled at first paint, no flash. The client build keeps `customElement` (where the element is defined), so only SSR output changes. Components without an explicit `<svelte:options customElement>` (the common case, where auto-options injects it into the client build only) were already unaffected.
+
+- c2f1b6c: Declare `vite`, `tsdown`, and `rolldown` as optional peer dependencies of `@svebcomponents/ssr`.
+
+  The `./vite` and `./tsdown` entries type against these packages, but they were only devDependencies — under pnpm's isolated layout a consumer's TypeScript resolves the emitted declarations against a _different_ installation than the consumer's own, so the plugin's `Plugin` type never unifies with the consumer's `PluginOption` and every consumer needs an `as unknown as PluginOption` cast. Declaring them as optional peers makes the package resolve the consumer's copies, so the types unify. Optional because the runtime entries (`.`, `/shim`, `/hydration`) need none of them.
+
+  `@svebcomponents/build`: `createTsdownConfig` now has an explicit `Options` return type — the inferred type referenced rollup's plugin types through non-portable `.pnpm` paths (TS2742) in the emitted declarations.
+
+- Updated dependencies [c2f1b6c]
+  - @svebcomponents/utils@0.1.0
+
 ## 0.0.8
 
 ### Patch Changes

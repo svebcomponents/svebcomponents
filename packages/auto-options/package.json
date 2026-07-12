@@ -1,6 +1,6 @@
 {
   "name": "@svebcomponents/auto-options",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "engines": {
     "node": ">=20.19.0"
   },
