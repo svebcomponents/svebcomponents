@@ -1,6 +1,6 @@
 {
   "name": "@svebcomponents/ssr",
-  "version": "0.0.8",
+  "version": "0.1.0",
   "engines": {
     "node": ">=20.19.0"
   },
