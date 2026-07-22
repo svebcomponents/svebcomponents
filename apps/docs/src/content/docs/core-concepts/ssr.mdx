@@ -69,6 +69,16 @@ export default defineConfig({
 });
 ```
 
+The plugin automatically adds `@svebcomponents/ssr` to Vite's `ssr.noExternal`
+— you don't need to configure that yourself. If your own component package
+also ships a raw-`.svelte` export (e.g. an `externalSvelte` build sharing
+this app's Svelte runtime), add it alongside via the plugin's `noExternal`
+option instead of editing `vite.config.ts`'s `ssr.noExternal` separately:
+
+```ts
+svebcomponents({ noExternal: ["my-component-package"] });
+```
+
 Then register the component's server renderer:
 
 ```ts

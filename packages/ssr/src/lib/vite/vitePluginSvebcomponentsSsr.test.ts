@@ -45,6 +45,31 @@ describe("vitePluginSvebcomponentsSsr", () => {
     expect(plugin.name).toBe("vite-plugin-svelte-webcomponent-wrapper");
   });
 
+  test("adds itself to ssr.noExternal via the config hook", () => {
+    const plugin = vitePluginSvebcomponentsSsr();
+    const configHook = plugin.config as unknown as (
+      config: unknown,
+      env: unknown,
+    ) => { ssr?: { noExternal?: unknown[] } };
+    const result = configHook({}, { command: "build", mode: "production" });
+    expect(result.ssr?.noExternal).toEqual(["@svebcomponents/ssr"]);
+  });
+
+  test("merges consumer-provided noExternal packages alongside itself", () => {
+    const plugin = vitePluginSvebcomponentsSsr({
+      noExternal: ["@svebcomponents/atproto.comments"],
+    });
+    const configHook = plugin.config as unknown as (
+      config: unknown,
+      env: unknown,
+    ) => { ssr?: { noExternal?: unknown[] } };
+    const result = configHook({}, { command: "build", mode: "production" });
+    expect(result.ssr?.noExternal).toEqual([
+      "@svebcomponents/ssr",
+      "@svebcomponents/atproto.comments",
+    ]);
+  });
+
   test("ignores non-svelte files", async () => {
     const plugin = vitePluginSvebcomponentsSsr();
     const result = await getTransform(plugin)(
