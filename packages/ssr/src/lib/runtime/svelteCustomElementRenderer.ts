@@ -24,6 +24,22 @@ type SvelteRenderResult = {
   head: string;
 };
 
+export interface SsrPrepareContext {
+  /** Snapshot of the properties that will be passed to the server component. */
+  readonly props: Readonly<Record<string, unknown>>;
+  /**
+   * Adds or replaces a property before rendering. In hydratable builds, rich
+   * values set here are serialized for the client just like host-supplied
+   * properties.
+   */
+  setProperty(name: string, value: unknown): void;
+}
+
+/** Optional server-only preparation performed before a custom element renders. */
+export type SsrPrepare = (
+  context: SsrPrepareContext,
+) => void | PromiseLike<void>;
+
 /**
  * Since svelte 5.36, `render()` returns a lazily-evaluated `RenderOutput`
  * that is *always* thenable — even for fully synchronous components. Its
@@ -92,6 +108,11 @@ export class SvelteCustomElementRenderer
      * directly as before.
      */
     private hydrationHostComponent?: Component,
+    /**
+     * Optional server-only preparation hook. A synchronous return keeps the
+     * renderer synchronous; returning a promise requires an async-capable host.
+     */
+    private prepare?: SsrPrepare,
   ) {
     super(tagName);
     this.svelteClientCustomElement = new SvelteClientCustomElementCtor();
@@ -191,7 +212,26 @@ export class SvelteCustomElementRenderer
     return `<script type="application/json" data-svebcomponents-ssr-props>${json.replaceAll("<", "\\u003C")}</script>`;
   }
 
-  override *renderShadow(_renderInfo: RenderInfo): RenderResult | undefined {
+  override *renderShadow(renderInfo: RenderInfo): RenderResult | undefined {
+    const preparation = this.prepare?.({
+      props: Object.freeze({ ...this.svelteClientCustomElement.$$d }),
+      setProperty: (name, value) => this.setProperty(name, value),
+    });
+
+    if (isPromiseLike<void>(preparation)) {
+      yield Promise.resolve(preparation).then(() =>
+        Array.from(this.renderPreparedShadow(renderInfo)),
+      );
+      return;
+    }
+
+    yield* this.renderPreparedShadow(renderInfo);
+  }
+
+  /** Renders after any component-specific server preparation has completed. */
+  private *renderPreparedShadow(
+    _renderInfo: RenderInfo,
+  ): Exclude<RenderResult, undefined> {
     const result = (this.hydrationHostComponent
       ? render(this.hydrationHostComponent, {
           props: {

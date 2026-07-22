@@ -26,6 +26,10 @@ test("rendering svelte with async SSR renderer", async () => {
   expect(res.body).toContain('<p id="count">Count: number-5</p>');
   expect(res.body).toContain('<p id="enabled">Enabled: boolean-true</p>');
   expect(res.body).toContain('<p id="async-label">Async: resolved</p>');
+  expect(res.body).toContain(
+    '<p id="prepared">Prepared: adjacent server module</p>',
+  );
+  expect(res.body).toContain('"prepared":{"source":"adjacent server module"}');
 });
 
 test("escapes untrusted values rendered through shadow props", async () => {

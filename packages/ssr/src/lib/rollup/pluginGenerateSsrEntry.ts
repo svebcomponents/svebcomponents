@@ -21,6 +21,11 @@ interface GenerateSsrEntryPluginOptions {
    * what the client-side `hydratable` wrapper hydrates.
    */
   hydrationHostImportPath?: string;
+  /**
+   * Import path (relative to the generated entry) of an optional server-only
+   * SSR preparation function.
+   */
+  prepareImportPath?: string;
 }
 
 /**
@@ -36,6 +41,7 @@ export function pluginGenerateSsrEntry(
     clientImportPath = "../client/index.js",
     entryFileName = DEFAULT_ENTRY_FILE_NAME,
     hydrationHostImportPath,
+    prepareImportPath,
   } = options;
 
   return {
@@ -71,7 +77,7 @@ ${
   hydrationHostImportPath
     ? `import HydrationHostComponent from '${hydrationHostImportPath}';\n`
     : ""
-}
+}${prepareImportPath ? `import prepare from '${prepareImportPath}';\n` : ""}
 // Import the client bundle dynamically instead of statically: bundlers that
 // code-split (e.g. rollup in a SvelteKit server build) may hoist a statically
 // imported module into a shared chunk that executes before this module's own
@@ -88,7 +94,7 @@ class ComponentSpecificSvelteCustomElementRenderer extends SvelteCustomElementRe
   constructor(tagName) {
     super(ServerSvelteComponent, ctor, tagName${
       hydrationHostImportPath ? ", HydrationHostComponent" : ""
-    });
+    }${prepareImportPath ? `${hydrationHostImportPath ? "" : ", undefined"}, prepare` : ""});
   }
 }
 

@@ -115,6 +115,54 @@ describe("pluginGenerateSsrEntry", () => {
     );
   });
 
+  test("imports and passes an SSR preparation function when provided", async () => {
+    const plugin = pluginGenerateSsrEntry({
+      hydrationHostImportPath: "./hydration-host.js",
+      prepareImportPath: "./index.ssr.js",
+    }) as {
+      writeBundle: FunctionPluginHooks["writeBundle"];
+    };
+    const mockContext = { error: vi.fn() } as unknown as PluginContext;
+    const outputOptions = {
+      dir: "dist/server",
+    } as NormalizedOutputOptions;
+
+    await plugin.writeBundle.call(mockContext, outputOptions, outputBundle);
+
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/ssr.js"),
+      expect.stringContaining("import prepare from './index.ssr.js'"),
+    );
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/ssr.js"),
+      expect.stringContaining(
+        "super(ServerSvelteComponent, ctor, tagName, HydrationHostComponent, prepare)",
+      ),
+    );
+  });
+
+  test("passes preparation without requiring a hydration host", async () => {
+    const plugin = pluginGenerateSsrEntry({
+      prepareImportPath: "./index.ssr.js",
+    }) as {
+      writeBundle: FunctionPluginHooks["writeBundle"];
+    };
+    const mockContext = { error: vi.fn() } as unknown as PluginContext;
+
+    await plugin.writeBundle.call(
+      mockContext,
+      { dir: "dist/server" } as NormalizedOutputOptions,
+      outputBundle,
+    );
+
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/ssr.js"),
+      expect.stringContaining(
+        "super(ServerSvelteComponent, ctor, tagName, undefined, prepare)",
+      ),
+    );
+  });
+
   test("uses a custom entry filename when provided", async () => {
     const plugin = pluginGenerateSsrEntry({
       entryFileName: "button-ssr",

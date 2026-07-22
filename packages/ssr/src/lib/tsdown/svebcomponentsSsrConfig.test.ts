@@ -23,4 +23,18 @@ describe("svebcomponentsSsrConfig", () => {
 
     expect(config.outDir).toEqual(outDir);
   });
+
+  test("compiles a server preparation module as an additional entry", () => {
+    const config = svebcomponentsSsrConfig({
+      entry: "src/index.ts",
+      prepareEntry: "src/index.ssr.ts",
+      prepareImportPath: "./index.ssr.js",
+      outDir: "dist/server",
+    });
+
+    expect(config.entry).toEqual({
+      index: "src/index.ts",
+      "index.ssr": "src/index.ssr.ts",
+    });
+  });
 });
