@@ -96,6 +96,7 @@ export const defineConfig = (options: DefineConfigOptions = {}): Options[] => {
       entry,
       outDir,
       hydratable,
+      installsSsrShimGuard: ssr,
       svelteConfig,
     }),
   ];
@@ -107,6 +108,7 @@ export const defineConfig = (options: DefineConfigOptions = {}): Options[] => {
         outDir: svelteOutDir,
         externalSvelte: true,
         hydratable,
+        installsSsrShimGuard: ssr,
         svelteConfig,
       }),
     );

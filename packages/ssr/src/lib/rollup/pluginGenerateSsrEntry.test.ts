@@ -85,6 +85,56 @@ describe("pluginGenerateSsrEntry", () => {
     );
   });
 
+  test("self-registers with ElementRendererRegistry when a tagName is provided", async () => {
+    const plugin = pluginGenerateSsrEntry({
+      tagName: "my-widget",
+    }) as {
+      writeBundle: FunctionPluginHooks["writeBundle"];
+    };
+    const mockContext = { error: vi.fn() } as unknown as PluginContext;
+    const outputOptions: NormalizedOutputOptions = {
+      dir: "dist/server",
+    } as NormalizedOutputOptions;
+
+    await plugin.writeBundle.call(mockContext, outputOptions, outputBundle);
+
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/ssr.js"),
+      expect.stringContaining(
+        "import { SvelteCustomElementRenderer, ElementRendererRegistry } from '@svebcomponents/ssr'",
+      ),
+    );
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/ssr.js"),
+      expect.stringContaining(
+        'ElementRendererRegistry.set("my-widget", ComponentSpecificSvelteCustomElementRenderer);',
+      ),
+    );
+  });
+
+  test("omits self-registration when no tagName is provided", async () => {
+    const plugin = pluginGenerateSsrEntry({}) as {
+      writeBundle: FunctionPluginHooks["writeBundle"];
+    };
+    const mockContext = { error: vi.fn() } as unknown as PluginContext;
+    const outputOptions: NormalizedOutputOptions = {
+      dir: "dist/server",
+    } as NormalizedOutputOptions;
+
+    await plugin.writeBundle.call(mockContext, outputOptions, outputBundle);
+
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/ssr.js"),
+      expect.stringContaining(
+        "import { SvelteCustomElementRenderer } from '@svebcomponents/ssr'",
+      ),
+    );
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/ssr.js"),
+      expect.not.stringContaining("ElementRendererRegistry"),
+    );
+  });
+
   test("uses custom import paths when provided", async () => {
     const plugin = pluginGenerateSsrEntry({
       serverImportPath: "./custom-server.js",

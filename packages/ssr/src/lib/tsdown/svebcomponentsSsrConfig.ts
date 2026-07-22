@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import fs from "node:fs";
 import path from "node:path";
 
 import type { Options } from "tsdown";
@@ -7,6 +8,7 @@ import svelte from "rollup-plugin-svelte";
 import { pluginGenerateSsrEntry } from "../rollup/pluginGenerateSsrEntry.js";
 import { pluginOverrideSvelteSsrSlotImplementation } from "../rollup/pluginOverrideSvelteSsrSlotImplementation.js";
 import { pluginStripCustomElementOptions } from "../rollup/pluginStripCustomElementOptions.js";
+import { extractDefineElementTag } from "../shared/extractDefineElementTag.js";
 import {
   mergeCompilerOptions,
   type SvelteBuildConfig,
@@ -20,6 +22,22 @@ import {
 const HYDRATION_HOST_SVELTE_PATH = fileURLToPath(
   new URL("../hydration/HydrationHost.svelte", import.meta.url),
 );
+
+/**
+ * Best-effort: reads the component's own declared tag name off its entry
+ * file's `defineElement("tag", Component)` call, so the generated SSR
+ * renderer can self-register with `ElementRendererRegistry` instead of
+ * requiring the consuming app to do it by hand. Missing/unreadable entries
+ * (e.g. a synthetic path in a unit test) simply fall back to no
+ * self-registration rather than failing the build.
+ */
+const readEntryTagName = (entry: string): string | undefined => {
+  try {
+    return extractDefineElementTag(fs.readFileSync(entry, "utf8"));
+  } catch {
+    return undefined;
+  }
+};
 
 interface SvebcomponentsSsrOptions {
   /**
@@ -76,8 +94,9 @@ const createSsrTsdownConfig = ({
   prepareEntry,
   prepareImportPath,
   svelteConfig,
-}: SvebcomponentsSsrOptions) =>
-  ({
+}: SvebcomponentsSsrOptions) => {
+  const tagName = readEntryTagName(entry);
+  return {
     entry: prepareEntry
       ? {
           [entryName(entry)]: entry,
@@ -118,9 +137,11 @@ const createSsrTsdownConfig = ({
           ? { hydrationHostImportPath }
           : {}),
         ...(prepareImportPath !== undefined ? { prepareImportPath } : {}),
+        ...(tagName !== undefined ? { tagName } : {}),
       }),
     ],
-  }) satisfies Options;
+  } satisfies Options;
+};
 
 interface HydrationHostTsdownOptions {
   /**
