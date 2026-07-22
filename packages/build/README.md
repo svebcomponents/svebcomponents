@@ -57,6 +57,32 @@ For the example above, `./dist/client/index.js` maps to `src/index.ts` and produ
 
 If an export does not have a matching SSR export, only the browser build is generated for that entrypoint.
 
+### Server preparation
+
+An SSR-enabled entrypoint can prepare properties before rendering by adding an
+adjacent `.ssr` module. For `src/index.ts`, create `src/index.ssr.ts` and export
+an `SsrPrepare` function as the default export:
+
+```ts
+import type { SsrPrepare } from "@svebcomponents/ssr";
+
+const prepare: SsrPrepare = ({ props, setProperty }) => {
+  if (props.data !== undefined || typeof props.source !== "string") return;
+
+  return fetchData(props.source).then((data) => {
+    setProperty("data", data);
+  });
+};
+
+export default prepare;
+```
+
+The build discovers this file automatically and includes it only in the server
+output. Properties set by the hook participate in rich-property serialization,
+so hydratable components receive the prepared value without repeating the work
+in the browser. Return synchronously when no preparation is needed to preserve
+the synchronous SSR path; a returned promise requires an async-capable host.
+
 ## Svelte Conditional Exports
 
 The `svelte` condition provides a lighter build for consumers that already use
@@ -165,6 +191,9 @@ The SSR build uses:
 1. `@svebcomponents/ssr`'s tsdown config helper
 2. Svelte compiled with `generate: "server"`
 3. a generated `ElementRenderer` entrypoint for server-side rendering
+
+If an adjacent `entry.ssr.ts` or `entry.ssr.js` file exists, it is compiled as
+an additional server-only entry and wired into the generated renderer.
 
 When a Svelte-aware SSR build is generated, it also externalizes `svelte` and
 `svelte/*` imports and generates its renderer against the Svelte-aware client

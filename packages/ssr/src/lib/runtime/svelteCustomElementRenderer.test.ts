@@ -314,6 +314,79 @@ describe("SvelteCustomElementRenderer", () => {
     expect(shadowContent).toContain("<div>Test content</div>");
   });
 
+  test("prepares properties synchronously before rendering", () => {
+    const mockElement = {
+      attributes: {},
+      attributeChangedCallback: vi.fn(),
+      $$d: { source: "initial" },
+      $$p_d: {},
+    };
+    mockClientElementCtor.mockReturnValue(mockElement);
+    const prepare = vi.fn(({ props, setProperty }) => {
+      expect(props).toEqual({ source: "initial" });
+      setProperty("prepared", { value: true });
+    });
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock host component
+      {} as any,
+      prepare,
+    );
+
+    const result = renderer.renderShadow({} as RenderInfo);
+    assert(result);
+    const chunks = Array.from(result);
+
+    expect(chunks.every((chunk) => typeof chunk === "string")).toBe(true);
+    expect(mockRender).toHaveBeenCalledWith(expect.anything(), {
+      props: expect.objectContaining({
+        __initialProps: {
+          source: "initial",
+          prepared: { value: true },
+        },
+      }),
+    });
+    expect(chunks.join("")).toContain(
+      'data-svebcomponents-ssr-props>{"prepared":{"value":true}}</script>',
+    );
+  });
+
+  test("awaits asynchronous property preparation before rendering", async () => {
+    const mockElement = {
+      attributes: {},
+      attributeChangedCallback: vi.fn(),
+      $$d: { source: "initial" },
+      $$p_d: {},
+    };
+    mockClientElementCtor.mockReturnValue(mockElement);
+    const prepare = vi.fn(({ setProperty }) =>
+      Promise.resolve().then(() => setProperty("prepared", "async")),
+    );
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock host component
+      {} as any,
+      prepare,
+    );
+
+    const result = renderer.renderShadow({} as RenderInfo);
+    assert(result);
+    const shadow = await collectResult(result);
+
+    expect(mockRender).toHaveBeenCalledWith(expect.anything(), {
+      props: expect.objectContaining({
+        __initialProps: { source: "initial", prepared: "async" },
+      }),
+    });
+    expect(shadow).toContain(
+      'data-svebcomponents-ssr-props>{"prepared":"async"}</script>',
+    );
+  });
+
   test("handles empty render result", async () => {
     mockRender.mockReturnValue(
       Promise.resolve({

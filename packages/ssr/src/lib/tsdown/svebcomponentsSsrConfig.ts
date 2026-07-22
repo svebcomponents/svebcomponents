@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import path from "node:path";
 
 import type { Options } from "tsdown";
 import svelte from "rollup-plugin-svelte";
@@ -54,8 +55,15 @@ interface SvebcomponentsSsrOptions {
    * the client-side `hydratable` wrapper.
    */
   hydrationHostImportPath?: string;
+  /** Server-only preparation module compiled alongside the component. */
+  prepareEntry?: string;
+  /** Import path from the generated renderer entry to the preparation module. */
+  prepareImportPath?: string;
   svelteConfig?: SvelteBuildConfig | undefined;
 }
+
+const entryName = (entry: string) =>
+  path.posix.basename(entry, path.posix.extname(entry));
 
 const createSsrTsdownConfig = ({
   entry,
@@ -65,10 +73,17 @@ const createSsrTsdownConfig = ({
   clientImportPath,
   ssrEntryFileName,
   hydrationHostImportPath,
+  prepareEntry,
+  prepareImportPath,
   svelteConfig,
 }: SvebcomponentsSsrOptions) =>
   ({
-    entry,
+    entry: prepareEntry
+      ? {
+          [entryName(entry)]: entry,
+          [entryName(prepareEntry)]: prepareEntry,
+        }
+      : entry,
     outDir,
     dts: true,
     // Several component configs may share an output directory and are built
@@ -102,6 +117,7 @@ const createSsrTsdownConfig = ({
         ...(hydrationHostImportPath !== undefined
           ? { hydrationHostImportPath }
           : {}),
+        ...(prepareImportPath !== undefined ? { prepareImportPath } : {}),
       }),
     ],
   }) satisfies Options;
