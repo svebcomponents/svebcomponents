@@ -76,7 +76,7 @@ const inferSsrPrepareEntry = (entry: string): string | undefined => {
   return existsSync(candidate) ? candidate : undefined;
 };
 
-export const defineConfig = (options: DefineConfigOptions = {}) => {
+export const defineConfig = (options: DefineConfigOptions = {}): Options[] => {
   const { ssr = true, entry = "src/index.ts", svelteConfig } = options;
   const outDir = options.outDir ?? "dist/client";
   const svelteOutDir = options.svelteOutDir;

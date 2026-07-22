@@ -48,15 +48,18 @@
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
-    "rolldown": "catalog:"
+    "rolldown": "catalog:",
+    "tsdown": "catalog:"
+  },
+  "peerDependencies": {
+    "tsdown": ">=0.15.0"
   },
   "dependencies": {
     "@sveltejs/load-config": "catalog:",
     "@svebcomponents/auto-options": "workspace:*",
     "@svebcomponents/ssr": "workspace:*",
     "rollup-plugin-svelte": "catalog:",
-    "unconfig": "catalog:",
-    "tsdown": "catalog:"
+    "unconfig": "catalog:"
   },
   "publishConfig": {
     "access": "public",
