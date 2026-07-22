@@ -1,5 +1,13 @@
 # @svebcomponents/ssr
 
+## 0.2.0
+
+### Minor Changes
+
+- bb1ca02: Add automatically discovered, server-only `entry.ssr.ts` preparation hooks for
+  setting component properties before SSR and serializing the results for
+  hydration.
+
 ## 0.1.0
 
 ### Minor Changes
