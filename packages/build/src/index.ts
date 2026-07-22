@@ -63,7 +63,7 @@ const entryOutputFile = (outDir: string, entry: string) =>
     `${path.posix.basename(entry, path.posix.extname(entry))}.js`,
   );
 
-export const defineConfig = (options: DefineConfigOptions = {}) => {
+export const defineConfig = (options: DefineConfigOptions = {}): Options[] => {
   const { ssr = true, entry = "src/index.ts", svelteConfig } = options;
   const outDir = options.outDir ?? "dist/client";
   const svelteOutDir = options.svelteOutDir;
