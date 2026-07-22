@@ -1,8 +1,23 @@
-import { expect, test, describe } from "vitest";
+import {
+  beforeEach,
+  expect,
+  test,
+  describe,
+  vi,
+  type MockedFunction,
+} from "vitest";
 import { defineConfig } from "./index";
 import type { Options } from "tsdown";
+import fs from "node:fs";
+
+vi.mock("node:fs");
+const mockExistsSync = fs.existsSync as MockedFunction<typeof fs.existsSync>;
 
 describe("defineConfig", () => {
+  beforeEach(() => {
+    mockExistsSync.mockReset();
+    mockExistsSync.mockReturnValue(false);
+  });
   test("returns default config with client build only when ssr is false", () => {
     const config = defineConfig({ ssr: false });
 
@@ -80,6 +95,20 @@ describe("defineConfig", () => {
 
     expect(config[0]).toHaveProperty("entry", customEntry);
     expect(config[1]).toHaveProperty("entry", customEntry);
+  });
+
+  test("automatically includes an adjacent SSR preparation module", () => {
+    mockExistsSync.mockImplementation(
+      (candidate) => String(candidate) === "src/index.ssr.ts",
+    );
+
+    const config = defineConfig();
+
+    expect(config[0]).toHaveProperty("entry", "src/index.ts");
+    expect(config[1]).toHaveProperty("entry", {
+      index: "src/index.ts",
+      "index.ssr": "src/index.ssr.ts",
+    });
   });
 
   test("derives the hydration host output name from the ssr entry filename", () => {

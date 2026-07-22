@@ -11,6 +11,12 @@ const mockFs = fs as unknown as {
   existsSync: MockedFunction<typeof fs.existsSync>;
 };
 
+const mockComponentEntriesOnly = () => {
+  mockFs.existsSync.mockImplementation(
+    (candidate) => !String(candidate).match(/\.ssr\.[cm]?[jt]s$/),
+  );
+};
+
 vi.mock("fs/promises", () => ({
   default: { writeFile: vi.fn() },
 }));
@@ -188,12 +194,12 @@ const expectConfigsToMatch = (
 
 describe("infer components", () => {
   it("parses components from package.json", () => {
-    mockFs.existsSync.mockReturnValue(true);
+    mockComponentEntriesOnly();
     const inferredComponents = inferComponents(packageJson);
     expectConfigsToMatch(inferredComponents, manualConfig, [clientPipeline]);
   });
   it("parses SSR components from package.json", () => {
-    mockFs.existsSync.mockReturnValue(true);
+    mockComponentEntriesOnly();
     const inferredComponents = inferComponents(ssrPackageJson);
     expectConfigsToMatch(inferredComponents, manualSSRConfig, [
       clientPipeline,
@@ -202,7 +208,7 @@ describe("infer components", () => {
     ]);
   });
   it("parses Svelte conditional exports from package.json", () => {
-    mockFs.existsSync.mockReturnValue(true);
+    mockComponentEntriesOnly();
     const inferredComponents = inferComponents(svelteConditionPackageJson);
     expectConfigsToMatch(inferredComponents, manualSvelteConditionConfig, [
       clientPipeline,
@@ -214,7 +220,7 @@ describe("infer components", () => {
     ]);
   });
   it("parses multiple components from package.json", () => {
-    mockFs.existsSync.mockReturnValue(true);
+    mockComponentEntriesOnly();
     const inferredComponents = inferComponents(multipleComponentsPackageJson);
     expectConfigsToMatch(inferredComponents, manualMultipleComponentsConfig, [
       clientPipeline,
@@ -224,7 +230,7 @@ describe("infer components", () => {
     ]);
   });
   it("generates the SSR entry filename from the declared ssr export", async () => {
-    mockFs.existsSync.mockReturnValue(true);
+    mockComponentEntriesOnly();
     const inferredComponents = inferComponents(multipleComponentsPackageJson);
     const generated = await collectGeneratedSsrFiles(inferredComponents);
     // The `./componentA/ssr` export declares `./dist/server/componentA-ssr.js`,
@@ -239,7 +245,7 @@ describe("infer components", () => {
     expect(generated).not.toContain(path.resolve("dist/server", "ssr.js"));
   });
   it("keeps the default 'ssr' entry filename for single components", async () => {
-    mockFs.existsSync.mockReturnValue(true);
+    mockComponentEntriesOnly();
     const inferredComponents = inferComponents(ssrPackageJson);
     const generated = await collectGeneratedSsrFiles(inferredComponents);
     expect(generated).toContain(path.resolve("dist/server", "ssr.js"));
@@ -254,7 +260,7 @@ describe("infer components", () => {
     // generated import specifiers, so they must never contain backslashes,
     // even when this code runs on Windows (guards against a regression where
     // `path.normalize` re-introduces platform-native separators).
-    mockFs.existsSync.mockReturnValue(true);
+    mockComponentEntriesOnly();
     const inferredComponents = inferComponents(svelteConditionPackageJson);
     // stringify the whole config graph so every path-bearing field is checked
     const serialized = JSON.stringify(inferredComponents);

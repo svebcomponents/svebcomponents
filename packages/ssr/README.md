@@ -46,6 +46,12 @@ Expose it from your component package:
 
 The browser entrypoint defines the custom element. The SSR entrypoint provides the renderer an app can register on the server.
 
+When using `@svebcomponents/build`, an adjacent server module such as
+`src/index.ssr.ts` is discovered automatically. Its default `SsrPrepare` export
+runs after host attributes and properties have been applied but before the
+component renders. Values written with `setProperty` are serialized into
+hydratable output for reuse in the browser.
+
 If the package's Svelte config enables Svelte async rendering, the generated
 `./ssr` renderer can yield async Lit `RenderResult` chunks. Async-capable host
 integrations should use the async Vite wrapper below.
@@ -127,6 +133,10 @@ The registry is designed for the Svelte-generated renderers produced by this pac
 A base renderer for Svelte custom elements.
 
 It creates the client custom element class, applies incoming attributes/properties, and renders the server Svelte component with `svelte/server`. Generated SSR entrypoints extend this class.
+
+Its optional `SsrPrepare` hook receives a read-only property snapshot and a
+`setProperty` callback. Synchronous hooks preserve synchronous rendering;
+promise-returning hooks require an async-capable host integration.
 
 ### `installShim`
 

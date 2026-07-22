@@ -3,6 +3,7 @@ import svebcomponentsSsr, {
 } from "@svebcomponents/ssr/tsdown";
 
 import { createTsdownConfig } from "./svebcomponentConfig.js";
+import { existsSync } from "node:fs";
 import { Options } from "tsdown";
 import path from "node:path";
 import type { SvelteBuildConfig } from "@svebcomponents/ssr/svelte-config";
@@ -63,6 +64,18 @@ const entryOutputFile = (outDir: string, entry: string) =>
     `${path.posix.basename(entry, path.posix.extname(entry))}.js`,
   );
 
+/**
+ * An adjacent `<entry>.ssr.<ext>` module is a server-only preparation hook.
+ * Keeping the extension the same makes the convention predictable for both
+ * TypeScript and JavaScript package sources.
+ */
+const inferSsrPrepareEntry = (entry: string): string | undefined => {
+  const extension = path.posix.extname(entry);
+  if (!extension) return undefined;
+  const candidate = `${entry.slice(0, -extension.length)}.ssr${extension}`;
+  return existsSync(candidate) ? candidate : undefined;
+};
+
 export const defineConfig = (options: DefineConfigOptions = {}) => {
   const { ssr = true, entry = "src/index.ts", svelteConfig } = options;
   const outDir = options.outDir ?? "dist/client";
@@ -70,6 +83,10 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
   const ssrOutDir = options.ssrOutDir ?? "dist/server";
   const ssrSvelteOutDir = options.ssrSvelteOutDir;
   const ssrEntryFileName = options.ssrEntryFileName ?? "ssr";
+  const prepareEntry = ssr ? inferSsrPrepareEntry(entry) : undefined;
+  const prepareImportPath = prepareEntry
+    ? `./${path.posix.basename(entryOutputFile(ssrOutDir, prepareEntry))}`
+    : undefined;
   // hydration only makes sense when there is server-rendered output to hydrate
   const hydratable = ssr && (options.hydratable ?? true);
   const hydrationHostEntryName = `${ssrEntryFileName}-hydration-host`;
@@ -110,6 +127,9 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
         ...(hydratable
           ? { hydrationHostImportPath: `./${hydrationHostEntryName}.js` }
           : {}),
+        ...(prepareEntry && prepareImportPath
+          ? { prepareEntry, prepareImportPath }
+          : {}),
       }),
     );
 
@@ -140,6 +160,9 @@ export const defineConfig = (options: DefineConfigOptions = {}) => {
           ),
           ...(hydratable
             ? { hydrationHostImportPath: `./${hydrationHostEntryName}.js` }
+            : {}),
+          ...(prepareEntry && prepareImportPath
+            ? { prepareEntry, prepareImportPath }
             : {}),
         }),
       );
