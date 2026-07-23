@@ -44,6 +44,20 @@ generates the equivalent custom element options:
 When you build with `@svebcomponents/build`, this transform is already part of
 the pipeline.
 
+## Declaring the Tag
+
+Write the custom element's tag with Svelte's own string-shorthand syntax:
+
+```svelte
+<svelte:options customElement="favorite-number" />
+```
+
+`auto-options` expands this into the object form shown above, merging in the
+inferred `props` — you get the tag declaration and the prop metadata from a
+single line. The object form (`customElement={{ tag: "favorite-number" }}`)
+works identically; use it directly when you also need `shadow` or a manual
+`extend`.
+
 ## Attribute Names
 
 JavaScript prop names remain camel-cased while their HTML attributes are

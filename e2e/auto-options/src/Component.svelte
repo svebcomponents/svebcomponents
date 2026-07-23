@@ -1,3 +1,5 @@
+<svelte:options customElement="simple-component" />
+
 <script lang="ts">
   interface Props {
     title: string;

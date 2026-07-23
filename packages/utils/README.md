@@ -42,3 +42,25 @@ camelizeKebabCase("favorite-number"); // "favoriteNumber"
 ```
 
 Used by `@svebcomponents/ssr` when mapping non-string kebab-case values to component properties during server rendering.
+
+### `defineElement(tagName, component)`
+
+Manually registers a compiled custom element, guarding against the ways a
+bare `customElements.define()` call can fail: no `customElements` registry
+(SSR before the DOM shim installs), no compiled constructor (`component`
+wasn't built with `customElement: true`, e.g. the server build), or the tag
+already being registered (first registration wins).
+
+```ts
+import { defineElement } from "@svebcomponents/utils";
+import MyComponent from "./MyComponent.svelte";
+
+export default MyComponent;
+defineElement("my-component", MyComponent);
+```
+
+Components built with `@svebcomponents/build` don't need this: declaring the
+tag in `<svelte:options customElement="my-component" />` is enough, since the
+build already guards Svelte's own generated registration call. Reach for
+`defineElement` only when a tag can't be a literal in `<svelte:options>` —
+e.g. one computed at build time.

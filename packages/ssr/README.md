@@ -77,10 +77,10 @@ import "my-component-package/ssr";
 ```
 
 No explicit registration call is needed: the generated renderer reads its own
-tag name from the component's `defineElement(...)` call at build time and
-registers itself with `ElementRendererRegistry` on import. The DOM shim
-installs first regardless of import order or bundler chunking, so there's no
-ordering convention to follow here.
+tag name from the component's `<svelte:options customElement>` declaration at
+build time and registers itself with `ElementRendererRegistry` on import. The
+DOM shim installs first regardless of import order or bundler chunking, so
+there's no ordering convention to follow here.
 
 If a component's tag name couldn't be determined at build time (e.g. it's
 computed dynamically), the generated renderer falls back to requiring manual

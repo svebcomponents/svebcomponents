@@ -10,8 +10,29 @@ the JavaScript output.
 
 ## Component Entrypoints
 
-Each custom element needs an entrypoint that imports the Svelte component and
-registers its generated constructor:
+Each custom element needs an entrypoint that re-exports the Svelte component:
+
+```ts
+import Component from "./Component.svelte";
+
+export default Component;
+```
+
+The component itself declares its tag:
+
+```svelte
+<svelte:options customElement="favorite-number" />
+```
+
+Consumers import the entrypoint for the side effect of defining
+`<favorite-number>`. Registration is guarded automatically: Svelte's
+generated `customElements.define()` call is made idempotent at build time, so
+it no-ops if the component (or a bundle containing it) is ever evaluated more
+than once — no manual registration call needed.
+
+For a tag that can't be a literal in `<svelte:options>` (e.g. computed at
+build time), fall back to `@svebcomponents/utils`'s `defineElement` in the
+entrypoint instead — the same guarded registration, called by hand:
 
 ```ts
 import { defineElement } from "@svebcomponents/utils";
@@ -19,17 +40,8 @@ import { defineElement } from "@svebcomponents/utils";
 import Component from "./Component.svelte";
 
 export default Component;
-defineElement("favorite-number", Component);
+defineElement(tagName, Component);
 ```
-
-Consumers import this module for the side effect of defining
-`<favorite-number>`. `defineElement` guards the registration: it no-ops when
-the component was compiled without a custom element constructor (the server
-build), when no `customElements` registry exists, or when the tag is already
-registered.
-
-Keeping registration in a TypeScript entrypoint also gives you control over
-the tag name and any setup the component needs before registration.
 
 ## Zero-config Builds
 
