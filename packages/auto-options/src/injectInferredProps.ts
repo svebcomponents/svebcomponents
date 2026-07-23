@@ -31,11 +31,11 @@ export const injectInferredProps = (
     ([, inferredProp]) => !inferredProp.isNonSerializable,
   );
 
-  // if the user already declared `<svelte:options customElement="tagName"/>` (the currently
-  // unsupported string variant), a `customElement` attribute is already present on svelte:options.
-  // We must not inject a second `customElement={{...}}` attribute, since that would be a Svelte
-  // compile error, so we leave svelte:options untouched entirely.
-  if (svelteOptions?.hasUnsupportedStringCustomElement) return;
+  // the bare `customElement` boolean shorthand, or a dynamically-interpolated
+  // string tag, can't be safely rewritten (see `extractSvelteOptionsProps.ts`)
+  // — a `customElement` attribute is already present, so injecting a second
+  // one would be a Svelte compile error. Leave svelte:options untouched.
+  if (svelteOptions?.hasUnsupportedCustomElementForm) return;
 
   const shouldInjectExtend =
     hydratable !== undefined && !svelteOptions?.customElementOptions?.hasExtend;
@@ -62,6 +62,26 @@ export const injectInferredProps = (
       hydratable.scriptContentStart,
       `\nimport { hydratable as ${HYDRATABLE_IDENTIFIER} } from "@svebcomponents/ssr/hydration";\nimport ${HYDRATION_HOST_IDENTIFIER} from "@svebcomponents/ssr/hydration-host";\n`,
     );
+  }
+
+  // 1-string: an existing string-shorthand tag (`customElement="my-tag"`)
+  // needs replacing wholesale with the expanded object form — there's no
+  // existing object to inject props/extend into, unlike the cases below.
+  if (svelteOptions?.stringFormTag) {
+    const { value, attributeStart, attributeEnd } = svelteOptions.stringFormTag;
+    const customElementBody = [
+      `tag: ${JSON.stringify(value)}`,
+      inferredPropsResult,
+      extendResult,
+    ]
+      .filter((entry) => entry !== null)
+      .join(",\n");
+    magicString.overwrite(
+      attributeStart,
+      attributeEnd,
+      `customElement={{\n${customElementBody}\n}}`,
+    );
+    return;
   }
 
   // 1: custom element options already exist on svelte:options
