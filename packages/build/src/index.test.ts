@@ -89,6 +89,24 @@ describe("defineConfig", () => {
     expect(config[1]).toHaveProperty("outDir", "dist/server");
   });
 
+  test("bundles the ssr HydrationHost into the client build when hydratable", () => {
+    // otherwise the injected `import ... from "@svebcomponents/ssr/hydration-host"`
+    // stays external and resolves to raw .svelte at runtime, forcing every
+    // consuming app to add the component to ssr.noExternal
+    const config = defineConfig({ hydratable: true });
+
+    expect(config[0]).toHaveProperty("outDir", "dist/client");
+    expect(config[0]).toHaveProperty("noExternal", [
+      /@svebcomponents\/ssr\/hydration-host/,
+    ]);
+  });
+
+  test("does not force-bundle the hydration host for a non-hydratable client build", () => {
+    const config = defineConfig({ hydratable: false });
+
+    expect(config[0]).not.toHaveProperty("noExternal");
+  });
+
   test("returns all configs by default (ssr and hydratable default to true)", () => {
     const config = defineConfig();
 

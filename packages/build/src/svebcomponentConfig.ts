@@ -92,6 +92,19 @@ export const createTsdownConfig = (options: SvebcomponentsOptions): Options => {
         }
       : {}),
     ...(externalSvelte ? { external: [/^svelte(\/.*)?$/] } : {}),
+    // A hydratable component's client build imports `@svebcomponents/ssr`'s
+    // HydrationHost (see auto-options' injected `import ... from
+    // "@svebcomponents/ssr/hydration-host"`). That subpath ships as raw
+    // `.svelte`, so leaving it external forces the runtime import to resolve
+    // to an uncompiled `.svelte` — which a consuming app's SSR can only load
+    // if it adds every such component to `ssr.noExternal`. Bundle it here
+    // instead: it is compiled by this same (component author's) toolchain,
+    // exactly like the server-side host (see `createHydrationHostTsdownConfig`),
+    // so hydration markers still match by construction and consumers need no
+    // `noExternal` entry for the component.
+    ...(hydratable
+      ? { noExternal: [/@svebcomponents\/ssr\/hydration-host/] }
+      : {}),
     plugins: [
       ...(externalSvelte ? [] : [pluginDedupe(["svelte", "esm-env"])]),
       autoOptions({ hydratable }),
