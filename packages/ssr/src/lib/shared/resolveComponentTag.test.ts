@@ -20,9 +20,7 @@ describe("findSvelteImportPath", () => {
 
   test("finds a nested relative .svelte import", () => {
     const source = `import Component from "../components/Component.svelte";`;
-    expect(findSvelteImportPath(source)).toBe(
-      "../components/Component.svelte",
-    );
+    expect(findSvelteImportPath(source)).toBe("../components/Component.svelte");
   });
 
   test("returns undefined when there is no .svelte import", () => {
@@ -63,6 +61,8 @@ describe("extractComponentTag", () => {
   });
 
   test("returns undefined when the source doesn't parse", () => {
-    expect(extractComponentTag("<svelte:options customElement=/>")).toBeUndefined();
+    expect(
+      extractComponentTag("<svelte:options customElement=/>"),
+    ).toBeUndefined();
   });
 });

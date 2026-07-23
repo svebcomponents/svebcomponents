@@ -21,9 +21,7 @@ describe("pluginGuardCustomElementDefine", () => {
     expect(result?.code).toContain(
       'customElements.get("my-tag") || customElements.define("my-tag", __svebcomponentsCeArg0_0)',
     );
-    expect(result?.code).toContain(
-      "const __svebcomponentsCeArg0_0 = Foo;",
-    );
+    expect(result?.code).toContain("const __svebcomponentsCeArg0_0 = Foo;");
   });
 
   test("preserves the exact tag-argument text verbatim, including template literals", () => {
