@@ -80,18 +80,27 @@ Svelte runtime), list it via the plugin's `noExternal` option:
 svebcomponentsSsr({ noExternal: ["my-component-package"] });
 ```
 
-Register the component's renderer before rendering templates that use the custom element:
+Load the component's renderer once before rendering templates that use the custom element:
+
+```ts
+import "my-component-package/ssr";
+```
+
+The generated renderer reads its own tag name from the component's
+`<svelte:options customElement>` declaration at build time and registers
+itself with `ElementRendererRegistry` on import. The DOM shim installs first
+regardless of import order or bundler chunking.
+
+If a component's tag name couldn't be determined at build time (e.g. it's
+computed dynamically), the generated renderer falls back to requiring manual
+registration instead:
 
 ```ts
 import { ElementRendererRegistry } from "@svebcomponents/ssr";
-
-import "my-component-package";
 import MyComponentRenderer from "my-component-package/ssr";
 
 ElementRendererRegistry.set("my-component", MyComponentRenderer);
 ```
-
-> **Caution:** The `@svebcomponents/ssr` import must come first, before importing any custom-element package. Importing `@svebcomponents/ssr` installs the server DOM shims (`Element`, `HTMLElement`, `customElements`) as a side effect, and custom element packages call `customElements.define` at module scope. Importing the component module first crashes with `customElements is not defined` on the server.
 
 Async SSR requires the host Svelte compiler to opt into Svelte's experimental
 async mode:

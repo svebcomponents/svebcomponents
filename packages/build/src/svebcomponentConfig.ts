@@ -3,6 +3,7 @@ import autoOptions from "@svebcomponents/auto-options";
 import { Options } from "tsdown";
 
 import { pluginDedupe } from "./pluginDedupe.js";
+import { pluginGuardCustomElementDefine } from "./pluginGuardCustomElementDefine.js";
 import {
   mergeCompilerOptions,
   type SvelteBuildConfig,
@@ -26,6 +27,17 @@ interface SvebcomponentsOptions {
    * declarative shadow DOM (injects `extend: hydratable` via auto-options).
    */
   hydratable?: boolean;
+  /**
+   * Whether this component has an SSR build (see `defineConfig`'s `ssr`
+   * option). Only then does the compiled client bundle need to defend
+   * itself against being reached on the server before the DOM shim installs
+   * — see the `banner` comment below. Left off (the default) for
+   * browser-only components, since referencing the optional
+   * `@svebcomponents/ssr` peer at all would otherwise break dev-server
+   * tooling (e.g. Vite's import analysis) for consumers who never install
+   * it.
+   */
+  installsSsrShimGuard?: boolean;
   svelteConfig?: SvelteBuildConfig | undefined;
 }
 
@@ -37,6 +49,7 @@ export const createTsdownConfig = (options: SvebcomponentsOptions): Options => {
     outDir,
     externalSvelte = false,
     hydratable = false,
+    installsSsrShimGuard = false,
     svelteConfig,
   } = options;
   return {
@@ -56,6 +69,28 @@ export const createTsdownConfig = (options: SvebcomponentsOptions): Options => {
     // in parallel by the svebcomponents CLI; tsdown's per-build clean would
     // race and delete other builds' output. The CLI cleans once up front.
     clean: false,
+    // Guarantees the DOM shim installs before this module's own compiled
+    // custom-element class (`class X extends HTMLElement`) evaluates,
+    // regardless of *how* this module ends up reachable on the server (a
+    // generated SSR entry's controlled dynamic import, or a consuming app's
+    // own static import needed so the browser registers the element — the
+    // latter is compiled into the server bundle too by frameworks like
+    // SvelteKit, and no import-ordering convention on the consumer's side
+    // can reliably beat bundler chunk hoisting). A banner is prepended as
+    // raw text ahead of all bundled module code, which is a stronger
+    // guarantee than relying on ESM import-order across chunks. The
+    // `window` check is a plain runtime guard, not a build-time/tree-shaken
+    // one, so this is only added for components with an SSR build — for a
+    // browser-only component, referencing `@svebcomponents/ssr/shim` at all
+    // (even unreachably) makes dev-server tooling try to resolve it, which
+    // fails outright for consumers who never install that optional peer.
+    ...(installsSsrShimGuard
+      ? {
+          banner: {
+            js: `if (typeof window === 'undefined') { await import('@svebcomponents/ssr/shim'); }`,
+          },
+        }
+      : {}),
     ...(externalSvelte ? { external: [/^svelte(\/.*)?$/] } : {}),
     plugins: [
       ...(externalSvelte ? [] : [pluginDedupe(["svelte", "esm-env"])]),
@@ -72,6 +107,10 @@ export const createTsdownConfig = (options: SvebcomponentsOptions): Options => {
           customElement: true,
         }),
       }),
+      // must run after svelte() above: it operates on the already-compiled
+      // JS output, guarding Svelte's own auto-generated
+      // `customElements.define(...)` call against double registration.
+      pluginGuardCustomElementDefine(),
     ],
   } satisfies Options;
 };

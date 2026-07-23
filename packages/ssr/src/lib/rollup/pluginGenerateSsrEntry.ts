@@ -26,6 +26,16 @@ interface GenerateSsrEntryPluginOptions {
    * SSR preparation function.
    */
   prepareImportPath?: string;
+  /**
+   * The component's custom element tag name, when it could be determined at
+   * build time (see `resolveComponentTag`). When set, the generated entry
+   * self-registers with `ElementRendererRegistry` on load, so consuming apps
+   * only need a bare `import "pkg/ssr"` instead of also calling
+   * `ElementRendererRegistry.set()` by hand. Omitted when the tag couldn't be
+   * determined — the generated renderer still works, but must be registered
+   * manually.
+   */
+  tagName?: string;
 }
 
 /**
@@ -42,6 +52,7 @@ export function pluginGenerateSsrEntry(
     entryFileName = DEFAULT_ENTRY_FILE_NAME,
     hydrationHostImportPath,
     prepareImportPath,
+    tagName,
   } = options;
 
   return {
@@ -71,7 +82,7 @@ export function pluginGenerateSsrEntry(
 // evaluates: the compiled custom element (and svelte's client runtime it
 // bundles) captures \`HTMLElement\` at module-evaluation time.
 import '@svebcomponents/ssr/shim';
-import { SvelteCustomElementRenderer } from '@svebcomponents/ssr';
+import { SvelteCustomElementRenderer${tagName ? ", ElementRendererRegistry" : ""} } from '@svebcomponents/ssr';
 import ServerSvelteComponent from '${serverImportPath}';
 ${
   hydrationHostImportPath
@@ -97,7 +108,19 @@ class ComponentSpecificSvelteCustomElementRenderer extends SvelteCustomElementRe
     }${prepareImportPath ? `${hydrationHostImportPath ? "" : ", undefined"}, prepare` : ""});
   }
 }
-
+${
+  tagName
+    ? `
+// The tag name was determined at build time from this component's own
+// <svelte:options customElement> declaration, so this entry can
+// self-register: importing it is then enough to make SSR work, with no
+// manual ElementRendererRegistry.set() call required. By this point \`ctor\`
+// above confirms the custom element is already defined, so the registry's
+// customElements.get() lookup succeeds.
+ElementRendererRegistry.set(${JSON.stringify(tagName)}, ComponentSpecificSvelteCustomElementRenderer);
+`
+    : ""
+}
 export default ComponentSpecificSvelteCustomElementRenderer;
 `;
 

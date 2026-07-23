@@ -83,7 +83,7 @@ export default defineConfig({
 });
 ```
 
-Then expose the compiled custom element from your package entrypoint:
+Then expose the compiled custom element from your package entrypoint. Outside `@svebcomponents/build`'s pipeline you don't get its automatic registration guard, so guard it by hand:
 
 ```ts
 import Component from "./Component.svelte";
@@ -97,7 +97,13 @@ export default Component;
 
 `auto-options` generates the prop metadata Svelte needs for attribute conversion, but the component still has to be compiled and registered as a custom element. Without that custom element output, attributes such as `favorite-number="42"` will stay strings.
 
-If you prefer defining the tag in the component itself, use the object form so `auto-options` can add the inferred `props` field:
+Declare the tag directly in the component with the string-shorthand form, and `auto-options` expands it into the object form with the inferred `props` merged in:
+
+```svelte
+<svelte:options customElement="favorite-number" />
+```
+
+The object form works too — use it directly when you also need `shadow` or a manual `extend`:
 
 ```svelte
 <svelte:options
@@ -212,6 +218,6 @@ For every inferred prop, the plugin generates:
 ## Current Limitations
 
 - Only Svelte 5 `$props()` declarations are inspected.
-- `customElement="tag-name"` string syntax is not supported; use the object form of `customElement` options.
+- The bare `customElement` boolean shorthand, and a dynamically-interpolated string tag (e.g. `customElement="{x}"`), aren't supported — use a plain string literal tag or the object form.
 - Imported prop types are not resolved. Type aliases and interfaces must be declared in the same component instance script to be inspected.
 - Generic and complex TypeScript types are not fully resolved. Unknown types fall back to `"String"` unless they are interface references, which are treated as `"Object"`.

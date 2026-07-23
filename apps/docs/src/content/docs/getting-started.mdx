@@ -24,6 +24,8 @@ Take a look at the example component in
 `components/example-component/src/ExampleComponent.svelte`:
 
 ```svelte
+<svelte:options customElement="example-component" />
+
 <script lang="ts">
   let {
     increments = 1,
@@ -39,8 +41,7 @@ Take a look at the example component in
 </button>
 ```
 
-If you know Svelte 5, there is nothing unfamiliar here. It is a regular Svelte
-component with typed props.
+If you know Svelte 5, there is nothing unfamiliar here. It is a regular Svelte component with typed props & the svelte:options tag for creating a custom element.
 
 ```ts
 increments: number;
@@ -52,28 +53,25 @@ attribute from a string to a number.
 
 ## Component Entrypoint
 
-The package entrypoint imports the Svelte component and registers the generated custom element constructor:
+The package entrypoint just re-exports the Svelte component:
 
 ```ts
-import { defineElement } from "@svebcomponents/utils";
 import ExampleComponent from "./ExampleComponent.svelte";
 
 export default ExampleComponent;
-defineElement("example-component", ExampleComponent);
 ```
 
-:::note
-When Svelte compiles a component as a custom element, it exposes the
-constructor as `Component.element`. `defineElement` registers it safely: it
-no-ops when there is no constructor (the server compile), no
-`customElements` registry (SSR before the DOM shim installs), or the tag is
-already registered (first registration wins).
-:::
+Declaring the tag in `<svelte:options>` registers the custom element.
+`@svebcomponents/build` guards that registration, so importing the component
+is safe even if it (or a bundle containing it) is evaluated more than once.
 
 :::note
-Svelte can register a custom element through `<svelte:options>`.
-Svebcomponents keeps registration in the entrypoint instead, so you can tailor
-it to your needs.
+For a tag that can't be a literal in `<svelte:options>` (e.g. computed at
+build time), fall back to `@svebcomponents/utils`'s `defineElement` in the
+entrypoint instead: `defineElement("example-component", ExampleComponent)`.
+It's the same guarded registration under the hood — no-ops when there is no
+constructor (the server compile), no `customElements` registry (SSR before
+the DOM shim installs), or the tag is already registered.
 :::
 
 ## Package Exports

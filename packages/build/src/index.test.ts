@@ -26,6 +26,20 @@ describe("defineConfig", () => {
     expect(config[0]).toHaveProperty("outDir", "dist/client");
   });
 
+  test("omits the SSR shim-guard banner from a browser-only (ssr: false) client build", () => {
+    const config = defineConfig({ ssr: false });
+
+    expect(config[0]).not.toHaveProperty("banner");
+  });
+
+  test("adds the SSR shim-guard banner to the client build when ssr is true", () => {
+    const config = defineConfig({ ssr: true });
+
+    expect(config[0]?.banner).toEqual({
+      js: expect.stringContaining("@svebcomponents/ssr/shim"),
+    });
+  });
+
   test("returns Svelte-aware configs when Svelte output directories are provided", () => {
     const config = defineConfig({
       svelteOutDir: "dist/client-svelte",

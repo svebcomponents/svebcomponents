@@ -17,11 +17,23 @@ export interface SvelteOptions {
       propValues: Record<string, Record<string, unknown>>;
     } | null;
   } | null;
-  // true when `<svelte:options customElement="tagName"/>` (the string variant) was found.
-  // This variant is currently not supported, and since a `customElement` attribute is already
-  // present, we must not inject a second one (which would be a Svelte compile error), so callers
-  // need to bail out of any further svelte:options mutation in this case.
-  hasUnsupportedStringCustomElement?: boolean;
+  // Present when `<svelte:options customElement="tag-name" />` (the string
+  // shorthand form) was found — a plain string literal tag with no other
+  // options. `attributeStart`/`attributeEnd` cover the whole
+  // `customElement="tag-name"` attribute (name, `=`, and quotes), so callers
+  // can replace it wholesale with the expanded object form.
+  stringFormTag?: {
+    value: string;
+    attributeStart: number;
+    attributeEnd: number;
+  };
+  // true when the bare `customElement` boolean shorthand, or a
+  // dynamically-interpolated string tag (e.g. `customElement="{x}"`), was
+  // found. Neither carries enough information to safely rewrite, and a
+  // `customElement` attribute is already present, so we must not inject a
+  // second one (a Svelte compile error) — callers need to bail out of any
+  // further svelte:options mutation in this case.
+  hasUnsupportedCustomElementForm?: boolean;
 }
 
 export const extractSvelteOptions = (
@@ -47,22 +59,49 @@ export const extractSvelteOptions = (
   // - `customElement="tagName"` (the quoted string variant) has a value that is an array of `Text`/`ExpressionTag` nodes
   // only the object variant `customElement={{...}}` has an `ExpressionTag` value with an `expression` we can inspect
   const customElementValue = customElementSvelteOptions.value;
+
+  if (Array.isArray(customElementValue)) {
+    // a plain string literal tag (`customElement="my-tag"`) parses as a
+    // single Text node holding the raw tag text. A dynamically-interpolated
+    // tag (`customElement="{x}"`) would instead include an `ExpressionTag`
+    // node, or more than one node — neither carries a statically-known tag
+    // we can safely rewrite, so those bail out below.
+    const [textNode, ...rest] = customElementValue;
+    if (rest.length === 0 && textNode?.type === "Text") {
+      return {
+        attributeInjectIndex,
+        customElementOptions: null,
+        stringFormTag: {
+          value: textNode.data,
+          attributeStart: customElementSvelteOptions.start,
+          attributeEnd: customElementSvelteOptions.end,
+        },
+      };
+    }
+    console.warn(
+      "[svebcomponents/auto-options] A dynamically-interpolated `customElement` string tag is not supported. Please switch to a plain string literal tag or the object variant of defining custom element options.",
+    );
+    return {
+      attributeInjectIndex,
+      customElementOptions: null,
+      hasUnsupportedCustomElementForm: true,
+    };
+  }
+
   const expression =
-    customElementValue !== true && !Array.isArray(customElementValue)
-      ? customElementValue.expression
-      : undefined;
+    customElementValue !== true ? customElementValue.expression : undefined;
   if (
     !expression ||
     expression.type !== "ObjectExpression" ||
     !("end" in expression && typeof expression["end"] === "number")
   ) {
     console.warn(
-      '[svebcomponents/auto-options] Svelte Options with the format `<svelte:options customElement="tagName"/>` are currently not supported. Please switch to the object variant of defining custom element options.',
+      "[svebcomponents/auto-options] The bare `customElement` boolean shorthand is not supported. Please switch to a string literal tag or the object variant of defining custom element options.",
     );
     return {
       attributeInjectIndex,
       customElementOptions: null,
-      hasUnsupportedStringCustomElement: true,
+      hasUnsupportedCustomElementForm: true,
     };
   }
   const hasExtend = expression.properties.some(

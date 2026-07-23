@@ -96,6 +96,32 @@ test("injects extend even when the component has no props", async () => {
   expect(result.code).not.toContain("props:");
 });
 
+test("expands a string-shorthand tag with extend, even with no props", async () => {
+  const propless = `<svelte:options customElement="my-tag" />
+<script lang="ts">
+  const doubled = 2 * 2;
+</script>
+
+<p>{doubled}</p>
+`;
+  const result = await transform(propless);
+  assert(result);
+
+  expect(result.code).toContain('tag: "my-tag"');
+  expect(result.code).toContain(
+    "extend: (ceClass) => __svebcomponentsHydratable(ceClass, __svebcomponentsHydrationHost)",
+  );
+  expect(result.code).not.toContain("props:");
+  // no leftover string-form attribute, and only one customElement attribute
+  expect(result.code).not.toContain('customElement="my-tag"');
+  expect(result.code.match(/customElement=\{\{/g)).toHaveLength(1);
+
+  const { compile } = await import("svelte/compiler");
+  expect(() =>
+    compile(result.code, { customElement: true, generate: "client" }),
+  ).not.toThrow();
+});
+
 test("skips modules carrying the ignore pragma", async () => {
   const ignored = `<!-- svebcomponents:auto-options-ignore -->
 ${component}`;

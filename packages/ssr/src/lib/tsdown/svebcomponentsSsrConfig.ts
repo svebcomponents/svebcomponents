@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import fs from "node:fs";
 import path from "node:path";
 
 import type { Options } from "tsdown";
@@ -7,6 +8,10 @@ import svelte from "rollup-plugin-svelte";
 import { pluginGenerateSsrEntry } from "../rollup/pluginGenerateSsrEntry.js";
 import { pluginOverrideSvelteSsrSlotImplementation } from "../rollup/pluginOverrideSvelteSsrSlotImplementation.js";
 import { pluginStripCustomElementOptions } from "../rollup/pluginStripCustomElementOptions.js";
+import {
+  extractComponentTag,
+  findSvelteImportPath,
+} from "../shared/resolveComponentTag.js";
 import {
   mergeCompilerOptions,
   type SvelteBuildConfig,
@@ -20,6 +25,30 @@ import {
 const HYDRATION_HOST_SVELTE_PATH = fileURLToPath(
   new URL("../hydration/HydrationHost.svelte", import.meta.url),
 );
+
+/**
+ * Best-effort: follows the entry file's relative import of its `.svelte`
+ * component and reads its declared custom element tag, so the generated SSR
+ * renderer can self-register with `ElementRendererRegistry` instead of
+ * requiring the consuming app to do it by hand. Missing/unreadable files
+ * (e.g. a synthetic path in a unit test, or a component with no declared
+ * tag) simply fall back to no self-registration rather than failing the
+ * build.
+ */
+const readEntryTagName = (entry: string): string | undefined => {
+  try {
+    const entrySource = fs.readFileSync(entry, "utf8");
+    const sveltePath = findSvelteImportPath(entrySource);
+    if (!sveltePath) return undefined;
+    const svelteSource = fs.readFileSync(
+      path.resolve(path.dirname(entry), sveltePath),
+      "utf8",
+    );
+    return extractComponentTag(svelteSource);
+  } catch {
+    return undefined;
+  }
+};
 
 interface SvebcomponentsSsrOptions {
   /**
@@ -76,8 +105,9 @@ const createSsrTsdownConfig = ({
   prepareEntry,
   prepareImportPath,
   svelteConfig,
-}: SvebcomponentsSsrOptions) =>
-  ({
+}: SvebcomponentsSsrOptions) => {
+  const tagName = readEntryTagName(entry);
+  return {
     entry: prepareEntry
       ? {
           [entryName(entry)]: entry,
@@ -118,9 +148,11 @@ const createSsrTsdownConfig = ({
           ? { hydrationHostImportPath }
           : {}),
         ...(prepareImportPath !== undefined ? { prepareImportPath } : {}),
+        ...(tagName !== undefined ? { tagName } : {}),
       }),
     ],
-  }) satisfies Options;
+  } satisfies Options;
+};
 
 interface HydrationHostTsdownOptions {
   /**

@@ -79,26 +79,31 @@ option instead of editing `vite.config.ts`'s `ssr.noExternal` separately:
 svebcomponents({ noExternal: ["my-component-package"] });
 ```
 
-Then register the component's server renderer:
+Then load the component's server renderer once, e.g. from `hooks.server.ts`:
+
+```ts
+import "my-component-package/ssr";
+```
+
+The generated renderer knows its own tag name (read from the component's
+`<svelte:options customElement>` declaration at build time) and registers
+itself with `ElementRendererRegistry` as soon as it's imported. The DOM shim
+is guaranteed to install first regardless of import order or how a bundler
+chunks things.
+
+:::note
+If a component's tag name couldn't be determined at build time (e.g. it's
+computed dynamically rather than a plain string literal), the generated
+renderer falls back to requiring manual registration:
 
 ```ts
 import { ElementRendererRegistry } from "@svebcomponents/ssr";
-import "my-component-package";
 import MyComponentRenderer from "my-component-package/ssr";
 
 ElementRendererRegistry.set("my-component", MyComponentRenderer);
 ```
 
-:::caution
-The `@svebcomponents/ssr` import must come first, before importing any
-custom-element package. It installs the server DOM shims as a side effect,
-and custom element packages call `customElements.define` at module scope, so
-importing the component module first crashes with `customElements is not
-defined` on the server.
 :::
-
-The registry tells the server which renderer belongs to
-`<my-component>`.
 
 ## What Happens During Rendering
 
