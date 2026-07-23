@@ -19,6 +19,16 @@ const isPromiseLike = <T>(value: unknown): value is PromiseLike<T> =>
   "then" in value &&
   typeof value.then === "function";
 
+/**
+ * The Vite wrapper can be bundled while a component's generated `/ssr`
+ * entry stays external. Both evaluate this module independently, so class
+ * identity is not stable across that boundary. A versioned global symbol
+ * describes the renderer contract without making the class itself global.
+ */
+const SVELTE_CUSTOM_ELEMENT_RENDERER_BRAND = Symbol.for(
+  "@svebcomponents/ssr/SvelteCustomElementRenderer/v1",
+);
+
 type SvelteRenderResult = {
   body: string;
   head: string;
@@ -280,3 +290,26 @@ export class SvelteCustomElementRenderer
     this.ssrAttributes.set(attributeName, attributeValue);
   }
 }
+
+Object.defineProperty(
+  SvelteCustomElementRenderer.prototype,
+  SVELTE_CUSTOM_ELEMENT_RENDERER_BRAND,
+  { value: true },
+);
+
+/**
+ * Cross-module-instance type guard for renderers created by this runtime.
+ *
+ * `instanceof SvelteCustomElementRenderer` is only valid when the renderer
+ * and caller imported the same evaluated module instance. Vite SSR may
+ * intentionally mix bundled and external package instances, so wrapper code
+ * must use this contract brand instead.
+ */
+export const isSvelteCustomElementRenderer = (
+  value: unknown,
+): value is SvelteCustomElementRenderer =>
+  typeof value === "object" &&
+  value !== null &&
+  (value as Record<PropertyKey, unknown>)[
+    SVELTE_CUSTOM_ELEMENT_RENDERER_BRAND
+  ] === true;
