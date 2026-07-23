@@ -1,5 +1,28 @@
 # @svebcomponents/ssr
 
+## 0.3.0
+
+### Minor Changes
+
+- fe3e191: - The generated SSR renderer entry now self-registers with `ElementRendererRegistry` when the component's tag name can be determined at build time (read from its `defineElement("tag", Component)` call, which every component entry point already makes). Consuming apps no longer need to import `ElementRendererRegistry` and call `.set()` by hand — a bare `import "my-component-package/ssr"` is enough. Falls back to today's manual registration when the tag can't be determined statically (e.g. a dynamically computed tag).
+  - Components with an SSR build now get a runtime-guarded shim install (`if (typeof window === "undefined") { await import("@svebcomponents/ssr/shim"); }`) prepended ahead of all bundled client code, so a custom element's compiled class can never evaluate before the shim installs — regardless of which import path reaches it first (a generated SSR entry's controlled dynamic import, or a consuming app's own static import needed for browser registration, which frameworks like SvelteKit compile into the server bundle too). Scoped to SSR-enabled components only: referencing the optional `@svebcomponents/ssr` peer at all, even behind a runtime check, makes dev-server tooling (Vite's import analysis) try to resolve it — so browser-only components never get this guard and are unaffected.
+- 6a8034f: `@svebcomponents/ssr/vite` now automatically adds `@svebcomponents/ssr` to Vite's `ssr.noExternal` — it ships raw `.svelte` files under some export conditions, which Node's SSR externalization can't load directly, so consumers previously had to configure this by hand. A new `noExternal` plugin option lets consumers add their own component package(s) alongside it. The package's `vite` peer range now also allows `^8.0.0` (not yet verified against a real Vite 8 install — no Vite 8 release is available to test against at time of writing).
+
+### Patch Changes
+
+- 7164bd3: `Server.svelte`/`AsyncServer.svelte` now install the DOM shim themselves as their first import, instead of depending on the consuming app happening to import `@svebcomponents/ssr` before anything else renders. These wrapper components — the ones Vite's dev-time transform and the generated production SSR entry actually load on every custom-element render — previously imported runtime modules directly and never triggered the package's own shim-install side effect, relying entirely on the consuming app's own import order. `installShim`'s effects are idempotent, so this is safe to run alongside any existing manual shim import too.
+- fe3e191: Components can now declare their custom element tag with Svelte's own string-shorthand syntax, and never need a manual registration call:
+
+  ```svelte
+  <svelte:options customElement="my-component" />
+  ```
+
+  `@svebcomponents/auto-options` expands this into the object form, merging in the inferred `props` (previously this form was rejected outright — `<svelte:options customElement="tag-name"/>` bailed with a warning and skipped prop inference entirely). The object form (`customElement={{ tag: "..." }}`) is unaffected.
+
+  `@svebcomponents/build`'s browser build now guards Svelte's own auto-generated `customElements.define(...)` call against being run more than once — the actual reason component entrypoints previously had to hand-write a guarded registration via `@svebcomponents/utils`'s `defineElement`. That's no longer necessary: a package entrypoint can simply re-export its component, with no registration call at all. `defineElement` remains available as a manual escape hatch for tags that can't be a literal in `<svelte:options>` (e.g. computed at build time).
+
+  `@svebcomponents/ssr`'s generated SSR entry now reads a component's tag from its `<svelte:options customElement>` declaration (via `svelte/compiler`'s normalized `parse()` output, which resolves both syntax forms identically) instead of regexing a `defineElement(...)` call out of the entry file — no behavior change for consumers, just a more direct source now that the tag no longer needs to live in a separate manual call.
+
 ## 0.2.0
 
 ### Minor Changes
