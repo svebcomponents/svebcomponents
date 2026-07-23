@@ -1,4 +1,11 @@
 <script lang="ts">
+  // Installed first, before any other import: this wrapper is what Vite's
+  // dev-time transform (and the generated production SSR entry) always
+  // loads before a custom element renders, so shim installation must not
+  // depend on some other module (e.g. the consuming app's own server hook)
+  // happening to import `@svebcomponents/ssr` first. installShim's effects
+  // are idempotent, so this is safe to run alongside that too.
+  import "../runtime/installShim.js";
   import type { Snippet } from "svelte";
   import { isKebabCase, camelizeKebabCase } from "@svebcomponents/utils";
   import { collectResult } from "@lit-labs/ssr/lib/render-result.js";
