@@ -85,12 +85,11 @@ Then load the component's server renderer once, e.g. from `hooks.server.ts`:
 import "my-component-package/ssr";
 ```
 
-That's it — no explicit registration call needed. The generated renderer
-knows its own tag name (read from the component's `<svelte:options
-customElement>` declaration at build time) and registers itself with
-`ElementRendererRegistry` as soon as it's imported. The DOM shim is
-guaranteed to install first regardless of import order or how a bundler
-chunks things, so there's no ordering convention to get right here.
+The generated renderer knows its own tag name (read from the component's
+`<svelte:options customElement>` declaration at build time) and registers
+itself with `ElementRendererRegistry` as soon as it's imported. The DOM shim
+is guaranteed to install first regardless of import order or how a bundler
+chunks things.
 
 :::note
 If a component's tag name couldn't be determined at build time (e.g. it's

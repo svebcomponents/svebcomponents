@@ -25,10 +25,9 @@ The component itself declares its tag:
 ```
 
 Consumers import the entrypoint for the side effect of defining
-`<favorite-number>`. Registration is guarded automatically: Svelte's
-generated `customElements.define()` call is made idempotent at build time, so
-it no-ops if the component (or a bundle containing it) is ever evaluated more
-than once — no manual registration call needed.
+`<favorite-number>`. Svelte's generated `customElements.define()` call is made
+idempotent at build time, so it no-ops if the component (or a bundle
+containing it) is ever evaluated more than once.
 
 For a tag that can't be a literal in `<svelte:options>` (e.g. computed at
 build time), fall back to `@svebcomponents/utils`'s `defineElement` in the

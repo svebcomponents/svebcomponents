@@ -63,11 +63,9 @@ import ExampleComponent from "./ExampleComponent.svelte";
 export default ExampleComponent;
 ```
 
-That's it — no registration call needed. Declaring the tag in
-`<svelte:options>` is enough: `@svebcomponents/build` guards the custom
-element registration Svelte generates for it, so importing the component is
-always safe even if it (or a bundle containing it) is evaluated more than
-once.
+Declaring the tag in `<svelte:options>` registers the custom element.
+`@svebcomponents/build` guards that registration, so importing the component
+is safe even if it (or a bundle containing it) is evaluated more than once.
 
 :::note
 For a tag that can't be a literal in `<svelte:options>` (e.g. computed at

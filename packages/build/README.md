@@ -4,7 +4,7 @@ This package wraps `tsdown` with the defaults Svebcomponents needs:
 
 - Svelte files are compiled as custom elements for the browser build.
 - `@svebcomponents/auto-options` runs before Svelte, so component props can be inferred into `<svelte:options customElement={...} />`.
-- The browser build guards Svelte's generated custom element registration against being run more than once, so a package entrypoint needs no registration call of its own.
+- The browser build guards Svelte's generated custom element registration against being run more than once.
 - Type declarations are emitted alongside the JavaScript output.
 - An SSR build can be generated with `@svebcomponents/ssr/tsdown`.
 - Svelte conditional exports can be generated for Svelte-aware tooling.
