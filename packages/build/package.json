@@ -58,6 +58,7 @@
     "@sveltejs/load-config": "catalog:",
     "@svebcomponents/auto-options": "workspace:*",
     "@svebcomponents/ssr": "workspace:*",
+    "magic-string": "catalog:",
     "rollup-plugin-svelte": "catalog:",
     "unconfig": "catalog:"
   },

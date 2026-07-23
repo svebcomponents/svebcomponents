@@ -3,6 +3,7 @@ import autoOptions from "@svebcomponents/auto-options";
 import { Options } from "tsdown";
 
 import { pluginDedupe } from "./pluginDedupe.js";
+import { pluginGuardCustomElementDefine } from "./pluginGuardCustomElementDefine.js";
 import {
   mergeCompilerOptions,
   type SvelteBuildConfig,
@@ -106,6 +107,10 @@ export const createTsdownConfig = (options: SvebcomponentsOptions): Options => {
           customElement: true,
         }),
       }),
+      // must run after svelte() above: it operates on the already-compiled
+      // JS output, guarding Svelte's own auto-generated
+      // `customElements.define(...)` call against double registration.
+      pluginGuardCustomElementDefine(),
     ],
   } satisfies Options;
 };
