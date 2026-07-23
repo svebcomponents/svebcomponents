@@ -1,5 +1,11 @@
 # @svebcomponents/ssr
 
+## 0.3.1
+
+### Patch Changes
+
+- 821e5df: SSR wrappers now recognize `SvelteCustomElementRenderer` subclasses across separate bundled and external module instances. A consuming app can leave a normally compiled svebcomponent external without the wrapper's nominal `instanceof` check rejecting its registered renderer, so the component package no longer needs its own `ssr.noExternal` entry.
+
 ## 0.3.0
 
 ### Minor Changes
