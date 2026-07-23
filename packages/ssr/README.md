@@ -70,6 +70,16 @@ export default defineConfig({
 });
 ```
 
+This automatically adds `@svebcomponents/ssr` to Vite's `ssr.noExternal` (it
+ships raw `.svelte` files under some export conditions, which Node's SSR
+externalization can't load directly). If your own component package also
+needs `ssr.noExternal` (e.g. an `externalSvelte` build sharing the host's
+Svelte runtime), list it via the plugin's `noExternal` option:
+
+```ts
+svebcomponentsSsr({ noExternal: ["my-component-package"] });
+```
+
 Load the component's renderer once before rendering templates that use the custom element:
 
 ```ts
