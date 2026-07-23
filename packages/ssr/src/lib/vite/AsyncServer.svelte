@@ -12,7 +12,7 @@
 
   import { isValidCustomElementTagName } from "../runtime/html.js";
   import { ElementRendererRegistry } from "../runtime/rendererRegistry.js";
-  import { SvelteCustomElementRenderer } from "../runtime/svelteCustomElementRenderer.js";
+  import { isSvelteCustomElementRenderer } from "../runtime/svelteCustomElementRenderer.js";
 
   interface WebComponentWrapperProps {
     children?: Snippet;
@@ -41,7 +41,7 @@
     if (!CustomElementRendererCtor)
       throw new Error(`Custom element renderer for ${tagName} not found`);
     const customElementRenderer = new CustomElementRendererCtor(tagName);
-    if (!(customElementRenderer instanceof SvelteCustomElementRenderer)) {
+    if (!isSvelteCustomElementRenderer(customElementRenderer)) {
       throw new Error(
         `Renderer for ${tagName} must extend SvelteCustomElementRenderer`,
       );
