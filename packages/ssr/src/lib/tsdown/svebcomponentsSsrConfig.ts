@@ -8,7 +8,10 @@ import svelte from "rollup-plugin-svelte";
 import { pluginGenerateSsrEntry } from "../rollup/pluginGenerateSsrEntry.js";
 import { pluginOverrideSvelteSsrSlotImplementation } from "../rollup/pluginOverrideSvelteSsrSlotImplementation.js";
 import { pluginStripCustomElementOptions } from "../rollup/pluginStripCustomElementOptions.js";
-import { extractDefineElementTag } from "../shared/extractDefineElementTag.js";
+import {
+  extractComponentTag,
+  findSvelteImportPath,
+} from "../shared/resolveComponentTag.js";
 import {
   mergeCompilerOptions,
   type SvelteBuildConfig,
@@ -24,16 +27,24 @@ const HYDRATION_HOST_SVELTE_PATH = fileURLToPath(
 );
 
 /**
- * Best-effort: reads the component's own declared tag name off its entry
- * file's `defineElement("tag", Component)` call, so the generated SSR
+ * Best-effort: follows the entry file's relative import of its `.svelte`
+ * component and reads its declared custom element tag, so the generated SSR
  * renderer can self-register with `ElementRendererRegistry` instead of
- * requiring the consuming app to do it by hand. Missing/unreadable entries
- * (e.g. a synthetic path in a unit test) simply fall back to no
- * self-registration rather than failing the build.
+ * requiring the consuming app to do it by hand. Missing/unreadable files
+ * (e.g. a synthetic path in a unit test, or a component with no declared
+ * tag) simply fall back to no self-registration rather than failing the
+ * build.
  */
 const readEntryTagName = (entry: string): string | undefined => {
   try {
-    return extractDefineElementTag(fs.readFileSync(entry, "utf8"));
+    const entrySource = fs.readFileSync(entry, "utf8");
+    const sveltePath = findSvelteImportPath(entrySource);
+    if (!sveltePath) return undefined;
+    const svelteSource = fs.readFileSync(
+      path.resolve(path.dirname(entry), sveltePath),
+      "utf8",
+    );
+    return extractComponentTag(svelteSource);
   } catch {
     return undefined;
   }
