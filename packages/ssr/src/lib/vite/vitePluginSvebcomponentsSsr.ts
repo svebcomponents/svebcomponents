@@ -1,4 +1,4 @@
-import type { Plugin, ResolvedConfig } from "vite";
+import type { Plugin, ResolvedConfig, UserConfig } from "vite";
 import { parse, type AST } from "svelte/compiler";
 import { walk } from "zimmerframe";
 import MagicString from "magic-string";
@@ -13,6 +13,7 @@ const WRAPPER_SOURCE_PACKAGE = "@svebcomponents/ssr/wrapper-component";
 const ASYNC_WRAPPER_SOURCE_PACKAGE =
   "@svebcomponents/ssr/async-wrapper-component";
 const WRAPPER_TAG_NAME_PROP = "_tagName";
+const OWN_PACKAGE_NAME = "@svebcomponents/ssr";
 
 interface VitePluginSvebcomponentsSsrOptions {
   /**
@@ -27,6 +28,15 @@ interface VitePluginSvebcomponentsSsrOptions {
    * through `compilerOptions.experimental.async`.
    */
   async?: boolean;
+  /**
+   * Additional package names (or patterns) to add to Vite's
+   * `ssr.noExternal`, alongside `@svebcomponents/ssr` itself (added
+   * automatically). Use this for your own custom-element package(s) when
+   * they ship a raw-`.svelte` export condition — e.g. an `externalSvelte`
+   * build sharing this app's Svelte runtime — which Node's SSR
+   * externalization can't load directly.
+   */
+  noExternal?: (string | RegExp)[];
 }
 
 /**
@@ -125,6 +135,20 @@ function vitePluginSvebcomponentsSsr(
   return {
     name: "vite-plugin-svelte-webcomponent-wrapper",
     enforce: "pre",
+
+    config(): Omit<UserConfig, "plugins"> {
+      // @svebcomponents/ssr ships raw `.svelte` files behind its
+      // wrapper-component/async-wrapper-component export conditions (see
+      // this package's package.json `exports`). Node's SSR externalization
+      // can't load a `.svelte` file directly (ERR_UNKNOWN_FILE_EXTENSION),
+      // so this package must always be routed through Vite's own transform
+      // pipeline instead of the default externalize-and-require path.
+      return {
+        ssr: {
+          noExternal: [OWN_PACKAGE_NAME, ...(options.noExternal ?? [])],
+        },
+      };
+    },
 
     configResolved(config) {
       resolvedConfig = config;
