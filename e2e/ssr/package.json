@@ -42,5 +42,13 @@
   },
   "dependencies": {
     "@svebcomponents/utils": "workspace:*"
+  },
+  "peerDependencies": {
+    "@svebcomponents/ssr": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@svebcomponents/ssr": {
+      "optional": true
+    }
   }
 }

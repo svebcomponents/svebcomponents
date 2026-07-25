@@ -117,19 +117,30 @@ export const createTsdownConfig = (options: SvebcomponentsOptions): Options => {
         }
       : {}),
     ...(externalSvelte ? { external: [/^svelte(\/.*)?$/] } : {}),
-    // A hydratable component's client build imports `@svebcomponents/ssr`'s
-    // HydrationHost (see auto-options' injected `import ... from
-    // "@svebcomponents/ssr/hydration-host"`). That subpath ships as raw
-    // `.svelte`, so leaving it external forces the runtime import to resolve
-    // to an uncompiled `.svelte` — which a consuming app's SSR can only load
-    // if it adds every such component to `ssr.noExternal`. Bundle it here
-    // instead: it is compiled by this same (component author's) toolchain,
-    // exactly like the server-side host (see `createHydrationHostTsdownConfig`),
-    // so hydration markers still match by construction and consumers need no
-    // `noExternal` entry for the component.
-    ...(hydratable
-      ? { noExternal: [/@svebcomponents\/ssr\/hydration-host/] }
-      : {}),
+    // A hydratable component's client build imports two things from
+    // `@svebcomponents/ssr` (see auto-options' injected imports): the
+    // `hydratable` wrapper from "@svebcomponents/ssr/hydration", and the
+    // HydrationHost from "@svebcomponents/ssr/hydration-host". Both must be
+    // bundled — the regex below is a substring test, so it covers both
+    // subpaths.
+    //
+    // The host ships as raw `.svelte`, so leaving it external forces the
+    // runtime import to resolve to an uncompiled `.svelte` — which a consuming
+    // app's SSR can only load if it adds every such component to
+    // `ssr.noExternal`. Bundling it here is safe: it is compiled by this same
+    // (component author's) toolchain, exactly like the server-side host (see
+    // `createHydrationHostTsdownConfig`), so hydration markers still match by
+    // construction and consumers need no `noExternal` entry.
+    //
+    // `hydration` is plain JS, but a component that declares
+    // `@svebcomponents/ssr` as the optional *peer* dependency it is meant to
+    // be gets it externalized by default — leaving a bare specifier in a
+    // bundle that is otherwise self-contained. That breaks the CDN drop-in
+    // outright (browsers cannot resolve bare specifiers without an import
+    // map), and resolving it via an import map would be worse still: the
+    // module imports `svelte`, so it would pull a *second* Svelte runtime in
+    // alongside the one already bundled here.
+    ...(hydratable ? { noExternal: [/@svebcomponents\/ssr\/hydration/] } : {}),
     plugins: [
       ...(externalSvelte ? [] : [pluginDedupe(["svelte", "esm-env"])]),
       autoOptions({ hydratable }),
