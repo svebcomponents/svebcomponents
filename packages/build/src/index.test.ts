@@ -89,19 +89,26 @@ describe("defineConfig", () => {
     expect(config[1]).toHaveProperty("outDir", "dist/server");
   });
 
-  test("bundles the ssr HydrationHost into the client build when hydratable", () => {
-    // otherwise the injected `import ... from "@svebcomponents/ssr/hydration-host"`
-    // stays external and resolves to raw .svelte at runtime, forcing every
-    // consuming app to add the component to ssr.noExternal
+  test("bundles both ssr hydration imports into the client build when hydratable", () => {
+    // The HydrationHost otherwise stays external and resolves to raw .svelte
+    // at runtime, forcing every consuming app to add the component to
+    // ssr.noExternal; `hydratable` otherwise leaks out as a bare specifier a
+    // browser cannot resolve, because a component declaring
+    // @svebcomponents/ssr as the optional peer dependency it is meant to be
+    // gets peer dependencies externalized by default.
     const config = defineConfig({ hydratable: true });
+    const [noExternal] = config[0]?.noExternal as [RegExp];
 
     expect(config[0]).toHaveProperty("outDir", "dist/client");
-    expect(config[0]).toHaveProperty("noExternal", [
-      /@svebcomponents\/ssr\/hydration-host/,
-    ]);
+    for (const injected of [
+      "@svebcomponents/ssr/hydration",
+      "@svebcomponents/ssr/hydration-host",
+    ]) {
+      expect(noExternal.test(injected)).toBe(true);
+    }
   });
 
-  test("does not force-bundle the hydration host for a non-hydratable client build", () => {
+  test("does not force-bundle the hydration imports for a non-hydratable client build", () => {
     const config = defineConfig({ hydratable: false });
 
     expect(config[0]).not.toHaveProperty("noExternal");
