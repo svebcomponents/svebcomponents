@@ -69,6 +69,31 @@ export const createTsdownConfig = (options: SvebcomponentsOptions): Options => {
     // in parallel by the svebcomponents CLI; tsdown's per-build clean would
     // race and delete other builds' output. The CLI cleans once up front.
     clean: false,
+    inputOptions: {
+      resolve: {
+        // Svelte gates its error and warning message texts — and a good deal
+        // of extra bookkeeping — behind `if (DEV)`, where `DEV` comes from
+        // `esm-env`. Without the `production` condition `esm-env` resolves to
+        // its `dev-fallback`, which is a *runtime* `process.env.NODE_ENV`
+        // check rather than a literal, so none of those branches can be
+        // eliminated and the full dev-only message texts ship to the browser.
+        //
+        // Listed alone rather than alongside the usual `browser`/`import`
+        // defaults on purpose: rolldown treats these as additive to the ones
+        // `platform` already implies, and naming `browser` here would also
+        // apply it to configs that are not browser builds.
+        conditionNames: ["production"],
+      },
+      optimization: {
+        // The condition alone is not enough. Rolldown emits the resolved
+        // `DEV` as a module-level `var`, which the minifier will not fold
+        // into its use sites, so the dead branches survive anyway. `smart`
+        // mode inlines imported constants exactly where it can decide a
+        // branch (`if`, ternary, `&&`/`||`/`??`) — which is the whole of
+        // what `DEV` is used for.
+        inlineConst: { mode: "smart", pass: 3 },
+      },
+    },
     // Guarantees the DOM shim installs before this module's own compiled
     // custom-element class (`class X extends HTMLElement`) evaluates,
     // regardless of *how* this module ends up reachable on the server (a

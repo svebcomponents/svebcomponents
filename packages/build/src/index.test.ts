@@ -161,6 +161,22 @@ describe("defineConfig", () => {
     expect(config[1]).toHaveProperty("entry", "src/index.ts");
   });
 
+  test("builds the browser bundles against the production export condition", () => {
+    // `esm-env` otherwise resolves DEV to a runtime `process.env.NODE_ENV`
+    // check, and every `if (DEV)` branch in Svelte's runtime — including the
+    // full error and warning message texts — survives into the browser bundle
+    const config = defineConfig({ svelteOutDir: "dist/client-svelte" });
+
+    for (const clientConfig of [config[0], config[1]]) {
+      expect(clientConfig?.inputOptions).toMatchObject({
+        resolve: { conditionNames: ["production"] },
+        // without inlining, DEV lands as a module-level `var` the minifier
+        // will not fold, and the dead branches stay regardless
+        optimization: { inlineConst: { mode: "smart" } },
+      });
+    }
+  });
+
   test("returns valid tsdownOptions", () => {
     const config = defineConfig();
 
