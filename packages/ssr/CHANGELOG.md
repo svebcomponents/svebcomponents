@@ -1,5 +1,12 @@
 # @svebcomponents/ssr
 
+## 0.3.2
+
+### Patch Changes
+
+- 1ca557a: Update the build integrations for tsdown 0.22 while preserving the existing
+  `.js` and `.d.ts` output contract.
+
 ## 0.3.1
 
 ### Patch Changes
