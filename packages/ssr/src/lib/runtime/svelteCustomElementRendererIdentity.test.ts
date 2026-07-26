@@ -31,9 +31,8 @@ test("recognizes a renderer created by a separate module instance", async () => 
 });
 
 test("rejects an unbranded renderer-like object", async () => {
-  const { isSvelteCustomElementRenderer } = await import(
-    "./svelteCustomElementRenderer.js"
-  );
+  const { isSvelteCustomElementRenderer } =
+    await import("./svelteCustomElementRenderer.js");
 
   expect(isSvelteCustomElementRenderer({ tagName: "test-element" })).toBe(
     false,

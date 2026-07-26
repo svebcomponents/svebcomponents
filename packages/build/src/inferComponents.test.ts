@@ -1,5 +1,5 @@
 import { describe, expect, it, type MockedFunction, vi } from "vitest";
-import type { Options } from "tsdown";
+import type { UserConfig } from "tsdown";
 import { inferComponents } from "./inferComponents";
 import { defineConfig } from "./index.js";
 import fs from "node:fs";
@@ -31,7 +31,7 @@ const mockWriteFile = fsPromises.writeFile as unknown as MockedFunction<
  * entry filename is captured inside the plugin closure).
  */
 const collectGeneratedSsrFiles = async (
-  configs: Options[],
+  configs: UserConfig[],
 ): Promise<string[]> => {
   mockWriteFile.mockClear();
   for (const config of configs) {
@@ -145,11 +145,11 @@ const manualMultipleComponentsConfig = [
 ];
 
 /**
- * Extracts the ordered plugin names of a tsdown `Options` entry.
+ * Extracts the ordered plugin names of a tsdown `UserConfig` entry.
  * `JSON.stringify` drops the plugin objects (their hooks are functions), so
  * plugin pipelines have to be asserted explicitly via their names.
  */
-const pluginNames = (options: Options): string[] => {
+const pluginNames = (options: UserConfig): string[] => {
   const plugins = options.plugins;
   expect(Array.isArray(plugins)).toBe(true);
   return (plugins as { name: string }[]).map((plugin) => plugin.name);
@@ -182,8 +182,8 @@ const hydrationHostPipeline = ["svelte"];
  * plugin pipelines (via plugin names, which the JSON comparison cannot see).
  */
 const expectConfigsToMatch = (
-  inferred: Options[],
-  expected: Options[],
+  inferred: UserConfig[],
+  expected: UserConfig[],
   expectedPipelines: string[][],
 ) => {
   // use `JSON.stringify` to compare the plain fields without comparing

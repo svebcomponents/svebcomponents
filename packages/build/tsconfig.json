@@ -1,7 +1,7 @@
 {
   "extends": "@svebcomponents/typescript-config/base",
   "compilerOptions": {
-    "types": ["vite/client"]
+    "types": ["node", "vite/client"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["src/fixtures"]

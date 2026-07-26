@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs/promises";
 
-import { build, type Options } from "tsdown";
+import { build, type UserConfig } from "tsdown";
 import { loadConfig as loadSvelteConfig } from "@sveltejs/load-config";
 import { loadConfig as loadSvebcomponentsConfig } from "unconfig";
 
@@ -22,7 +22,7 @@ const getSvelteConfig = async (): Promise<SvelteBuildConfig | undefined> => {
 
 async function main() {
   const svelteConfig = await getSvelteConfig();
-  const { config } = await loadSvebcomponentsConfig<Options[] | null>({
+  const { config } = await loadSvebcomponentsConfig<UserConfig[] | null>({
     sources: [
       {
         files: "svebcomponents.config",

@@ -4,7 +4,7 @@ import svebcomponentsSsr, {
 
 import { createTsdownConfig } from "./svebcomponentConfig.js";
 import { existsSync } from "node:fs";
-import { Options } from "tsdown";
+import { UserConfig } from "tsdown";
 import path from "node:path";
 import type { SvelteBuildConfig } from "@svebcomponents/ssr/svelte-config";
 
@@ -76,7 +76,9 @@ const inferSsrPrepareEntry = (entry: string): string | undefined => {
   return existsSync(candidate) ? candidate : undefined;
 };
 
-export const defineConfig = (options: DefineConfigOptions = {}): Options[] => {
+export const defineConfig = (
+  options: DefineConfigOptions = {},
+): UserConfig[] => {
   const { ssr = true, entry = "src/index.ts", svelteConfig } = options;
   const outDir = options.outDir ?? "dist/client";
   const svelteOutDir = options.svelteOutDir;
@@ -91,7 +93,7 @@ export const defineConfig = (options: DefineConfigOptions = {}): Options[] => {
   const hydratable = ssr && (options.hydratable ?? true);
   const hydrationHostEntryName = `${ssrEntryFileName}-hydration-host`;
 
-  const tsdownOptions: Options[] = [
+  const tsdownOptions: UserConfig[] = [
     createTsdownConfig({
       entry,
       outDir,

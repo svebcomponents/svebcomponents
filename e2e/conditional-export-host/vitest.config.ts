@@ -1,4 +1,5 @@
 import { svelte } from "@sveltejs/vite-plugin-svelte";
+import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
 import { conditionalExportResolutionTest } from "./test/conditionalExportResolutionTest.js";
@@ -17,7 +18,7 @@ export default defineConfig({
         },
       ],
       headless: true,
-      provider: "playwright",
+      provider: playwright(),
     },
   },
 });

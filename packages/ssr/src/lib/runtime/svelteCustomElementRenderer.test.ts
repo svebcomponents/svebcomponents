@@ -25,6 +25,8 @@ describe("SvelteCustomElementRenderer", () => {
   let mockSvelteComponent: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- this is just a mock
   let mockClientElementCtor: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- this is just a mock
+  let mockClientElement: any;
   const tagName = "test-element";
 
   beforeEach(() => {
@@ -32,13 +34,16 @@ describe("SvelteCustomElementRenderer", () => {
 
     mockSvelteComponent = {};
 
-    mockClientElementCtor = vi.fn().mockImplementation(() => ({
+    mockClientElement = {
       attributes: {},
       attributeChangedCallback: vi.fn(),
       $$d: {},
       $$p_d: {},
       $$c: mockSvelteComponent,
-    }));
+    };
+    mockClientElementCtor = vi.fn(function MockClientElement() {
+      return mockClientElement;
+    });
 
     mockRender.mockReturnValue({
       body: "<div>Test content</div>",
@@ -75,7 +80,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
@@ -99,7 +104,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
@@ -128,7 +133,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
@@ -149,7 +154,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
@@ -169,7 +174,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
@@ -192,7 +197,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
@@ -215,7 +220,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
@@ -248,7 +253,7 @@ describe("SvelteCustomElementRenderer", () => {
         },
       },
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
@@ -272,7 +277,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
@@ -294,7 +299,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: { prop1: "value1", prop2: "value2" },
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
@@ -321,7 +326,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: { source: "initial" },
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
     const prepare = vi.fn(({ props, setProperty }) => {
       expect(props).toEqual({ source: "initial" });
       setProperty("prepared", { value: true });
@@ -360,7 +365,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: { source: "initial" },
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
     const prepare = vi.fn(({ setProperty }) =>
       Promise.resolve().then(() => setProperty("prepared", "async")),
     );
@@ -403,7 +408,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
@@ -440,7 +445,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
@@ -494,7 +499,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
@@ -518,7 +523,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
     const mockHost = {};
 
     const renderer = new SvelteCustomElementRenderer(
@@ -553,7 +558,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
@@ -579,7 +584,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
@@ -615,7 +620,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,
@@ -644,7 +649,7 @@ describe("SvelteCustomElementRenderer", () => {
       $$d: {},
       $$p_d: {},
     };
-    mockClientElementCtor.mockReturnValue(mockElement);
+    mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
       mockSvelteComponent,

@@ -7,7 +7,7 @@ import {
   type MockedFunction,
 } from "vitest";
 import { defineConfig } from "./index";
-import type { Options } from "tsdown";
+import type { UserConfig } from "tsdown";
 import fs from "node:fs";
 
 vi.mock("node:fs");
@@ -50,9 +50,9 @@ describe("defineConfig", () => {
     // ssr-svelte, ssr-svelte hydration host
     expect(config).toHaveLength(6);
     expect(config[1]).toHaveProperty("outDir", "dist/client-svelte");
-    expect(config[1]).toHaveProperty("external", [/^svelte(\/.*)?$/]);
+    expect(config[1]).toHaveProperty("deps.neverBundle", [/^svelte(\/.*)?$/]);
     expect(config[4]).toHaveProperty("outDir", "dist/server-svelte");
-    expect(config[4]).toHaveProperty("external", [/^svelte(\/.*)?$/]);
+    expect(config[4]).toHaveProperty("deps.neverBundle", [/^svelte(\/.*)?$/]);
     expect(config[5]).toHaveProperty("outDir", "dist/server-svelte");
     expect(config[5]).toHaveProperty("entry", {
       "ssr-hydration-host": expect.stringContaining("HydrationHost.svelte"),
@@ -97,21 +97,21 @@ describe("defineConfig", () => {
     // @svebcomponents/ssr as the optional peer dependency it is meant to be
     // gets peer dependencies externalized by default.
     const config = defineConfig({ hydratable: true });
-    const [noExternal] = config[0]?.noExternal as [RegExp];
+    const [alwaysBundle] = config[0]?.deps?.alwaysBundle as [RegExp];
 
     expect(config[0]).toHaveProperty("outDir", "dist/client");
     for (const injected of [
       "@svebcomponents/ssr/hydration",
       "@svebcomponents/ssr/hydration-host",
     ]) {
-      expect(noExternal.test(injected)).toBe(true);
+      expect(alwaysBundle.test(injected)).toBe(true);
     }
   });
 
   test("does not force-bundle the hydration imports for a non-hydratable client build", () => {
     const config = defineConfig({ hydratable: false });
 
-    expect(config[0]).not.toHaveProperty("noExternal");
+    expect(config[0]).not.toHaveProperty("deps.alwaysBundle");
   });
 
   test("returns all configs by default (ssr and hydratable default to true)", () => {
@@ -187,7 +187,7 @@ describe("defineConfig", () => {
   test("returns valid tsdownOptions", () => {
     const config = defineConfig();
 
-    config.forEach((tsdownConfig: Options) => {
+    config.forEach((tsdownConfig: UserConfig) => {
       expect(tsdownConfig).toHaveProperty("entry");
       expect(tsdownConfig).toHaveProperty("outDir");
       expect(tsdownConfig).toHaveProperty("plugins");

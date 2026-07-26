@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 import path from "node:path";
 
-import type { Options } from "tsdown";
+import type { UserConfig } from "tsdown";
 import svelte from "rollup-plugin-svelte";
 
 import { pluginGenerateSsrEntry } from "../rollup/pluginGenerateSsrEntry.js";
@@ -105,7 +105,7 @@ const createSsrTsdownConfig = ({
   prepareEntry,
   prepareImportPath,
   svelteConfig,
-}: SvebcomponentsSsrOptions) => {
+}: SvebcomponentsSsrOptions): UserConfig => {
   const tagName = readEntryTagName(entry);
   return {
     entry: prepareEntry
@@ -116,11 +116,14 @@ const createSsrTsdownConfig = ({
       : entry,
     outDir,
     dts: true,
+    // Keep the public output paths stable as .js/.d.ts. tsdown 0.22 defaults
+    // Node-platform builds to fixed .mjs/.d.mts extensions.
+    fixedExtension: false,
     // Several component configs may share an output directory and are built
     // in parallel by the svebcomponents CLI; tsdown's per-build clean would
     // race and delete other builds' output. The CLI cleans once up front.
     clean: false,
-    ...(externalSvelte ? { external: [/^svelte(\/.*)?$/] } : {}),
+    ...(externalSvelte ? { deps: { neverBundle: [/^svelte(\/.*)?$/] } } : {}),
     plugins: [
       pluginStripCustomElementOptions(),
       pluginOverrideSvelteSsrSlotImplementation(),
@@ -151,7 +154,7 @@ const createSsrTsdownConfig = ({
         ...(tagName !== undefined ? { tagName } : {}),
       }),
     ],
-  } satisfies Options;
+  } satisfies UserConfig;
 };
 
 interface HydrationHostTsdownOptions {
@@ -181,14 +184,15 @@ export const createHydrationHostTsdownConfig = ({
   entryName,
   externalSvelte = false,
   svelteConfig,
-}: HydrationHostTsdownOptions) =>
+}: HydrationHostTsdownOptions): UserConfig =>
   ({
     entry: { [entryName]: HYDRATION_HOST_SVELTE_PATH },
     outDir,
     dts: false,
+    fixedExtension: false,
     // shared output directories are cleaned once by the svebcomponents CLI
     clean: false,
-    ...(externalSvelte ? { external: [/^svelte(\/.*)?$/] } : {}),
+    ...(externalSvelte ? { deps: { neverBundle: [/^svelte(\/.*)?$/] } } : {}),
     plugins: [
       svelte({
         emitCss: false,
@@ -205,6 +209,6 @@ export const createHydrationHostTsdownConfig = ({
         }),
       }),
     ],
-  }) satisfies Options;
+  }) satisfies UserConfig;
 
 export default createSsrTsdownConfig;

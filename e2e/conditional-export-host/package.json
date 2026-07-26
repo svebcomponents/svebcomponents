@@ -20,6 +20,7 @@
     "@svebcomponents/build": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
     "@vitest/browser": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
     "vitest": "catalog:",
     "playwright": "catalog:",
     "typescript": "catalog:"

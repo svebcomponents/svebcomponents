@@ -1,3 +1,4 @@
+import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
 export const baseConfig = {
@@ -12,11 +13,11 @@ export const baseConfig = {
             enabled: true,
             instances: [
               {
-                browser: "chromium",
+                browser: "chromium" as const,
               },
             ],
             headless: true,
-            provider: "playwright",
+            provider: playwright(),
           },
         },
       },
