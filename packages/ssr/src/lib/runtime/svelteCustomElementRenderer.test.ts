@@ -10,7 +10,10 @@ import {
 import { SvelteCustomElementRenderer } from "./svelteCustomElementRenderer";
 import { render } from "svelte/server";
 import type { RenderInfo } from "@lit-labs/ssr";
-import { collectResult } from "@lit-labs/ssr/lib/render-result.js";
+import {
+  collectResult,
+  collectResultSync,
+} from "@lit-labs/ssr/lib/render-result.js";
 import { SvelteCustomElementPropType } from "./html";
 
 // Mock svelte/server
@@ -309,7 +312,7 @@ describe("SvelteCustomElementRenderer", () => {
 
     const renderResult = renderer.renderShadow({} as RenderInfo);
     assert(renderResult);
-    const shadowContent = Array.from(renderResult).join("");
+    const shadowContent = collectResultSync(renderResult);
 
     expect(mockRender).toHaveBeenCalledWith(mockSvelteComponent, {
       props: mockElement.$$d,
@@ -317,6 +320,27 @@ describe("SvelteCustomElementRenderer", () => {
 
     expect(shadowContent).toContain("<style>/* test styles */</style>");
     expect(shadowContent).toContain("<div>Test content</div>");
+  });
+
+  test("defers preparation and Svelte rendering until Lit consumes the thunk", () => {
+    const prepare = vi.fn();
+    const renderer = new SvelteCustomElementRenderer(
+      mockSvelteComponent,
+      mockClientElementCtor,
+      tagName,
+      undefined,
+      prepare,
+    );
+
+    const result = renderer.renderShadow({} as RenderInfo);
+
+    expect(prepare).not.toHaveBeenCalled();
+    expect(mockRender).not.toHaveBeenCalled();
+
+    collectResultSync(result);
+
+    expect(prepare).toHaveBeenCalledOnce();
+    expect(mockRender).toHaveBeenCalledOnce();
   });
 
   test("prepares properties synchronously before rendering", () => {
@@ -342,9 +366,8 @@ describe("SvelteCustomElementRenderer", () => {
 
     const result = renderer.renderShadow({} as RenderInfo);
     assert(result);
-    const chunks = Array.from(result);
+    const shadow = collectResultSync(result);
 
-    expect(chunks.every((chunk) => typeof chunk === "string")).toBe(true);
     expect(mockRender).toHaveBeenCalledWith(expect.anything(), {
       props: expect.objectContaining({
         __initialProps: {
@@ -353,7 +376,7 @@ describe("SvelteCustomElementRenderer", () => {
         },
       }),
     });
-    expect(chunks.join("")).toContain(
+    expect(shadow).toContain(
       'data-svebcomponents-ssr-props>{"prepared":{"value":true}}</script>',
     );
   });
@@ -456,9 +479,9 @@ describe("SvelteCustomElementRenderer", () => {
     const renderResult = renderer.renderShadow({} as RenderInfo);
     assert(renderResult);
     // synchronous consumption must work (this is what collectResultSync does)
-    const chunks = Array.from(renderResult);
-    expect(chunks.every((chunk) => typeof chunk === "string")).toBe(true);
-    expect(chunks.join("")).toBe(
+    expect(renderResult).toHaveLength(1);
+    expect(renderResult[0]).toEqual(expect.any(Function));
+    expect(collectResultSync(renderResult)).toBe(
       "<style>/* lazy styles */</style><div>Lazy content</div>",
     );
     // the promise path must not be taken for synchronous components
@@ -537,9 +560,9 @@ describe("SvelteCustomElementRenderer", () => {
     renderer.setAttribute("title", "from attribute");
     renderer.setProperty("threadData", { items: [1, 2] });
 
-    const shadow = Array.from(
+    const shadow = collectResultSync(
       renderer.renderShadow({} as RenderInfo) ?? [],
-    ).join("");
+    );
     expect(shadow).toContain(
       '<script type="application/json" data-svebcomponents-ssr-props>',
     );
@@ -569,9 +592,9 @@ describe("SvelteCustomElementRenderer", () => {
     );
     renderer.setProperty("payload", { html: "</script><img src=x>" });
 
-    const shadow = Array.from(
+    const shadow = collectResultSync(
       renderer.renderShadow({} as RenderInfo) ?? [],
-    ).join("");
+    );
     // exactly one script element: the payload cannot terminate it early
     expect(shadow.match(/<\/script>/g)).toHaveLength(1);
     expect(shadow).toContain("\\u003C/script>");
@@ -593,9 +616,9 @@ describe("SvelteCustomElementRenderer", () => {
     );
     renderer.setProperty("threadData", { items: [] });
 
-    const shadow = Array.from(
+    const shadow = collectResultSync(
       renderer.renderShadow({} as RenderInfo) ?? [],
-    ).join("");
+    );
     expect(shadow).not.toContain("data-svebcomponents-ssr-props");
   });
 
@@ -630,7 +653,7 @@ describe("SvelteCustomElementRenderer", () => {
 
     const renderResult = renderer.renderShadow({} as RenderInfo);
     assert(renderResult);
-    expect(() => Array.from(renderResult)).toThrow(renderError);
+    expect(() => collectResultSync(renderResult)).toThrow(renderError);
   });
 
   test("renderShadow resolves async svelte render results", async () => {

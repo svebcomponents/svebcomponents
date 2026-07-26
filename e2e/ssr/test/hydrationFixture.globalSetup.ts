@@ -1,25 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { collectResultSync } from "@lit-labs/ssr/lib/render-result.js";
 
 // The real server-side pipeline: the generated renderer entry produced by
 // @svebcomponents/build (which renders through the server-compiled
 // HydrationHost). Using it directly keeps this fixture faithful to actual
 // SSR output without needing a host page or the lit-ssr pipeline.
 import SyncComponentRenderer from "../dist/server/sync-ssr.js";
-
-const collectStrings = (chunks: Iterable<unknown>): string => {
-  let out = "";
-  for (const chunk of chunks) {
-    if (typeof chunk !== "string") {
-      throw new Error(
-        "hydration fixture expects a fully synchronous render result",
-      );
-    }
-    out += chunk;
-  }
-  return out;
-};
 
 /**
  * Renders the sync test component to a declarative-shadow-DOM HTML fixture
@@ -34,11 +22,11 @@ export default async function setup(): Promise<void> {
   // serialized-props channel for the client to hydrate without a mismatch
   renderer.setProperty("meta", { note: "rich prop survived" });
 
-  const shadow = collectStrings(
+  const shadow = collectResultSync(
     // the render info object is unused by our renderer
-    renderer.renderShadow({} as never) as Iterable<unknown>,
+    renderer.renderShadow({} as never),
   );
-  const attributes = collectStrings(renderer.renderAttributes());
+  const attributes = collectResultSync(renderer.renderAttributes());
 
   const fixture = `<sync-component${attributes}><template shadowrootmode="open">${shadow}</template></sync-component>`;
 

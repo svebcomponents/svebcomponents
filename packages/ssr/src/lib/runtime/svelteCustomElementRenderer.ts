@@ -1,8 +1,5 @@
-import {
-  ElementRenderer,
-  type RenderInfo,
-  type RenderResult,
-} from "@lit-labs/ssr";
+import { ElementRenderer, type RenderInfo } from "@lit-labs/ssr";
+import type { ThunkedRenderResult } from "@lit-labs/ssr/lib/render-result.js";
 import type { Component } from "svelte";
 import { render } from "svelte/server";
 
@@ -158,10 +155,10 @@ export class SvelteCustomElementRenderer
     );
   }
 
-  override *renderAttributes(): RenderResult {
-    for (const [name, value] of this.ssrAttributes) {
-      yield renderSsrAttribute(name, value);
-    }
+  override renderAttributes(): ThunkedRenderResult {
+    return Array.from(this.ssrAttributes, ([name, value]) =>
+      renderSsrAttribute(name, value),
+    );
   }
 
   /**
@@ -222,55 +219,59 @@ export class SvelteCustomElementRenderer
     return `<script type="application/json" data-svebcomponents-ssr-props>${json.replaceAll("<", "\\u003C")}</script>`;
   }
 
-  override *renderShadow(renderInfo: RenderInfo): RenderResult | undefined {
-    const preparation = this.prepare?.({
-      props: Object.freeze({ ...this.svelteClientCustomElement.$$d }),
-      setProperty: (name, value) => this.setProperty(name, value),
-    });
+  override renderShadow(renderInfo: RenderInfo): ThunkedRenderResult {
+    return [
+      () => {
+        const preparation = this.prepare?.({
+          props: Object.freeze({ ...this.svelteClientCustomElement.$$d }),
+          setProperty: (name, value) => this.setProperty(name, value),
+        });
 
-    if (isPromiseLike<void>(preparation)) {
-      yield Promise.resolve(preparation).then(() =>
-        Array.from(this.renderPreparedShadow(renderInfo)),
-      );
-      return;
-    }
+        if (isPromiseLike<void>(preparation)) {
+          return Promise.resolve(preparation).then(() =>
+            this.renderPreparedShadow(renderInfo),
+          );
+        }
 
-    yield* this.renderPreparedShadow(renderInfo);
+        return this.renderPreparedShadow(renderInfo);
+      },
+    ];
   }
 
   /** Renders after any component-specific server preparation has completed. */
-  private *renderPreparedShadow(
-    _renderInfo: RenderInfo,
-  ): Exclude<RenderResult, undefined> {
-    const result = (this.hydrationHostComponent
-      ? render(this.hydrationHostComponent, {
-          props: {
-            __component: this.svelteSsrComponent,
-            __propDefinitions: this.svelteClientCustomElement.$$p_d,
-            __initialProps: { ...this.svelteClientCustomElement.$$d },
-          },
-        })
-      : render(this.svelteSsrComponent, {
-          props: this.svelteClientCustomElement.$$d,
-        })) as unknown as SvelteRenderResult | PromiseLike<SvelteRenderResult>;
-    if (isPromiseLike<SvelteRenderResult>(result)) {
-      const syncResult = tryRenderSync(result);
-      if (syncResult) {
-        yield syncResult.head;
-        yield syncResult.body;
-        yield this.serializeRichProps();
-        return;
-      }
-      yield Promise.resolve(result).then(({ body, head }) => [
-        head,
-        body,
-        this.serializeRichProps(),
-      ]);
-      return;
-    }
-    yield result.head;
-    yield result.body;
-    yield this.serializeRichProps();
+  private renderPreparedShadow(_renderInfo: RenderInfo): ThunkedRenderResult {
+    return [
+      () => {
+        const result = (this.hydrationHostComponent
+          ? render(this.hydrationHostComponent, {
+              props: {
+                __component: this.svelteSsrComponent,
+                __propDefinitions: this.svelteClientCustomElement.$$p_d,
+                __initialProps: { ...this.svelteClientCustomElement.$$d },
+              },
+            })
+          : render(this.svelteSsrComponent, {
+              props: this.svelteClientCustomElement.$$d,
+            })) as unknown as
+          SvelteRenderResult | PromiseLike<SvelteRenderResult>;
+        if (isPromiseLike<SvelteRenderResult>(result)) {
+          const syncResult = tryRenderSync(result);
+          if (syncResult) {
+            return [
+              syncResult.head,
+              syncResult.body,
+              this.serializeRichProps(),
+            ];
+          }
+          return Promise.resolve(result).then(({ body, head }) => [
+            head,
+            body,
+            this.serializeRichProps(),
+          ]);
+        }
+        return [result.head, result.body, this.serializeRichProps()];
+      },
+    ];
   }
 
   private reflectPropertyToAttribute(name: string, value: unknown) {

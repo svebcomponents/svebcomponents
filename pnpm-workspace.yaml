@@ -13,7 +13,7 @@ catalog:
   "@changesets/cli": 2.31.1
   "@astrojs/check": 0.9.9
   "@eslint/js": 9.39.5
-  "@lit-labs/ssr": 3.3.1
+  "@lit-labs/ssr": 4.1.0
   "@lit-labs/ssr-dom-shim": 1.6.0
   "@sveltejs/load-config": 0.2.1
   "@sveltejs/package": 2.5.8
