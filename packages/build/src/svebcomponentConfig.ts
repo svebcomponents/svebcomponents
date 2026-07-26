@@ -1,6 +1,6 @@
 import svelte from "rollup-plugin-svelte";
 import autoOptions from "@svebcomponents/auto-options";
-import { Options } from "tsdown";
+import { UserConfig } from "tsdown";
 
 import { pluginDedupe } from "./pluginDedupe.js";
 import { pluginGuardCustomElementDefine } from "./pluginGuardCustomElementDefine.js";
@@ -43,7 +43,9 @@ interface SvebcomponentsOptions {
 
 // explicit return type: the inferred type references rollup's plugin types
 // through non-portable .pnpm paths (TS2742) in the emitted declarations
-export const createTsdownConfig = (options: SvebcomponentsOptions): Options => {
+export const createTsdownConfig = (
+  options: SvebcomponentsOptions,
+): UserConfig => {
   const {
     entry,
     outDir,
@@ -116,7 +118,18 @@ export const createTsdownConfig = (options: SvebcomponentsOptions): Options => {
           },
         }
       : {}),
-    ...(externalSvelte ? { external: [/^svelte(\/.*)?$/] } : {}),
+    ...(externalSvelte || hydratable
+      ? {
+          deps: {
+            ...(externalSvelte ? { neverBundle: [/^svelte(\/.*)?$/] } : {}),
+            ...(hydratable
+              ? {
+                  alwaysBundle: [/@svebcomponents\/ssr\/hydration/],
+                }
+              : {}),
+          },
+        }
+      : {}),
     // A hydratable component's client build imports two things from
     // `@svebcomponents/ssr` (see auto-options' injected imports): the
     // `hydratable` wrapper from "@svebcomponents/ssr/hydration", and the
@@ -140,7 +153,6 @@ export const createTsdownConfig = (options: SvebcomponentsOptions): Options => {
     // map), and resolving it via an import map would be worse still: the
     // module imports `svelte`, so it would pull a *second* Svelte runtime in
     // alongside the one already bundled here.
-    ...(hydratable ? { noExternal: [/@svebcomponents\/ssr\/hydration/] } : {}),
     plugins: [
       ...(externalSvelte ? [] : [pluginDedupe(["svelte", "esm-env"])]),
       autoOptions({ hydratable }),
@@ -161,5 +173,5 @@ export const createTsdownConfig = (options: SvebcomponentsOptions): Options => {
       // `customElements.define(...)` call against double registration.
       pluginGuardCustomElementDefine(),
     ],
-  } satisfies Options;
+  } satisfies UserConfig;
 };

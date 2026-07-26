@@ -1,7 +1,7 @@
 import path from "node:path";
 import { defineConfig, DefineConfigOptions } from "./index.js";
 import { existsSync } from "node:fs";
-import { type Options } from "tsdown";
+import { type UserConfig } from "tsdown";
 import type { SvelteBuildConfig } from "@svebcomponents/ssr/svelte-config";
 
 type ExportValue = {
@@ -35,16 +35,14 @@ const resolveSvebcomponentEntryPoint = (
 export const inferComponents = (
   packageJson: unknown,
   svelteConfig?: SvelteBuildConfig,
-): Options[] => {
-  if (
-    !(
-      typeof packageJson === "object" &&
-      packageJson !== null &&
-      "exports" in packageJson &&
-      typeof packageJson.exports === "object" &&
-      packageJson.exports !== null
-    )
-  ) {
+): UserConfig[] => {
+  if (!(
+    typeof packageJson === "object" &&
+    packageJson !== null &&
+    "exports" in packageJson &&
+    typeof packageJson.exports === "object" &&
+    packageJson.exports !== null
+  )) {
     return [];
   }
   const exports = packageJson.exports as Record<string, ExportValue>;

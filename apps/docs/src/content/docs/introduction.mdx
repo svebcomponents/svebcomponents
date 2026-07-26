@@ -3,6 +3,13 @@ title: Introduction
 description: Why Svebcomponents exists and which parts of the Svelte custom element workflow it improves.
 ---
 
+:::note[Beta status]
+Svebcomponents is currently in beta. Its build, auto-options, SSR, and hydration
+workflows are ready for real-world evaluation and early production adoption.
+APIs may still change before 1.0; breaking changes are documented in release
+notes and migration guides.
+:::
+
 Web components are one of the best encapsulation tools the web platform has to
 offer, but authoring custom elements in JavaScript still comes with plenty of
 warts.
@@ -35,5 +42,5 @@ Svebcomponents tackles those three problems:
   configuration from TypeScript.
 - [Build](/core-concepts/build/) makes package configuration as simple as
   defining exports in `package.json`.
-- [SSR](/core-concepts/ssr/) provides experimental support for building and
+- [SSR](/core-concepts/ssr/) provides support for building and
   consuming server-renderable custom elements.

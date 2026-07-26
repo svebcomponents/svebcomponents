@@ -18,6 +18,9 @@
     "fix": "prettier --write .",
     "build": "tsc"
   },
+  "dependencies": {
+    "@vitest/browser-playwright": "catalog:"
+  },
   "devDependencies": {
     "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",

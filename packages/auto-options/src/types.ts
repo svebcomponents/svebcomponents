@@ -2,11 +2,7 @@ import type { VariableDeclarator } from "estree";
 import { type AST } from "svelte/compiler";
 
 export type PrimitiveType =
-  | "Array"
-  | "Boolean"
-  | "Number"
-  | "Object"
-  | "String";
+  "Array" | "Boolean" | "Number" | "Object" | "String";
 
 export interface SvelteOptionProp {
   attributeName?: string | undefined;

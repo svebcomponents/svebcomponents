@@ -20,7 +20,7 @@ const transform = (code: string, id = "Component.svelte"): TransformResult => {
 /** the code string of a non-null transform result */
 const codeOf = (result: TransformResult): string => {
   if (result && typeof result === "object" && "code" in result) {
-    return result.code;
+    return result.code.toString();
   }
   throw new Error("expected a transform result with a code string");
 };
