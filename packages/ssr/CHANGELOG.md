@@ -1,5 +1,11 @@
 # @svebcomponents/ssr
 
+## 0.3.3
+
+### Patch Changes
+
+- 117c5ba: Update the SSR runtime for Lit SSR 4's thunked `ElementRenderer` contract.
+
 ## 0.3.2
 
 ### Patch Changes
