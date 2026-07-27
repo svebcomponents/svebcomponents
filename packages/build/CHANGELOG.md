@@ -1,5 +1,12 @@
 # @svebcomponents/build
 
+## 0.3.6
+
+### Patch Changes
+
+- Updated dependencies [117c5ba]
+  - @svebcomponents/ssr@0.3.3
+
 ## 0.3.5
 
 ### Patch Changes

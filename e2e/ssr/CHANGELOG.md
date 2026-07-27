@@ -1,5 +1,12 @@
 # @svebcomponents/e2e.ssr
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies [117c5ba]
+  - @svebcomponents/ssr@0.3.3
+
 ## 0.0.3
 
 ### Patch Changes
