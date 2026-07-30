@@ -1,0 +1,27 @@
+{
+  "name": "@svebcomponents/e2e.ssr-react",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@lit-labs/ssr": "catalog:",
+    "@svebcomponents/e2e.ssr": "workspace:*",
+    "@svebcomponents/ssr": "workspace:*",
+    "@svebcomponents/ssr-react": "workspace:*",
+    "@svebcomponents/typescript-config": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitest/browser": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
+    "lit": "catalog:",
+    "playwright": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "svelte": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

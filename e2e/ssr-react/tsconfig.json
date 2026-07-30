@@ -1,0 +1,8 @@
+{
+  "extends": "@svebcomponents/typescript-config/base",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@svebcomponents/ssr-react"
+  },
+  "include": ["src/**/*", "test/**/*", "vitest.config.ts"]
+}

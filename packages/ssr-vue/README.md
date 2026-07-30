@@ -48,6 +48,24 @@ custom element in any SFC:
 </template>
 ```
 
+## Any Custom Element, Not Just Svelte-built Ones
+
+This integration depends only on Lit's `ElementRenderer` contract, so it will
+server-render any custom element that has a renderer registered — including
+Lit elements:
+
+```ts
+import { LitElementRenderer } from "@lit-labs/ssr/lib/lit-element-renderer.js";
+import { ElementRendererRegistry } from "@svebcomponents/ssr";
+
+ElementRendererRegistry.use(LitElementRenderer);
+```
+
+`use()` registers a renderer that selects its own elements through Lit's
+static `matchesClass` hook, so that one line covers every LitElement in the
+app. `e2e/ssr-vue` renders a plain Lit element through this package to keep
+that honest.
+
 ## Async Components
 
 Unlike the Svelte integration, there is no sync/async wrapper split. Vue's
