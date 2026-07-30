@@ -86,14 +86,21 @@ warning naming the tag. Genuine render failures (an unregistered renderer, for
 instance) still throw, because those are configuration errors rather than a
 capability gap.
 
-This is not simply a matter of reaching for `renderToPipeableStream` and
-`Suspense`. Declarative shadow DOM only attaches during HTML parsing, and
-React streams suspended content as a hidden block plus a script that relocates
-the nodes — a `<template shadowrootmode>` moved into place that way does
-nothing, leaving an inert template in the light DOM and an empty shadow root.
+This is a limitation of this integration, not of React. React's _streaming_
+renderer does preserve declarative shadow DOM: suspended content is delivered
+as ordinary HTML that the parser processes in a hidden staging container, so
+the shadow root attaches there, and React's relocation script then moves the
+_element_ — which carries its shadow root with it. Lifting the limit is a
+wrapper design problem (`use()` needs a render-stable promise, which needs a
+per-request cache), not a platform one.
 
-Note that the Vue integration has no such limitation: `renderToString` there
-awaits async `setup()` and emits in order.
+See [the async SSR findings](https://github.com/svebcomponents/svebcomponents/blob/main/packages/ssr-react/docs/async-ssr.md)
+for the investigation, the measured behavior, and the candidate designs. They
+are asserted by tests in `e2e/ssr-react/test/experiments/`, so a change in
+React's behavior fails rather than silently going stale.
+
+Note that the Vue integration has no such limitation at all: `renderToString`
+there awaits async `setup()` and emits in order.
 
 ## Requirements
 
@@ -133,7 +140,7 @@ list, so the two trees agree.
 ## Current Limitations
 
 - Experimental; the API may change.
-- Synchronous element renderers only (see above).
+- Synchronous element renderers only when server-rendering (see above).
 - Custom element tags are detected structurally (a dash, minus the HTML spec's
   reserved SVG/MathML names).
 - The consuming app must import the browser custom element module and register
