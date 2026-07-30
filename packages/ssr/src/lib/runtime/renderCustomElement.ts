@@ -25,10 +25,19 @@ export interface RenderedCustomElement {
    */
   attributes: Record<string, string>;
   /**
-   * A complete `<template shadowrootmode="open">…</template>` string. Its
-   * content is already escaped by the element renderer.
+   * A complete `<template shadowrootmode="open">…</template>` string, for
+   * hosts that emit raw markup (Svelte's `{@html}`, React's
+   * `dangerouslySetInnerHTML`). Content is already escaped by the element
+   * renderer.
    */
   shadowTemplate: string;
+  /**
+   * The shadow root's inner markup without the surrounding `<template>`, for
+   * hosts that build the template element themselves and need to fill it
+   * (Vue's `innerHTML` prop, for instance). Same escaping guarantees as
+   * {@link shadowTemplate}.
+   */
+  shadowContent: string;
 }
 
 /**
@@ -121,8 +130,14 @@ const attributesRecord = (
   return attributes;
 };
 
-const wrapShadow = (shadow: string) =>
-  `<template shadowrootmode="open">${shadow}</template>`;
+const toResult = (
+  renderer: ElementRenderer,
+  shadow: string,
+): RenderedCustomElement => ({
+  attributes: attributesRecord(renderer),
+  shadowTemplate: `<template shadowrootmode="open">${shadow}</template>`,
+  shadowContent: shadow,
+});
 
 /**
  * Server-renders a custom element, collecting its shadow content
@@ -139,10 +154,7 @@ export const renderCustomElementSync = (
 ): RenderedCustomElement => {
   const { renderer, shadowStream } = startRender(tagName, props);
   const shadow = collectResultSync(shadowStream);
-  return {
-    attributes: attributesRecord(renderer),
-    shadowTemplate: wrapShadow(shadow),
-  };
+  return toResult(renderer, shadow);
 };
 
 /**
@@ -158,8 +170,5 @@ export const renderCustomElement = async (
 ): Promise<RenderedCustomElement> => {
   const { renderer, shadowStream } = startRender(tagName, props);
   const shadow = await collectResult(shadowStream);
-  return {
-    attributes: attributesRecord(renderer),
-    shadowTemplate: wrapShadow(shadow),
-  };
+  return toResult(renderer, shadow);
 };

@@ -1,0 +1,25 @@
+{
+  "name": "@svebcomponents/e2e.ssr-vue",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@lit-labs/ssr": "catalog:",
+    "@svebcomponents/e2e.ssr": "workspace:*",
+    "@svebcomponents/ssr": "workspace:*",
+    "@svebcomponents/ssr-vue": "workspace:*",
+    "@svebcomponents/typescript-config": "workspace:*",
+    "@vitejs/plugin-vue": "catalog:",
+    "@vitest/browser": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
+    "lit": "catalog:",
+    "playwright": "catalog:",
+    "svelte": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "vue": "catalog:"
+  }
+}

@@ -34,7 +34,16 @@ export default defineConfig({
                   label: "Auto-options",
                   slug: "core-concepts/auto-options",
                 },
-                { label: "SSR", slug: "core-concepts/ssr" },
+                {
+                  label: "SSR",
+                  items: [
+                    { label: "Overview", slug: "core-concepts/ssr" },
+                    {
+                      label: "Framework Integrations",
+                      slug: "core-concepts/ssr/framework-integrations",
+                    },
+                  ],
+                },
                 { label: "Hydration", slug: "core-concepts/hydration" },
               ],
             },
@@ -49,6 +58,7 @@ export default defineConfig({
               slug: "packages/auto-options",
             },
             { label: "@svebcomponents/ssr", slug: "packages/ssr" },
+            { label: "@svebcomponents/ssr-vue", slug: "packages/ssr-vue" },
             { label: "@svebcomponents/utils", slug: "packages/utils" },
             {
               label: "@svebcomponents internals",
