@@ -1,0 +1,73 @@
+{
+  "name": "@svebcomponents/ssr-astro",
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/svebcomponents/svebcomponents.git",
+    "directory": "packages/ssr-astro"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc && publint",
+    "check": "tsc --noEmit",
+    "lint": "pnpm /^lint:.*/",
+    "lint:eslint": "eslint .",
+    "lint:format": "prettier --check .",
+    "fix": "pnpm /^fix:.*/",
+    "fix:eslint": "eslint . --fix",
+    "fix:format": "prettier --write --ignore-unknown .",
+    "test": "vitest run",
+    "test:dev": "vitest --watch"
+  },
+  "files": [
+    "dist",
+    "CustomElement.astro",
+    "!dist/**/*.test.*",
+    "!dist/**/*.spec.*"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./vite": {
+      "types": "./dist/vite/vitePluginSvebcomponentsSsrAstro.d.ts",
+      "import": "./dist/vite/vitePluginSvebcomponentsSsrAstro.js"
+    },
+    "./component": "./CustomElement.astro"
+  },
+  "peerDependencies": {
+    "astro": "^5.0.0"
+  },
+  "devDependencies": {
+    "@svebcomponents/eslint-config": "workspace:*",
+    "@svebcomponents/prettier-config": "workspace:*",
+    "@svebcomponents/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "astro": "catalog:",
+    "publint": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  },
+  "dependencies": {
+    "@astrojs/compiler": "catalog:",
+    "@svebcomponents/ssr": "workspace:*",
+    "@svebcomponents/utils": "workspace:*",
+    "magic-string": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "keywords": [
+    "astro",
+    "svelte",
+    "web-components",
+    "ssr"
+  ]
+}

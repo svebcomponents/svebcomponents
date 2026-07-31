@@ -1,0 +1,16 @@
+---
+// A realistic page, which also satisfies astro's requirement that a project
+// have a pages directory.
+import "@svebcomponents/ssr/enable-async";
+import "@svebcomponents/e2e.ssr/sync";
+import "@svebcomponents/e2e.ssr/sync/ssr";
+---
+
+<html lang="en">
+  <head><title>svebcomponents in astro</title></head>
+  <body>
+    <sync-component title="Hello from Astro" count="1">
+      <p>light dom child</p>
+    </sync-component>
+  </body>
+</html>

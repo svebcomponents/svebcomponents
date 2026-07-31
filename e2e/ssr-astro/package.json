@@ -1,0 +1,24 @@
+{
+  "name": "@svebcomponents/e2e.ssr-astro",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@lit-labs/ssr": "catalog:",
+    "@svebcomponents/e2e.ssr": "workspace:*",
+    "@svebcomponents/ssr": "workspace:*",
+    "@svebcomponents/ssr-astro": "workspace:*",
+    "@svebcomponents/typescript-config": "workspace:*",
+    "@vitest/browser": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
+    "astro": "catalog:",
+    "lit": "catalog:",
+    "playwright": "catalog:",
+    "svelte": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
