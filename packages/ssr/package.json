@@ -36,6 +36,10 @@
       "types": "./dist/runtime/installShim.d.ts",
       "import": "./dist/runtime/installShim.js"
     },
+    "./enable-async": {
+      "types": "./dist/runtime/enableAsyncMode.d.ts",
+      "import": "./dist/runtime/enableAsyncMode.js"
+    },
     "./hydration": {
       "types": "./dist/hydration/hydratable.d.ts",
       "import": "./dist/hydration/hydratable.js"

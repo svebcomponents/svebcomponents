@@ -13,6 +13,17 @@ interface Element {
 
 class _ElementRendererRegistry {
   private renderers = new Map<Element["prototype"], ElementRendererCtor>();
+  /**
+   * Renderers that select the elements they serve themselves, through Lit's
+   * static `matchesClass` hook, rather than being registered against a
+   * specific element class.
+   *
+   * This is how a whole *family* of elements is supported with one
+   * registration — `use(LitElementRenderer)` makes every LitElement in the app
+   * server-renderable — and it is what keeps this registry from privileging
+   * any one component framework.
+   */
+  private matchers: ElementRendererCtor[] = [];
 
   set(elementBaseClass: Element | string, renderer: ElementRendererCtor) {
     if (typeof elementBaseClass === "string") {
@@ -28,7 +39,29 @@ class _ElementRendererRegistry {
     this.renderers.set(elementBaseClass.prototype, renderer);
   }
 
-  get(elementClass: Element): ElementRendererCtor | null {
+  /**
+   * Registers a renderer that claims elements via Lit's static `matchesClass`.
+   *
+   * ```ts
+   * import { LitElementRenderer } from "@lit-labs/ssr/lib/lit-element-renderer.js";
+   *
+   * ElementRendererRegistry.use(LitElementRenderer);
+   * ```
+   *
+   * Explicit `set()` registrations win over these, so an app can still
+   * override the renderer for one specific element.
+   */
+  use(renderer: ElementRendererCtor) {
+    if (!this.matchers.includes(renderer)) {
+      this.matchers.push(renderer);
+    }
+  }
+
+  get(
+    elementClass: Element,
+    tagName = "",
+    attributes: Map<string, string> = new Map(),
+  ): ElementRendererCtor | null {
     let targetPrototype = elementClass.prototype;
     do {
       if (this.renderers.has(targetPrototype)) {
@@ -38,6 +71,24 @@ class _ElementRendererRegistry {
       (targetPrototype = Object.getPrototypeOf(targetPrototype)) &&
       targetPrototype !== HTMLElement.prototype
     );
+
+    // Fall back to renderers that select their own elements. Same protocol
+    // Lit's own `getElementRenderer` uses, so a renderer written for Lit's
+    // pipeline works here unchanged.
+    for (const renderer of this.matchers) {
+      const matchesClass = (
+        renderer as unknown as {
+          matchesClass?: (
+            ceClass: Element,
+            tagName: string,
+            attributes: Map<string, string>,
+          ) => boolean;
+        }
+      ).matchesClass;
+      if (matchesClass?.call(renderer, elementClass, tagName, attributes)) {
+        return renderer;
+      }
+    }
     return null;
   }
 
@@ -46,7 +97,7 @@ class _ElementRendererRegistry {
   }
 
   getAll() {
-    return Array.from(this.renderers.values());
+    return [...this.renderers.values(), ...this.matchers];
   }
 }
 

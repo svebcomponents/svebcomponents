@@ -7,6 +7,7 @@ import {
   assert,
   type MockedFunction,
 } from "vitest";
+import "./installShim.js";
 import { SvelteCustomElementRenderer } from "./svelteCustomElementRenderer";
 import { render } from "svelte/server";
 import type { RenderInfo } from "@lit-labs/ssr";
@@ -23,6 +24,28 @@ vi.mock("svelte/server", () => ({
 
 const mockRender = render as unknown as MockedFunction<typeof render>;
 
+/**
+ * A stand-in for svelte's generated custom element class.
+ *
+ * It has to be a real SSR-shim element rather than a plain object: the
+ * renderer keeps host attributes on Lit's `ElementRenderer.element`, which is
+ * what makes it usable from Lit's own pipeline and from host integrations
+ * that read `element.attributes`.
+ */
+const createMockClientElement = (init: {
+  $$d?: Record<string, unknown>;
+  $$p_d?: Record<string, unknown>;
+  $$c?: unknown;
+}) => {
+  class MockClientElement extends globalThis.HTMLElement {
+    attributeChangedCallback = vi.fn();
+    $$d = init.$$d ?? {};
+    $$p_d = init.$$p_d ?? {};
+    $$c = init.$$c;
+  }
+  return new MockClientElement();
+};
+
 describe("SvelteCustomElementRenderer", () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- this is just a mock
   let mockSvelteComponent: any;
@@ -37,14 +60,18 @@ describe("SvelteCustomElementRenderer", () => {
 
     mockSvelteComponent = {};
 
-    mockClientElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
-      $$d: {},
-      $$p_d: {},
-      $$c: mockSvelteComponent,
-    };
-    mockClientElementCtor = vi.fn(function MockClientElement() {
+    // The renderer stores host attributes on the element itself (Lit's
+    // `ElementRenderer.element`), so the stand-in has to be a real shim
+    // element rather than a plain object — which is what svelte's generated
+    // custom element class is.
+    class MockClientElement extends globalThis.HTMLElement {
+      attributeChangedCallback = vi.fn();
+      $$d: Record<string, unknown> = {};
+      $$p_d: Record<string, unknown> = {};
+      $$c = mockSvelteComponent;
+    }
+    mockClientElement = new MockClientElement();
+    mockClientElementCtor = vi.fn(function MockClientElementCtor() {
       return mockClientElement;
     });
 
@@ -77,12 +104,10 @@ describe("SvelteCustomElementRenderer", () => {
   });
 
   test("sets attributes via attributeChangedCallback for string values", () => {
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
@@ -101,12 +126,10 @@ describe("SvelteCustomElementRenderer", () => {
   });
 
   test("removes attributes and notifies via attributeChangedCallback", () => {
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
@@ -130,12 +153,10 @@ describe("SvelteCustomElementRenderer", () => {
   });
 
   test("removes attributes case-insensitively", () => {
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
@@ -151,12 +172,10 @@ describe("SvelteCustomElementRenderer", () => {
   });
 
   test("removing an absent attribute is a no-op and does not notify", () => {
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
@@ -171,12 +190,10 @@ describe("SvelteCustomElementRenderer", () => {
   });
 
   test("renders attributes correctly", () => {
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
@@ -194,12 +211,10 @@ describe("SvelteCustomElementRenderer", () => {
   });
 
   test("escapes attribute values", () => {
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
@@ -217,12 +232,10 @@ describe("SvelteCustomElementRenderer", () => {
   });
 
   test("rejects invalid attribute names", () => {
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
@@ -239,9 +252,7 @@ describe("SvelteCustomElementRenderer", () => {
   });
 
   test("reflects configured properties to attributes", () => {
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {
         enabled: {
@@ -255,7 +266,7 @@ describe("SvelteCustomElementRenderer", () => {
           type: SvelteCustomElementPropType.Number,
         },
       },
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
@@ -274,12 +285,10 @@ describe("SvelteCustomElementRenderer", () => {
   });
 
   test("sets properties to data property", () => {
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
@@ -292,16 +301,14 @@ describe("SvelteCustomElementRenderer", () => {
     renderer.setProperty("testProp", testValue);
     assert("testProp" in mockElement.$$d);
 
-    expect(mockElement.$$d.testProp).toBe(testValue);
+    expect(mockElement.$$d["testProp"]).toBe(testValue);
   });
 
   test("renderShadow method synchronously prints shadow content including expected content", () => {
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: { prop1: "value1", prop2: "value2" },
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
@@ -344,12 +351,10 @@ describe("SvelteCustomElementRenderer", () => {
   });
 
   test("prepares properties synchronously before rendering", () => {
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: { source: "initial" },
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
     const prepare = vi.fn(({ props, setProperty }) => {
       expect(props).toEqual({ source: "initial" });
@@ -382,12 +387,10 @@ describe("SvelteCustomElementRenderer", () => {
   });
 
   test("awaits asynchronous property preparation before rendering", async () => {
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: { source: "initial" },
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
     const prepare = vi.fn(({ setProperty }) =>
       Promise.resolve().then(() => setProperty("prepared", "async")),
@@ -425,12 +428,10 @@ describe("SvelteCustomElementRenderer", () => {
       }) as unknown as ReturnType<typeof render>,
     );
 
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
@@ -462,12 +463,10 @@ describe("SvelteCustomElementRenderer", () => {
       renderOutput as unknown as ReturnType<typeof render>,
     );
 
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
@@ -516,12 +515,10 @@ describe("SvelteCustomElementRenderer", () => {
       renderOutput as unknown as ReturnType<typeof render>,
     );
 
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
@@ -540,12 +537,10 @@ describe("SvelteCustomElementRenderer", () => {
   });
 
   test("serializes rich props into the shadow output in hydration-host mode", () => {
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
     const mockHost = {};
 
@@ -575,12 +570,10 @@ describe("SvelteCustomElementRenderer", () => {
   });
 
   test("escapes markup-breaking characters in serialized rich props", () => {
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
@@ -601,12 +594,10 @@ describe("SvelteCustomElementRenderer", () => {
   });
 
   test("does not serialize rich props without a hydration host", () => {
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
@@ -637,12 +628,10 @@ describe("SvelteCustomElementRenderer", () => {
       renderOutput as unknown as ReturnType<typeof render>,
     );
 
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(
@@ -666,12 +655,10 @@ describe("SvelteCustomElementRenderer", () => {
       }) as unknown as ReturnType<typeof render>,
     );
 
-    const mockElement = {
-      attributes: {},
-      attributeChangedCallback: vi.fn(),
+    const mockElement = createMockClientElement({
       $$d: {},
       $$p_d: {},
-    };
+    });
     mockClientElement = mockElement;
 
     const renderer = new SvelteCustomElementRenderer(

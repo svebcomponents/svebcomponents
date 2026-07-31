@@ -152,13 +152,29 @@ ElementRendererRegistry.set("my-component", MyComponentRenderer);
 
 You can register by tag name or by constructor. Lookups walk the element prototype chain, so a renderer registered for a base element class can also serve subclasses.
 
-The registry is designed for the Svelte-generated renderers produced by this package. Registered renderers are instantiated with the resolved tag name, so stock Lit `ElementRenderer` classes now receive their `tagName`, but the Svelte wrapper still passes a minimal `RenderInfo` when rendering; full compatibility with arbitrary Lit renderers is therefore not guaranteed.
+Any renderer conforming to Lit's `ElementRenderer` contract can be registered — the host integrations drive renderers exclusively through that contract, reading host attributes from `renderer.element.attributes` the same way `@lit-labs/ssr-react` does. A renderer that emulates its element rather than instantiating one simply contributes no host attributes, matching Lit's own behavior.
+
+The reverse direction holds too: the renderers this package generates implement Lit's static `matchesClass` hook, so they can be passed straight to `@lit-labs/ssr`'s `render()` in `elementRenderers`, with no adapter. That is covered by `e2e/lit-ssr`.
+
+Renderers receive a fully-formed Lit `RenderInfo`, so a renderer whose shadow content is itself a template — `LitElementRenderer` calls `renderValue(value, renderInfo)` — works unchanged, and custom elements nested inside that content are resolved through the same registry.
+
+Register a renderer that selects its own elements with `use()`:
+
+```ts
+import { LitElementRenderer } from "@lit-labs/ssr/lib/lit-element-renderer.js";
+
+ElementRendererRegistry.use(LitElementRenderer);
+```
+
+That one line makes every LitElement in the app server-renderable through any of the host integrations. `use()` follows Lit's static `matchesClass` protocol, so renderers written for Lit's pipeline work here unchanged; explicit `set()` registrations take precedence, so an app can still override one specific element.
 
 ### `SvelteCustomElementRenderer`
 
 A base renderer for Svelte custom elements.
 
-It creates the client custom element class, applies incoming attributes/properties, and renders the server Svelte component with `svelte/server`. Generated SSR entrypoints extend this class.
+It creates the client custom element class, applies incoming attributes/properties, and renders the server Svelte component with `svelte/server`. Generated SSR entrypoints extend this class and add a `matchesClass` implementation for their own element.
+
+Host attributes live on Lit's `ElementRenderer.element` — svelte's generated custom element class is itself an SSR-shim element — rather than in a private store, which is what keeps the renderer usable from Lit's pipeline and from host integrations that were not written for svelte.
 
 Its optional `SsrPrepare` hook receives a read-only property snapshot and a
 `setProperty` callback. Synchronous hooks preserve synchronous rendering;

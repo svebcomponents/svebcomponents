@@ -63,6 +63,9 @@ catalogs:
     globals:
       specifier: 16.5.0
       version: 16.5.0
+    lit:
+      specifier: 3.3.3
+      version: 3.3.3
     magic-string:
       specifier: 0.30.21
       version: 0.30.21
@@ -313,6 +316,36 @@ importers:
       playwright:
         specifier: 'catalog:'
         version: 1.62.0
+      svelte:
+        specifier: 'catalog:'
+        version: 5.56.8(@typescript-eslint/types@8.65.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@types/node@24.13.3)(@vitest/browser-playwright@4.1.10)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0))
+
+  e2e/lit-ssr:
+    devDependencies:
+      '@lit-labs/ssr':
+        specifier: 'catalog:'
+        version: 4.1.0(@types/node@24.13.3)
+      '@lit-labs/ssr-dom-shim':
+        specifier: 'catalog:'
+        version: 1.6.0
+      '@svebcomponents/e2e.ssr':
+        specifier: workspace:*
+        version: link:../ssr
+      '@svebcomponents/ssr':
+        specifier: workspace:*
+        version: link:../../packages/ssr
+      '@svebcomponents/typescript-config':
+        specifier: workspace:*
+        version: link:../../configs/typescript-config
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.3
       svelte:
         specifier: 'catalog:'
         version: 5.56.8(@typescript-eslint/types@8.65.0)

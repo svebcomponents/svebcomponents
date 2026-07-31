@@ -29,6 +29,7 @@ catalog:
   eslint-plugin-svelte: 3.22.0
   esm-env: 1.2.2
   globals: 16.5.0
+  lit: 3.3.3
   magic-string: 0.30.21
   playwright: 1.62.0
   prettier: 3.9.6
