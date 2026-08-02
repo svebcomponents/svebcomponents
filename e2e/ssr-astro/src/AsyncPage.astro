@@ -1,0 +1,9 @@
+---
+const { title } = Astro.props;
+---
+
+{/* simple-component both awaits while rendering and has an async SsrPrepare
+    hook. Astro frontmatter is async, so no separate wrapper is needed. */}
+<div id="app">
+  <simple-component title={title} count="5" enabled="" />
+</div>

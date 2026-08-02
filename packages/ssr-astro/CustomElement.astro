@@ -1,0 +1,33 @@
+---
+// Astro frontmatter is an async module scope, so the element renderer can be
+// awaited directly. That is why this integration needs no synchronous/
+// asynchronous split: a component that awaits while rendering, or that has an
+// async SsrPrepare hook, works through this one wrapper.
+import { renderCustomElement } from "@svebcomponents/ssr";
+
+const { _tagName, ...attrs } = Astro.props as {
+  _tagName: string;
+  [key: string]: unknown;
+};
+
+const Tag = _tagName;
+const rendered = await renderCustomElement(_tagName, attrs);
+---
+
+{/*
+  The declarative shadow root must be the element's *first* child: the HTML
+  parser adopts it into a shadow root and removes it from the light DOM before
+  any script runs.
+
+  The closing `</template>` is written explicitly on purpose. A self-closing
+  `<template ... />` is not treated as void by Astro's compiler, and would
+  swallow the <slot /> below into the shadow content.
+
+  There is no client-side counterpart to this component. Astro ships no
+  JavaScript for it, so nothing re-renders the element in the browser — it
+  upgrades and hydrates itself from the shadow root emitted here.
+*/}
+<Tag {...rendered.attributes}
+  ><template shadowrootmode="open" set:html={rendered.shadowContent}
+  ></template><slot /></Tag
+>

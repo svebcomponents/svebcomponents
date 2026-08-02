@@ -9,6 +9,9 @@ catalogs:
     '@astrojs/check':
       specifier: 0.9.9
       version: 0.9.9
+    '@astrojs/compiler':
+      specifier: 2.13.1
+      version: 2.13.1
     '@changesets/cli':
       specifier: 2.31.1
       version: 2.31.1
@@ -60,6 +63,9 @@ catalogs:
     '@vue/compiler-dom':
       specifier: 3.5.40
       version: 3.5.40
+    astro:
+      specifier: 5.18.2
+      version: 5.18.2
     eslint:
       specifier: 9.39.5
       version: 9.39.5
@@ -420,6 +426,48 @@ importers:
         specifier: 'catalog:'
         version: 4.1.10(@types/node@24.13.3)(@vitest/browser-playwright@4.1.10)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0))
 
+  e2e/ssr-astro:
+    devDependencies:
+      '@lit-labs/ssr':
+        specifier: 'catalog:'
+        version: 4.1.0(@types/node@24.13.3)
+      '@svebcomponents/e2e.ssr':
+        specifier: workspace:*
+        version: link:../ssr
+      '@svebcomponents/ssr':
+        specifier: workspace:*
+        version: link:../../packages/ssr
+      '@svebcomponents/ssr-astro':
+        specifier: workspace:*
+        version: link:../../packages/ssr-astro
+      '@svebcomponents/typescript-config':
+        specifier: workspace:*
+        version: link:../../configs/typescript-config
+      '@vitest/browser':
+        specifier: 'catalog:'
+        version: 4.1.10(vite@8.1.5(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.10)
+      '@vitest/browser-playwright':
+        specifier: 'catalog:'
+        version: 4.1.10(playwright@1.62.0)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.10)
+      astro:
+        specifier: 'catalog:'
+        version: 5.18.2(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0)(rollup@4.62.2)(supports-color@7.2.0)(typescript@5.9.3)(yaml@2.9.0)
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.3
+      playwright:
+        specifier: 'catalog:'
+        version: 1.62.0
+      svelte:
+        specifier: 'catalog:'
+        version: 5.56.8(@typescript-eslint/types@8.65.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@types/node@24.13.3)(@vitest/browser-playwright@4.1.10)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0))
+
   e2e/ssr-react:
     devDependencies:
       '@lit-labs/ssr':
@@ -671,6 +719,49 @@ importers:
       tsdown:
         specifier: 'catalog:'
         version: 0.22.14(@volar/typescript@2.4.28)(publint@0.3.22)(typescript@5.9.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.1.5(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@types/node@24.13.3)(@vitest/browser-playwright@4.1.10)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0))
+
+  packages/ssr-astro:
+    dependencies:
+      '@astrojs/compiler':
+        specifier: 'catalog:'
+        version: 2.13.1
+      '@svebcomponents/ssr':
+        specifier: workspace:*
+        version: link:../ssr
+      '@svebcomponents/utils':
+        specifier: workspace:*
+        version: link:../utils
+      magic-string:
+        specifier: 'catalog:'
+        version: 0.30.21
+    devDependencies:
+      '@svebcomponents/eslint-config':
+        specifier: workspace:*
+        version: link:../../configs/eslint-config
+      '@svebcomponents/prettier-config':
+        specifier: workspace:*
+        version: link:../../configs/prettier-config
+      '@svebcomponents/typescript-config':
+        specifier: workspace:*
+        version: link:../../configs/typescript-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      astro:
+        specifier: 'catalog:'
+        version: 5.18.2(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0)(rollup@4.62.2)(supports-color@7.2.0)(typescript@5.9.3)(yaml@2.9.0)
+      publint:
+        specifier: 'catalog:'
+        version: 0.3.22
       typescript:
         specifier: 'catalog:'
         version: 5.9.3

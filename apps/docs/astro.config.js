@@ -60,6 +60,7 @@ export default defineConfig({
             { label: "@svebcomponents/ssr", slug: "packages/ssr" },
             { label: "@svebcomponents/ssr-vue", slug: "packages/ssr-vue" },
             { label: "@svebcomponents/ssr-react", slug: "packages/ssr-react" },
+            { label: "@svebcomponents/ssr-astro", slug: "packages/ssr-astro" },
             { label: "@svebcomponents/utils", slug: "packages/utils" },
             {
               label: "@svebcomponents internals",

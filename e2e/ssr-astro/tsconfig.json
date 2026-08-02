@@ -1,0 +1,4 @@
+{
+  "extends": "@svebcomponents/typescript-config/base",
+  "include": ["src/**/*", "test/**/*", "astro.config.mjs", "vitest.config.ts"]
+}

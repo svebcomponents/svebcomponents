@@ -1,12 +1,12 @@
 ---
 title: Framework Integrations
-description: Server-rendering Svebcomponents custom elements in Svelte, Vue, React and other host frameworks.
+description: Server-rendering Svebcomponents custom elements in Svelte, Vue, React, Astro and other host frameworks.
 ---
 
 :::caution[Beta status]
 The Svelte integration is ready for real-world evaluation and early production
-adoption. The Vue and React integrations are experimental and their APIs may
-change.
+adoption. The Vue, React and Astro integrations are experimental and their
+APIs may change.
 :::
 
 **The custom element itself is framework-agnostic.** It is a web component:
@@ -167,6 +167,45 @@ This is a limitation of the integration rather than of React: React's
 streaming renderer does preserve declarative shadow DOM. See the
 [async SSR findings](https://github.com/svebcomponents/svebcomponents/blob/main/packages/ssr-react/docs/async-ssr.md)
 for the measured behavior and the designs under consideration.
+
+## Astro
+
+Add the integration. That is the entire configuration:
+
+```ts
+import { defineConfig } from "astro/config";
+import svebcomponents from "@svebcomponents/ssr-astro";
+
+export default defineConfig({
+  integrations: [svebcomponents()],
+});
+```
+
+Custom elements then work in any `.astro` template:
+
+```astro
+<my-component title="Hello" count="5">
+  <p>light dom child</p>
+</my-component>
+```
+
+### No client-side counterpart
+
+Astro is the one integration with nothing to register in the browser, because
+Astro ships no client JavaScript for these elements. There is no host render to
+match against: the parser attaches the shadow root, the element upgrades when
+its bundle loads, and it hydrates itself.
+
+The exception is islands. A custom element inside a `client:*` React, Vue or
+Svelte island belongs to that framework, and the corresponding integration
+applies there instead.
+
+### No async split either
+
+Astro frontmatter is an async module scope, so the wrapper awaits the element
+renderer directly — asynchronous components need nothing extra beyond the
+[`enable-async` opt-in](/core-concepts/ssr/#async-rendering-outside-svelte)
+every non-Svelte host needs.
 
 ## Other Frameworks
 

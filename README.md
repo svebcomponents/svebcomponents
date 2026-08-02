@@ -40,3 +40,5 @@ the version-compatibility tradeoff.
   - the same server rendering, for custom elements used inside a Vue app
 - [`@svebcomponents/ssr-react`] (experimental)
   - the same server rendering, for custom elements used inside a React app
+- [`@svebcomponents/ssr-astro`] (experimental)
+  - the same server rendering, for custom elements used inside an Astro app
