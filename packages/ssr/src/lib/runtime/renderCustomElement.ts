@@ -41,6 +41,29 @@ export interface RenderedCustomElement {
 }
 
 /**
+ * Thrown by {@link renderCustomElementSync} when the element's renderer turns
+ * out to be asynchronous — an async `SsrPrepare` hook, or a component that
+ * awaits while rendering.
+ *
+ * Host integrations whose SSR pipeline cannot await (React's synchronous
+ * `renderToString`, for instance) catch this to fall back to client-only
+ * rendering, while letting genuine render errors propagate.
+ */
+export class AsyncRendererError extends Error {
+  override readonly name = "AsyncRendererError";
+
+  constructor(
+    readonly tagName: string,
+    override readonly cause: unknown,
+  ) {
+    super(
+      `<${tagName}> renders asynchronously and cannot be rendered through the synchronous path. ` +
+        "Use renderCustomElement (async) from an await-capable host, or let the host fall back to client-only rendering.",
+    );
+  }
+}
+
+/**
  * Props a host wrapper uses for its own plumbing rather than passing to the
  * custom element. Excluded defensively: every current wrapper already strips
  * these before calling, but a wrapper that forwards a raw prop bag should not
@@ -130,6 +153,21 @@ const attributesRecord = (
   return attributes;
 };
 
+/**
+ * Distinguishes "this renderer is asynchronous" from a genuine render failure.
+ *
+ * Neither collector exposes a typed error, so this matches on what they do
+ * throw: svelte prefixes its message with the error code, and Lit reports the
+ * unexpected promise in its stream.
+ */
+const isAsynchronyError = (error: unknown): boolean => {
+  if (!(error instanceof Error)) return false;
+  return (
+    error.message.startsWith("await_invalid") ||
+    error.message.includes("Promises not supported")
+  );
+};
+
 const toResult = (
   renderer: ElementRenderer,
   shadow: string,
@@ -153,7 +191,19 @@ export const renderCustomElementSync = (
   props: Record<string, unknown>,
 ): RenderedCustomElement => {
   const { renderer, shadowStream } = startRender(tagName, props);
-  const shadow = collectResultSync(shadowStream);
+  let shadow: string;
+  try {
+    shadow = collectResultSync(shadowStream);
+  } catch (error) {
+    // Both collectors can surface asynchrony: Lit's sync collector rejects a
+    // promise in the result stream, and svelte's own renderer throws
+    // `await_invalid` when it hits async work in a sync render. Neither is a
+    // problem with the component, so both are reported as one typed error.
+    if (isAsynchronyError(error)) {
+      throw new AsyncRendererError(tagName, error);
+    }
+    throw error;
+  }
   return toResult(renderer, shadow);
 };
 

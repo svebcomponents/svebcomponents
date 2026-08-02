@@ -6,6 +6,7 @@ import { SvelteCustomElementRenderer } from "./svelteCustomElementRenderer.js";
 import { ElementRenderer } from "@lit-labs/ssr";
 import type { ThunkedRenderResult } from "@lit-labs/ssr/lib/render-result.js";
 import {
+  AsyncRendererError,
   renderCustomElement,
   renderCustomElementSync,
 } from "./renderCustomElement.js";
@@ -137,8 +138,12 @@ describe("renderCustomElement", () => {
     });
 
     // an async SsrPrepare hook makes the shadow stream yield a promise, which
-    // the synchronous collector cannot consume
-    expect(() => renderCustomElementSync(tagName, {})).toThrow();
+    // the synchronous collector cannot consume. It is reported as a typed
+    // error so a non-awaiting host can fall back to client-only rendering
+    // without swallowing genuine render failures.
+    expect(() => renderCustomElementSync(tagName, {})).toThrow(
+      AsyncRendererError,
+    );
   });
 
   test("awaits an asynchronous renderer on the async path", async () => {

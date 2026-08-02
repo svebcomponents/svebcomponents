@@ -1,11 +1,12 @@
 ---
 title: Framework Integrations
-description: Server-rendering Svebcomponents custom elements in Svelte, Vue and other host frameworks.
+description: Server-rendering Svebcomponents custom elements in Svelte, Vue, React and other host frameworks.
 ---
 
 :::caution[Beta status]
 The Svelte integration is ready for real-world evaluation and early production
-adoption. The Vue integration is experimental and its API may change.
+adoption. The Vue and React integrations are experimental and their APIs may
+change.
 :::
 
 **The custom element itself is framework-agnostic.** It is a web component:
@@ -118,6 +119,53 @@ is an app that renders correctly in the browser and not at all on the server.
 Rewriting the single-file component's source before `@vitejs/plugin-vue` sees
 it means the client and server compiles observe the same template.
 
+## React
+
+Install `@svebcomponents/ssr-react` and point the JSX transform at it:
+
+```jsonc
+// tsconfig.json
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@svebcomponents/ssr-react",
+  },
+}
+```
+
+That is the whole setup. Any tag containing a dash is then routed through the
+integration:
+
+```tsx
+<my-component title="Hello" count={5} />
+```
+
+Unlike the Svelte and Vue integrations there is no bundler plugin, because the
+JSX runtime swap is a compiler setting. React is therefore the one integration
+that does not require Vite — it works in any React setup.
+
+If you would rather not swap the JSX runtime, use the wrapper directly:
+
+```tsx
+import { CustomElement } from "@svebcomponents/ssr-react";
+
+<CustomElement tag="my-component" title="Hello" count={5} />;
+```
+
+### Synchronous renderers only
+
+React's `renderToString` cannot await, so a component that performs
+asynchronous work — one that awaits while rendering, or that has an async
+`SsrPrepare` hook — cannot be server-rendered by this integration today.
+
+Rather than failing the page, such an element is emitted without
+server-rendered shadow content and rendered in the browser only, with a
+one-time console warning naming the tag. Genuine configuration errors, such as
+an element with no registered renderer, still throw.
+
+This is a limitation of the integration rather than of React: React's
+streaming renderer does preserve declarative shadow DOM.
+
 ## Other Frameworks
 
 The pieces an integration is built from are exported for reuse:
@@ -134,8 +182,9 @@ const { attributes, shadowTemplate, shadowContent } = await renderCustomElement(
 );
 ```
 
-Use `renderCustomElementSync` when the host's rendering pipeline cannot await,
-and `renderCustomElement` when it can. `shadowTemplate` is the complete
+Use `renderCustomElementSync` when the host's rendering pipeline cannot await
+— it throws `AsyncRendererError` if the element turns out to need awaiting, so
+the host can degrade deliberately — and `renderCustomElement` when it can. `shadowTemplate` is the complete
 `<template shadowrootmode="open">…</template>` string for hosts that emit raw
 markup; `shadowContent` is its inner markup, for hosts that build the template
 element themselves.

@@ -38,3 +38,5 @@ the version-compatibility tradeoff.
   - the pipeline depends only on Lit's `ElementRenderer` contract, so it renders any custom element with a registered renderer — Lit elements included
 - [`@svebcomponents/ssr-vue`] (experimental)
   - the same server rendering, for custom elements used inside a Vue app
+- [`@svebcomponents/ssr-react`] (experimental)
+  - the same server rendering, for custom elements used inside a React app
