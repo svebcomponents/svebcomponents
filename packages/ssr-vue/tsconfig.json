@@ -1,0 +1,5 @@
+{
+  "extends": "@svebcomponents/typescript-config/base",
+  "compilerOptions": { "rootDir": "src/lib" },
+  "include": ["src/lib/**/*"]
+}

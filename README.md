@@ -35,3 +35,6 @@ the version-compatibility tradeoff.
 - [`@svebcomponents/ssr`]
   - lets `@svebcomponents/build` produce a server-renderable build (via tsdown) alongside the browser one
   - render web components that provide an `ElementRenderer` in SvelteKit (or other vite based SSR frameworks)
+  - the pipeline depends only on Lit's `ElementRenderer` contract, so it renders any custom element with a registered renderer — Lit elements included
+- [`@svebcomponents/ssr-vue`] (experimental)
+  - the same server rendering, for custom elements used inside a Vue app

@@ -1,0 +1,153 @@
+---
+title: Framework Integrations
+description: Server-rendering Svebcomponents custom elements in Svelte, Vue and other host frameworks.
+---
+
+:::caution[Beta status]
+The Svelte integration is ready for real-world evaluation and early production
+adoption. The Vue integration is experimental and its API may change.
+:::
+
+**The custom element itself is framework-agnostic.** It is a web component:
+the same built artifact drops into a Svelte app, a Vue app, a React app, or a
+plain HTML page, and behaves identically in all of them. Nothing on this page
+changes the component.
+
+What differs is one server-side detail. [Server rendering](/core-concepts/ssr/)
+has two halves — producing the element's shadow DOM, which the component's
+`ElementRenderer` does identically everywhere, and getting that markup into
+the host framework's output, which every framework spells differently. A host
+framework has to be told that `<my-component>` is something it should ask a
+renderer about, and the resulting markup has to be shaped so the framework
+hydrates around the element rather than re-creating it.
+
+An integration supplies only that second half. In the browser, none of this is
+involved at all: the element upgrades and
+[hydrates](/core-concepts/hydration/) itself, exactly as it would on a page
+with no framework.
+
+## What Every Integration Does
+
+On the server, an integration emits the element with its shadow root inline:
+
+```html
+<my-component title="Hello">
+  <template shadowrootmode="open"><!-- shadow content --></template>
+  <!-- light dom children -->
+</my-component>
+```
+
+The `<template shadowrootmode>` **must be the element's first child**. The HTML
+parser adopts it into a shadow root and removes it from the light DOM before
+any script runs, which is what makes declarative shadow DOM work at all.
+
+In the browser the integration renders the same element _without_ the
+template, because by then the parser has already consumed it. The host
+framework hydrates against the post-parse child list, so both sides agree, and
+the element itself [hydrates](/core-concepts/hydration/) its shadow root
+in place.
+
+## Svelte
+
+See the [SSR guide](/core-concepts/ssr/) for the full walkthrough. In short, a
+Vite plugin rewrites custom element tags in `.svelte` templates to a wrapper
+component:
+
+```ts
+import { sveltekit } from "@sveltejs/kit/vite";
+import svebcomponents from "@svebcomponents/ssr/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [svebcomponents(), sveltekit()],
+});
+```
+
+Svelte is the only integration with a synchronous/asynchronous split. Its
+async wrapper uses `await` in the template, which requires the host app itself
+to be compiled with `compilerOptions.experimental.async`.
+
+## Vue
+
+Install `@svebcomponents/ssr-vue` and add its Vite plugin ahead of
+`@vitejs/plugin-vue`:
+
+```ts
+import vue from "@vitejs/plugin-vue";
+import svebcomponentsVue from "@svebcomponents/ssr-vue/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [svebcomponentsVue(), vue()],
+});
+```
+
+Register the wrapper component on both the server and client app instances:
+
+```ts
+import { svebcomponents } from "@svebcomponents/ssr-vue";
+
+app.use(svebcomponents());
+```
+
+Then write custom elements in any single-file component:
+
+```vue
+<template>
+  <my-component title="Hello" :count="5" />
+</template>
+```
+
+### No async split in Vue
+
+Vue's `renderToString` fully awaits an async `setup()` and emits its output in
+order, so one wrapper handles both synchronous and asynchronous element
+renderers. Nothing extra is needed for a component that awaits while rendering
+or that has an async `SsrPrepare` hook — beyond the
+[`enable-async` opt-in](/core-concepts/ssr/#async-rendering-outside-svelte)
+every non-Svelte host needs.
+
+### Why a Vite plugin rather than a compiler transform
+
+Vue exposes `compilerOptions.nodeTransforms`, which looks like the natural
+place to retag custom elements. It does not work for server rendering: user
+node transforms run after the built-in ones, and `@vue/compiler-ssr` resolves
+a component's identity before they get a chance to rename the tag. The result
+is an app that renders correctly in the browser and not at all on the server.
+
+Rewriting the single-file component's source before `@vitejs/plugin-vue` sees
+it means the client and server compiles observe the same template.
+
+## Other Frameworks
+
+The pieces an integration is built from are exported for reuse:
+
+```ts
+import {
+  renderCustomElement,
+  renderCustomElementSync,
+} from "@svebcomponents/ssr";
+
+const { attributes, shadowTemplate, shadowContent } = await renderCustomElement(
+  "my-component",
+  { title: "Hello" },
+);
+```
+
+Use `renderCustomElementSync` when the host's rendering pipeline cannot await,
+and `renderCustomElement` when it can. `shadowTemplate` is the complete
+`<template shadowrootmode="open">…</template>` string for hosts that emit raw
+markup; `shadowContent` is its inner markup, for hosts that build the template
+element themselves.
+
+Since the pipeline only depends on Lit's `ElementRenderer` contract, an
+integration written this way renders [any custom element with a registered
+renderer](/core-concepts/ssr/#any-custom-element-not-just-svelte-built-ones),
+not only Svebcomponents ones.
+
+## Requirements
+
+`@svebcomponents/ssr` calls Svelte's server renderer, so `svelte` must be
+installed as a server-side dependency of the host application even when it
+contains no Svelte components of its own. A component package's server bundle
+ships its own Svelte runtime, but the renderer entry point does not.
