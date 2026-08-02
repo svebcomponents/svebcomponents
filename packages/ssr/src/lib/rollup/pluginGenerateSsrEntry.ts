@@ -102,6 +102,15 @@ if (!ctor) {
   throw new Error('Could not access custom element constructor');
 }
 class ComponentSpecificSvelteCustomElementRenderer extends SvelteCustomElementRenderer {
+  // Lit's \`getElementRenderer\` selects a renderer by calling this, so
+  // implementing it lets this renderer be passed straight to
+  // \`@lit-labs/ssr\`'s \`render()\` in \`elementRenderers\`, alongside
+  // \`LitElementRenderer\`. Subclasses of the element are matched too, mirroring
+  // the prototype-chain walk the renderer registry does.
+  static matchesClass(ceClass) {
+    return ceClass === ctor || ctor.prototype.isPrototypeOf(ceClass.prototype);
+  }
+
   constructor(tagName) {
     super(ServerSvelteComponent, ctor, tagName${
       hydrationHostImportPath ? ", HydrationHostComponent" : ""
@@ -126,6 +135,7 @@ export default ComponentSpecificSvelteCustomElementRenderer;
 
       const typesContent = `import { SvelteCustomElementRenderer } from '@svebcomponents/ssr';
 declare class ComponentSpecificSvelteCustomElementRenderer extends SvelteCustomElementRenderer {
+  static matchesClass(ceClass: typeof HTMLElement): boolean;
   constructor(tagName?: string);
 }
 export default ComponentSpecificSvelteCustomElementRenderer;

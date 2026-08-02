@@ -4,9 +4,11 @@ import {
 } from "@lit-labs/ssr/lib/render-result.js";
 import { isKebabCase, camelizeKebabCase } from "@svebcomponents/utils";
 
-import { isValidCustomElementTagName } from "./html.js";
+import type { ElementRenderer } from "@lit-labs/ssr";
+
+import { isValidCustomElementTagName, isValidAttributeName } from "./html.js";
 import { ElementRendererRegistry } from "./rendererRegistry.js";
-import { isSvelteCustomElementRenderer } from "./svelteCustomElementRenderer.js";
+import { createRenderInfo } from "./renderInfo.js";
 
 /**
  * The host-framework-neutral result of server-rendering one custom element.
@@ -54,15 +56,10 @@ const startRender = (tagName: string, props: Record<string, unknown>) => {
   const ctor = customElements.get(tagName);
   if (!ctor) throw new Error(`Custom element ${tagName} not found`);
 
-  const CustomElementRendererCtor = ElementRendererRegistry.get(ctor);
+  const CustomElementRendererCtor = ElementRendererRegistry.get(ctor, tagName);
   if (!CustomElementRendererCtor)
     throw new Error(`Custom element renderer for ${tagName} not found`);
   const renderer = new CustomElementRendererCtor(tagName);
-  if (!isSvelteCustomElementRenderer(renderer)) {
-    throw new Error(
-      `Renderer for ${tagName} must extend SvelteCustomElementRenderer`,
-    );
-  }
 
   for (const [key, value] of Object.entries(props)) {
     if (RESERVED_PROP_NAMES.has(key)) continue;
@@ -77,13 +74,51 @@ const startRender = (tagName: string, props: Record<string, unknown>) => {
     renderer.setProperty(key, value);
   }
 
-  const shadowStream = renderer.renderShadow(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO: pass something meaningful here
-    {} as any,
-  );
+  // A real RenderInfo, not a stub: a renderer whose shadow content is itself a
+  // template (LitElementRenderer calls `renderValue(value, renderInfo)`) reads
+  // it, and nested custom elements are resolved through its `elementRenderers`.
+  const renderInfo = createRenderInfo(ElementRendererRegistry.getAll());
+  renderer.connectedCallback();
+  renderInfo.customElementInstanceStack.push(renderer);
+  renderInfo.customElementHostStack.push(renderer);
+
+  const shadowStream = renderer.renderShadow(renderInfo);
   if (!shadowStream) throw new Error(`Shadow stream for ${tagName} not found`);
 
   return { renderer, shadowStream };
+};
+
+/**
+ * Reads the renderer's host attributes as a name→value record.
+ *
+ * This is deliberately expressed in terms of Lit's `ElementRenderer` surface
+ * alone — `element.attributes` — rather than any svebcomponents-specific
+ * method, so *any* conforming `ElementRenderer` can be driven by this module.
+ * It is the same thing `@lit-labs/ssr-react` does to turn a renderer's
+ * attributes into host props.
+ *
+ * A renderer that emulates its element instead of instantiating one (Lit's
+ * own `FallbackRenderer`, for instance) exposes no `element`; it simply
+ * contributes no attributes, again matching Lit's behavior.
+ */
+const attributesRecord = (
+  renderer: ElementRenderer,
+): Record<string, string> => {
+  const attributes: Record<string, string> = {};
+  const element = renderer.element;
+  if (element === undefined) return attributes;
+
+  for (const { name, value } of Array.from(
+    element.attributes as unknown as ArrayLike<{ name: string; value: string }>,
+  )) {
+    // Names bypass the renderer's own serializer on this path, and can come
+    // from runtime custom-element inputs, so they are validated here.
+    if (!isValidAttributeName(name)) {
+      throw new Error(`Invalid SSR attribute name: ${name}`);
+    }
+    attributes[name] = value;
+  }
+  return attributes;
 };
 
 const wrapShadow = (shadow: string) =>
@@ -105,7 +140,7 @@ export const renderCustomElementSync = (
   const { renderer, shadowStream } = startRender(tagName, props);
   const shadow = collectResultSync(shadowStream);
   return {
-    attributes: renderer.getSsrAttributes(),
+    attributes: attributesRecord(renderer),
     shadowTemplate: wrapShadow(shadow),
   };
 };
@@ -124,7 +159,7 @@ export const renderCustomElement = async (
   const { renderer, shadowStream } = startRender(tagName, props);
   const shadow = await collectResult(shadowStream);
   return {
-    attributes: renderer.getSsrAttributes(),
+    attributes: attributesRecord(renderer),
     shadowTemplate: wrapShadow(shadow),
   };
 };

@@ -5,7 +5,6 @@ import { render } from "svelte/server";
 
 import {
   propValueToAttributeValue,
-  isValidAttributeName,
   renderSsrAttribute,
   type SvelteCustomElementPropDefinition,
 } from "./html.js";
@@ -15,16 +14,6 @@ const isPromiseLike = <T>(value: unknown): value is PromiseLike<T> =>
   value !== null &&
   "then" in value &&
   typeof value.then === "function";
-
-/**
- * The Vite wrapper can be bundled while a component's generated `/ssr`
- * entry stays external. Both evaluate this module independently, so class
- * identity is not stable across that boundary. A versioned global symbol
- * describes the renderer contract without making the class itself global.
- */
-const SVELTE_CUSTOM_ELEMENT_RENDERER_BRAND = Symbol.for(
-  "@svebcomponents/ssr/SvelteCustomElementRenderer/v1",
-);
 
 type SvelteRenderResult = {
   body: string;
@@ -98,8 +87,21 @@ export class SvelteCustomElementRenderer
   extends ElementRenderer
   implements ElementRenderer
 {
-  private readonly ssrAttributes = new Map<string, string>();
   private readonly svelteClientCustomElement: SvelteClientCustomElement;
+
+  /**
+   * Lit's `ElementRenderer` exposes the element instance it is rendering, and
+   * its host attributes live on it. Assigning it here is what keeps this
+   * renderer usable through Lit's own SSR pipeline and by host integrations
+   * that read attributes the standard way (`renderer.element.attributes`, as
+   * `@lit-labs/ssr-react` does) rather than through a bespoke method.
+   *
+   * Svelte's generated custom element class extends the SSR DOM shim's
+   * `HTMLElement`, so it already *is* the element — and the shim's
+   * `setAttribute` only stores the value, leaving this class free to drive
+   * `attributeChangedCallback` on its own terms.
+   */
+  override readonly element: HTMLElement;
 
   constructor(
     private svelteSsrComponent: Component,
@@ -123,6 +125,42 @@ export class SvelteCustomElementRenderer
   ) {
     super(tagName);
     this.svelteClientCustomElement = new SvelteClientCustomElementCtor();
+    this.element = this.svelteClientCustomElement as unknown as HTMLElement;
+  }
+
+  /**
+   * Claims the custom element class this renderer was generated for.
+   *
+   * Lit's `getElementRenderer` selects a renderer by calling this, so
+   * implementing it is what lets a svebcomponents renderer be passed to
+   * `@lit-labs/ssr`'s `render()` in `elementRenderers`. Generated entry points
+   * override it with an identity check against their own element class; the
+   * base cannot know which class it serves, so it keeps Lit's default of
+   * claiming nothing.
+   */
+  static override matchesClass(
+    _ceClass: typeof HTMLElement,
+    _tagName: string,
+    _attributes: Map<string, string>,
+  ): boolean {
+    return false;
+  }
+
+  /**
+   * The host attributes as name→value pairs, in insertion order.
+   *
+   * The SSR DOM shim exposes `attributes` as an array of `{name, value}`
+   * rather than a live `NamedNodeMap`; this renderer only ever runs on the
+   * server, so that is the only shape it needs to handle.
+   */
+  private get attributeEntries(): [string, string][] {
+    return Array.from(
+      this.element.attributes as unknown as ArrayLike<{
+        name: string;
+        value: string;
+      }>,
+      (attr): [string, string] => [attr.name, attr.value],
+    );
   }
 
   override setAttribute(name: string, value: string) {
@@ -130,7 +168,7 @@ export class SvelteCustomElementRenderer
     // pipeline stringifies attribute values before calling this, and our
     // Server.svelte wrapper routes non-string values through `setProperty`.
     name = name.toLowerCase();
-    this.ssrAttributes.set(name, value);
+    this.element.setAttribute(name, value);
     this.svelteClientCustomElement.attributeChangedCallback(name, value, value);
   }
 
@@ -141,13 +179,13 @@ export class SvelteCustomElementRenderer
    */
   removeAttribute(name: string) {
     name = name.toLowerCase();
-    const oldValue = this.ssrAttributes.get(name);
+    const oldValue = this.element.getAttribute(name) ?? undefined;
     if (oldValue === undefined) {
       // Mirrors browser behavior: removing an absent attribute is a no-op
       // and does not fire attributeChangedCallback.
       return;
     }
-    this.ssrAttributes.delete(name);
+    this.element.removeAttribute(name);
     this.svelteClientCustomElement.attributeChangedCallback(
       name,
       oldValue,
@@ -156,26 +194,9 @@ export class SvelteCustomElementRenderer
   }
 
   override renderAttributes(): ThunkedRenderResult {
-    return Array.from(this.ssrAttributes, ([name, value]) =>
+    return this.attributeEntries.map(([name, value]) =>
       renderSsrAttribute(name, value),
     );
-  }
-
-  /**
-   * The host attributes as a raw name→value record, for wrappers that let
-   * svelte serialize the element (`<svelte:element {...attributes}>`).
-   * Values are unescaped — svelte's own attribute serialization escapes
-   * them; names are validated here since they bypass `renderSsrAttribute`.
-   */
-  getSsrAttributes(): Record<string, string> {
-    const attributes: Record<string, string> = {};
-    for (const [name, value] of this.ssrAttributes) {
-      if (!isValidAttributeName(name)) {
-        throw new Error(`Invalid SSR attribute name: ${name}`);
-      }
-      attributes[name] = value;
-    }
-    return attributes;
   }
 
   /**
@@ -285,32 +306,9 @@ export class SvelteCustomElementRenderer
     const attributeName = propDefinition.attribute ?? name.toLowerCase();
     const attributeValue = propValueToAttributeValue(value, propDefinition);
     if (attributeValue == null) {
-      this.ssrAttributes.delete(attributeName);
+      this.element.removeAttribute(attributeName);
       return;
     }
-    this.ssrAttributes.set(attributeName, attributeValue);
+    this.element.setAttribute(attributeName, attributeValue);
   }
 }
-
-Object.defineProperty(
-  SvelteCustomElementRenderer.prototype,
-  SVELTE_CUSTOM_ELEMENT_RENDERER_BRAND,
-  { value: true },
-);
-
-/**
- * Cross-module-instance type guard for renderers created by this runtime.
- *
- * `instanceof SvelteCustomElementRenderer` is only valid when the renderer
- * and caller imported the same evaluated module instance. Vite SSR may
- * intentionally mix bundled and external package instances, so wrapper code
- * must use this contract brand instead.
- */
-export const isSvelteCustomElementRenderer = (
-  value: unknown,
-): value is SvelteCustomElementRenderer =>
-  typeof value === "object" &&
-  value !== null &&
-  (value as Record<PropertyKey, unknown>)[
-    SVELTE_CUSTOM_ELEMENT_RENDERER_BRAND
-  ] === true;

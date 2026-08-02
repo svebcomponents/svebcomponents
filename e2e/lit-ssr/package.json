@@ -1,0 +1,20 @@
+{
+  "name": "@svebcomponents/e2e.lit-ssr",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@lit-labs/ssr": "catalog:",
+    "@lit-labs/ssr-dom-shim": "catalog:",
+    "@svebcomponents/e2e.ssr": "workspace:*",
+    "@svebcomponents/ssr": "workspace:*",
+    "@svebcomponents/typescript-config": "workspace:*",
+    "lit": "catalog:",
+    "svelte": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

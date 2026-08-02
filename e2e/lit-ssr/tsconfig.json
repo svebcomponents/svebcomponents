@@ -1,0 +1,4 @@
+{
+  "extends": "@svebcomponents/typescript-config/base",
+  "include": ["test/**/*", "vitest.config.ts"]
+}

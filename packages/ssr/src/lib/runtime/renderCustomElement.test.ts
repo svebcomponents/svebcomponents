@@ -3,6 +3,8 @@ import { expect, test, describe, beforeEach, vi } from "vitest";
 import "./installShim.js";
 import { ElementRendererRegistry } from "./rendererRegistry.js";
 import { SvelteCustomElementRenderer } from "./svelteCustomElementRenderer.js";
+import { ElementRenderer } from "@lit-labs/ssr";
+import type { ThunkedRenderResult } from "@lit-labs/ssr/lib/render-result.js";
 import {
   renderCustomElement,
   renderCustomElementSync,
@@ -24,8 +26,9 @@ let tagCounter = 0;
 const registerElement = (options: { prepare?: () => void | Promise<void> }) => {
   const tagName = `test-element-${++tagCounter}`;
 
-  class ClientElement {
-    attributes: Record<string, string> = {};
+  // extends the shim's HTMLElement, as svelte's generated custom element
+  // class does: the renderer stores host attributes on the element itself
+  class ClientElement extends globalThis.HTMLElement {
     attributeChangedCallback = vi.fn();
     $$d: Record<string, unknown> = {};
     $$p_d: Record<string, never> = {};
@@ -158,5 +161,58 @@ describe("renderCustomElement", () => {
     expect(shadowTemplate).toBe(
       '<template shadowrootmode="open"><p>hello</p></template>',
     );
+  });
+});
+
+describe("renderer agnosticism", () => {
+  test("drives a plain Lit ElementRenderer with no svelte involvement", () => {
+    // Deliberately not a SvelteCustomElementRenderer: this module must be
+    // usable with any renderer conforming to Lit's ElementRenderer contract,
+    // which is what makes a svebcomponents-built element renderable by other
+    // SSR pipelines — and other elements renderable by this one.
+    class PlainRenderer extends ElementRenderer {
+      override element = new globalThis.HTMLElement();
+
+      override setAttribute(name: string, value: string) {
+        this.element.setAttribute(name, value);
+      }
+
+      override renderShadow(): ThunkedRenderResult {
+        return ["<p>plain</p>"];
+      }
+    }
+
+    class PlainElement extends globalThis.HTMLElement {}
+    customElements.define("plain-element", PlainElement);
+    ElementRendererRegistry.set("plain-element", PlainRenderer as never);
+
+    const rendered = renderCustomElementSync("plain-element", {
+      "data-label": "hi",
+    });
+
+    expect(rendered.attributes).toEqual({ "data-label": "hi" });
+    expect(rendered.shadowTemplate).toBe(
+      '<template shadowrootmode="open"><p>plain</p></template>',
+    );
+  });
+
+  test("contributes no attributes for a renderer that has no element", () => {
+    // Lit's own FallbackRenderer emulates its element rather than
+    // instantiating one; such a renderer simply has no host attributes, which
+    // matches how lit's integrations treat it
+    class ElementlessRenderer extends ElementRenderer {
+      override renderShadow(): ThunkedRenderResult {
+        return ["<p>elementless</p>"];
+      }
+    }
+
+    class BareElement extends globalThis.HTMLElement {}
+    customElements.define("bare-element", BareElement);
+    ElementRendererRegistry.set("bare-element", ElementlessRenderer as never);
+
+    const rendered = renderCustomElementSync("bare-element", { title: "x" });
+
+    expect(rendered.attributes).toEqual({});
+    expect(rendered.shadowTemplate).toContain("<p>elementless</p>");
   });
 });

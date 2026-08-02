@@ -106,6 +106,62 @@ ElementRendererRegistry.set("my-component", MyComponentRenderer);
 
 :::
 
+## Any Custom Element, Not Just Svelte-built Ones
+
+Nothing in the SSR pipeline is specific to how a custom element is
+implemented. Rendering goes through Lit's `ElementRenderer` contract and
+nothing else, so any element with a conforming renderer can be server-rendered
+— including Lit elements:
+
+```ts
+import { LitElementRenderer } from "@lit-labs/ssr/lib/lit-element-renderer.js";
+import { ElementRendererRegistry } from "@svebcomponents/ssr";
+
+ElementRendererRegistry.use(LitElementRenderer);
+```
+
+`use()` registers a renderer that selects the elements it serves itself,
+through Lit's static `matchesClass` hook, rather than being bound to one tag.
+That single line therefore covers every Lit element in the app. An explicit
+`ElementRendererRegistry.set()` registration still wins, so one specific
+element can be given a different renderer.
+
+The reverse direction works too: the renderers Svebcomponents generates
+implement `matchesClass`, so they can be handed straight to `@lit-labs/ssr`'s
+own `render()`:
+
+```ts
+import { render } from "@lit-labs/ssr";
+import MyComponentRenderer from "my-component-package/ssr";
+
+render(html`<my-component title="Hello"></my-component>`, {
+  elementRenderers: [MyComponentRenderer],
+});
+```
+
+Both directions are covered by end-to-end tests in the repository.
+
+## Async Rendering Outside Svelte
+
+Svelte gates asynchronous server rendering behind a module-global flag, which
+is normally set for you by a Svelte app compiled with
+`compilerOptions.experimental.async`.
+
+A host application that is not a Svelte app has no such compilation, and a
+component package's own server bundle cannot set the flag either — it carries
+its own copy of Svelte, while `render()` is called through the copy
+`@svebcomponents/ssr` imports. Such an app must therefore opt in explicitly on
+the server:
+
+```ts
+import "@svebcomponents/ssr/enable-async";
+```
+
+Without it, `render()` runs synchronously even when awaited, and a component
+that performs asynchronous work throws `await_invalid`. This is only needed
+outside Svelte hosts; a SvelteKit app compiled with `experimental.async`
+already has it.
+
 ## What Happens During Rendering
 
 On the server, the Vite plugin finds custom element tags in Svelte templates
