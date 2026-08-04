@@ -9,13 +9,16 @@ emitting declarative shadow DOM around them.
 This package is experimental. Its API may change before it is released
 alongside the rest of the toolchain.
 
-**Synchronous rendering only.** See "Async Components" below.
+**The default `CustomElement` is synchronous rendering only.** See "Async
+Components" below for the RSC opt-in.
 
 ## What It Provides
 
 - `@svebcomponents/ssr-react` — the `CustomElement` component.
 - `@svebcomponents/ssr-react/jsx-runtime` (and `/jsx-dev-runtime`) — drop-in
   replacements for React's JSX runtime that route any dashed tag through it.
+- `@svebcomponents/ssr-react/rsc` — an async `CustomElement` for React Server
+  Components, which server-renders asynchronous elements instead of degrading.
 
 Unlike the Svelte and Vue integrations, there is no bundler plugin. The JSX
 runtime swap is a compiler setting, so this works anywhere React does —
@@ -77,8 +80,8 @@ import { CustomElement } from "@svebcomponents/ssr-react";
 
 React's `renderToString` cannot await, so a component that renders
 asynchronously — one that awaits while rendering, or whose `index.ssr.ts`
-exports an async `SsrPrepare` hook — **cannot be server-rendered by this
-integration**.
+exports an async `SsrPrepare` hook — **cannot be server-rendered by the
+default `CustomElement`**.
 
 Rather than failing the page, such an element is emitted without server-rendered
 shadow content and rendered in the browser only, with a one-time console
@@ -86,18 +89,22 @@ warning naming the tag. Genuine render failures (an unregistered renderer, for
 instance) still throw, because those are configuration errors rather than a
 capability gap.
 
-This is a limitation of this integration, not of React. React's _streaming_
-renderer does preserve declarative shadow DOM: suspended content is delivered
-as ordinary HTML that the parser processes in a hidden staging container, so
-the shadow root attaches there, and React's relocation script then moves the
-_element_ — which carries its shadow root with it. Lifting the limit is a
-wrapper design problem (`use()` needs a render-stable promise, which needs a
-per-request cache), not a platform one.
+Apps on a React Server Components framework can avoid the degrade entirely by
+rendering the element from a Server Component instead:
 
-See [the async SSR findings](https://github.com/svebcomponents/svebcomponents/blob/main/packages/ssr-react/docs/async-ssr.md)
-for the investigation, the measured behavior, and the candidate designs. They
-are asserted by tests in `e2e/ssr-react/test/experiments/`, so a change in
-React's behavior fails rather than silently going stale.
+```tsx
+import { CustomElement } from "@svebcomponents/ssr-react/rsc";
+
+<CustomElement tag="my-component" title="Hello" count={5} />;
+```
+
+An RSC async function component runs to completion before any markup is
+emitted, so it can `await` the renderer directly — no cache, no `use()`, no
+Suspense boundary. That only works for elements rendered from a Server
+Component, though: an async function component cannot be imported into a
+Client Component (`"use client"`), so an element rendered from client-side
+React — on an RSC framework or not — has no async path and keeps the default's
+degrade-to-client-only behavior.
 
 Note that the Vue integration has no such limitation at all: `renderToString`
 there awaits async `setup()` and emits in order.
@@ -145,4 +152,6 @@ list, so the two trees agree.
   reserved SVG/MathML names).
 - The consuming app must import the browser custom element module and register
   the matching SSR renderer, exactly as with the Svelte integration.
-- React Server Components are untested.
+- The RSC entry point (`/rsc`) only helps elements rendered from a Server
+  Component; there is no async path for a plain streaming SSR app or for
+  elements rendered from a Client Component (see "Async Components" above).

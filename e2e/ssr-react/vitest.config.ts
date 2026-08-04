@@ -10,10 +10,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     // renders real React SSR output for the browser-side hydration test
-    globalSetup: [
-      "test/hydrationFixture.globalSetup.tsx",
-      "test/experiments/streamingFixture.globalSetup.tsx",
-    ],
+    globalSetup: ["test/hydrationFixture.globalSetup.tsx"],
     projects: [
       {
         test: {
@@ -26,7 +23,7 @@ export default defineConfig({
         test: {
           name: "client",
           setupFiles: ["test/client/setup.ts"],
-          include: ["test/client/*.test.tsx", "test/experiments/*.test.tsx"],
+          include: ["test/client/*.test.tsx"],
           browser: {
             screenshotFailures: false,
             enabled: true,

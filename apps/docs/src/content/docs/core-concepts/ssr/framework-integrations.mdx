@@ -152,21 +152,37 @@ import { CustomElement } from "@svebcomponents/ssr-react";
 <CustomElement tag="my-component" title="Hello" count={5} />;
 ```
 
-### Synchronous renderers only
+### Synchronous by default, with an RSC opt-in
 
 React's `renderToString` cannot await, so a component that performs
 asynchronous work — one that awaits while rendering, or that has an async
-`SsrPrepare` hook — cannot be server-rendered by this integration today.
+`SsrPrepare` hook — cannot be server-rendered by the default `CustomElement`.
 
 Rather than failing the page, such an element is emitted without
 server-rendered shadow content and rendered in the browser only, with a
 one-time console warning naming the tag. Genuine configuration errors, such as
 an element with no registered renderer, still throw.
 
-This is a limitation of the integration rather than of React: React's
-streaming renderer does preserve declarative shadow DOM. See the
-[async SSR findings](https://github.com/svebcomponents/svebcomponents/blob/main/packages/ssr-react/docs/async-ssr.md)
-for the measured behavior and the designs under consideration.
+Apps on a React Server Components framework can server-render these elements
+instead, from a Server Component:
+
+```tsx
+import { CustomElement } from "@svebcomponents/ssr-react/rsc";
+
+<CustomElement tag="my-component" title="Hello" count={5} />;
+```
+
+An RSC async function component runs to completion before any markup is
+emitted, so it can simply `await` the renderer — no cache, no `use()`, no
+Suspense boundary required, and it accepts asynchronous `SsrPrepare` hooks and
+components that await while rendering (given the
+[`enable-async` opt-in](/core-concepts/ssr/#async-rendering-outside-svelte)
+every non-Svelte host needs for that).
+
+It only helps where the element is rendered from a Server Component, though:
+an async function component cannot be imported into a Client Component
+(`"use client"`), so an element rendered from client-side React — whether or
+not the app is on RSC — keeps the default's degrade-to-client-only behavior.
 
 ## Astro
 
