@@ -1,5 +1,16 @@
 # @svebcomponents/build
 
+## 0.3.7
+
+### Patch Changes
+
+- Updated dependencies [e858eca]
+- Updated dependencies [ab7d1cd]
+- Updated dependencies [567aef3]
+- Updated dependencies [0d1077f]
+  - @svebcomponents/ssr@0.4.0
+  - @svebcomponents/auto-options@0.2.1
+
 ## 0.3.6
 
 ### Patch Changes

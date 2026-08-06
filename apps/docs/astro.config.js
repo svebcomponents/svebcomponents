@@ -58,9 +58,14 @@ export default defineConfig({
               slug: "packages/auto-options",
             },
             { label: "@svebcomponents/ssr", slug: "packages/ssr" },
-            { label: "@svebcomponents/ssr-vue", slug: "packages/ssr-vue" },
-            { label: "@svebcomponents/ssr-react", slug: "packages/ssr-react" },
-            { label: "@svebcomponents/ssr-astro", slug: "packages/ssr-astro" },
+            {
+              label: "SSR integrations",
+              items: [
+                { label: "Vue", slug: "packages/ssr-vue" },
+                { label: "React", slug: "packages/ssr-react" },
+                { label: "Astro", slug: "packages/ssr-astro" },
+              ],
+            },
             { label: "@svebcomponents/utils", slug: "packages/utils" },
             {
               label: "@svebcomponents internals",
