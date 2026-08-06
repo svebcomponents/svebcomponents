@@ -266,3 +266,77 @@ describe("renderDeclarations", () => {
     expect(output).toContain('"b-el": BElElement;');
   });
 });
+
+describe("generated declarations compile", () => {
+  /**
+   * Type-checks the emitted file with the real compiler. The declarations are
+   * only useful if they are valid TypeScript in a consumer's project, and the
+   * inlining, qualification and `Omit` handling are all easy to get subtly
+   * wrong in ways no string assertion would catch.
+   */
+  const expectCompiles = async (output: string) => {
+    const ts = await import("typescript");
+    const file = path.join(workspace, "custom-elements.d.ts");
+    await fs.writeFile(file, output, "utf8");
+
+    const program = ts.createProgram([file], {
+      strict: true,
+      noEmit: true,
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      lib: ["lib.es2022.d.ts", "lib.dom.d.ts"],
+      skipLibCheck: false,
+      types: [],
+    });
+    const diagnostics = ts
+      .getPreEmitDiagnostics(program)
+      .filter((diagnostic) => diagnostic.file?.fileName === file)
+      .map((diagnostic) =>
+        ts.flattenDiagnosticMessageText(diagnostic.messageText, " "),
+      );
+    expect(diagnostics).toEqual([]);
+  };
+
+  it("compiles a component with events, local types and imports", async () => {
+    await fs.writeFile(
+      path.join(workspace, "src", "types.ts"),
+      `export interface Size { width: number }`,
+      "utf8",
+    );
+    await writeComponent(
+      "Element.svelte",
+      BUTTON.replace(
+        `<script lang="ts">`,
+        `<script lang="ts">\n  import type { Size } from "./types.js";`,
+      ).replace("count?: number;", "count?: number;\n    size?: Size;"),
+    );
+    await expectCompiles(
+      renderDeclarations(await analyzeWorkspace(), workspace, workspace),
+    );
+  });
+
+  it("compiles a component whose prop shadows a built-in DOM property", async () => {
+    await writeComponent(
+      "Element.svelte",
+      `<svelte:options customElement={{ tag: 'titled-el' }} />
+<script lang="ts">
+  let { title, hidden }: { title: number; hidden: string } = $props();
+</script>`,
+    );
+    await expectCompiles(
+      renderDeclarations(await analyzeWorkspace(), workspace, workspace),
+    );
+  });
+
+  it("compiles several components in one file", async () => {
+    await writeComponent("A.svelte", BUTTON);
+    await writeComponent(
+      "B.svelte",
+      BUTTON.replace("my-button", "other-button"),
+    );
+    await expectCompiles(
+      renderDeclarations(await analyzeWorkspace(), workspace, workspace),
+    );
+  });
+});
