@@ -54,12 +54,38 @@ export interface CssPropertyMetadata {
   default?: string | undefined;
 }
 
+export interface LocalTypeDeclaration {
+  name: string;
+  /** The declaration verbatim, e.g. `interface Detail { id: string }`. */
+  text: string;
+}
+
+export interface TypeImport {
+  /** The import statement verbatim. */
+  text: string;
+  /** The module specifier, so relative paths can be rewritten on emit. */
+  source: string;
+  /** The local binding names this import introduces. */
+  names: string[];
+}
+
 export interface ComponentMetadata {
   description?: string | undefined;
   props: PropMetadata[];
   slots: SlotMetadata[];
   events: EventMetadata[];
   cssProperties: CssPropertyMetadata[];
+  /**
+   * Interfaces and type aliases declared in the instance script. Generated
+   * declarations inline these, since a type named in `typeText` is otherwise
+   * out of scope wherever the declaration is emitted.
+   */
+  localTypes: LocalTypeDeclaration[];
+  /**
+   * Imports from the instance script that a referenced type may resolve
+   * through. Generated declarations re-emit the ones they actually need.
+   */
+  imports: TypeImport[];
 }
 
 interface ParsedJsDoc {
@@ -379,6 +405,62 @@ export const extractEvents = (code: string, root: unknown): EventMetadata[] => {
     },
   });
   return [...events.values()];
+};
+
+/**
+ * Captures the interfaces and type aliases declared in the instance script,
+ * verbatim, so generated declarations can inline the ones they reference.
+ */
+export const extractLocalTypes = (
+  code: string,
+  typeDeclarations: TypeDeclaration[],
+): LocalTypeDeclaration[] => {
+  const types: LocalTypeDeclaration[] = [];
+  for (const declaration of typeDeclarations) {
+    const name = "id" in declaration ? declaration.id.name : undefined;
+    const span = declaration as unknown as { start?: number; end?: number };
+    if (
+      typeof name !== "string" ||
+      typeof span.start !== "number" ||
+      typeof span.end !== "number"
+    ) {
+      continue;
+    }
+    types.push({ name, text: code.slice(span.start, span.end) });
+  }
+  return types;
+};
+
+/**
+ * Captures the instance script's imports along with the names they bind, so a
+ * generated declaration can re-emit exactly the ones a referenced type needs.
+ */
+export const extractTypeImports = (
+  code: string,
+  instance: unknown,
+): TypeImport[] => {
+  if (!instance) return [];
+  const imports: TypeImport[] = [];
+  walk(instance as { type: string }, null, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- estree import nodes are not exposed in the public svelte AST types
+    ImportDeclaration(node: any, context: { next: () => void }) {
+      const source = node.source?.value;
+      if (
+        typeof source !== "string" ||
+        typeof node.start !== "number" ||
+        typeof node.end !== "number"
+      ) {
+        context.next();
+        return;
+      }
+      const names = (node.specifiers ?? [])
+        .map((specifier: { local?: { name?: string } }) => specifier.local?.name)
+        .filter((name: unknown): name is string => typeof name === "string");
+      imports.push({ text: code.slice(node.start, node.end), source, names });
+      context.next();
+    },
+  });
+  return imports;
 };
 
 const CSS_VAR_REFERENCE = /var\(\s*(--[\w-]+)\s*(?:,\s*([^)]*))?\)/g;

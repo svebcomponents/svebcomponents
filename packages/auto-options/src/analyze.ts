@@ -20,7 +20,9 @@ import {
   extractEvents,
   extractPropDefaults,
   extractPropDocs,
+  extractLocalTypes,
   extractSlots,
+  extractTypeImports,
   mergeDocumented,
   type ComponentMetadata,
   type CssPropertyMetadata,
@@ -32,8 +34,10 @@ export type {
   ComponentMetadata,
   CssPropertyMetadata,
   EventMetadata,
+  LocalTypeDeclaration,
   PropMetadata,
   SlotMetadata,
+  TypeImport,
 } from "./metadata.js";
 
 /**
@@ -238,5 +242,7 @@ const buildMetadata = (
       [...tagValues("cssprop"), ...tagValues("cssproperty")],
       (name): CssPropertyMetadata => ({ name }),
     ),
+    localTypes: extractLocalTypes(code, typeDeclarations),
+    imports: extractTypeImports(code, root["instance"]),
   };
 };
