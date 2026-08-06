@@ -29,6 +29,7 @@ the version-compatibility tradeoff.
 - [`@svebcomponents/build`]
   - Provides the `svebcomponents` CLI tool for building web components (based on tsdown ⚡).
   - By default, it offers a zero-configuration build experience.
+  - Emits a custom elements manifest and TypeScript declarations for the elements you ship, so Svelte, Vue and React templates know your tags and their props.
   - For advanced configuration, create a `svebcomponents.config.ts` file in your project root and import `defineConfig` from `@svebcomponents/build` to define a custom tsdown configuration.
 - [`@svebcomponents/auto-options`]
   - automatically generate type converter & attribute settings from your props leveraging the typescript AST

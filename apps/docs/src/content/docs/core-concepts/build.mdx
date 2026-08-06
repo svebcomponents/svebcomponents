@@ -151,6 +151,102 @@ provides the renderer that a server application can register.
 SSR is currently in beta. See [SSR](/core-concepts/ssr/) for its stability and
 security considerations.
 
+## Element Types & Manifest
+
+Every build also writes two files describing the elements your package
+declares:
+
+- `custom-elements.json` — a
+  [custom elements manifest](https://github.com/webcomponents/custom-elements-manifest)
+  (schema 2.1.0). Editors read it directly for HTML completions, and the wider
+  custom elements tooling ecosystem consumes it.
+- `custom-elements.d.ts` — TypeScript declarations generated from the same
+  analysis, so consuming templates know your tags and what they accept.
+
+Publish both by listing them in `files`, and point tooling at the manifest:
+
+```json
+{
+  "customElements": "custom-elements.json",
+  "files": ["dist", "custom-elements.json", "custom-elements.d.ts"]
+}
+```
+
+Consumers pick up the declarations by including the file once:
+
+```ts
+/// <reference types="my-components/custom-elements.d.ts" />
+```
+
+### What Gets Described
+
+Props become attributes with the type and reflection settings
+[auto-options](/core-concepts/auto-options/) inferred. Props typed with
+TypeScript carry their declared type and JSDoc description; untyped props fall
+back to the attribute converter's type, so a `Number` prop is still typed
+`number`.
+
+The declarations register your tag in `HTMLElementTagNameMap` — so
+`document.querySelector("my-button")` returns the right element type — and
+augment the template surfaces of Svelte (`SvelteHTMLElements`), Vue
+(`GlobalComponents`) and React (`JSX.IntrinsicElements`). Augmenting a
+framework you do not use is inert, so a Svelte-only consumer is unaffected by
+the Vue and React blocks.
+
+:::note
+The React augmentation describes React 19 and later. Earlier versions
+stringify every prop passed to a custom element and do not attach listeners
+for custom event names.
+:::
+
+### Events
+
+Events are collected from the pattern this project endorses:
+
+```svelte
+<script lang="ts">
+  interface ChangeDetail {
+    value: string;
+  }
+
+  const emit = (value: string) =>
+    $host().dispatchEvent(new CustomEvent<ChangeDetail>("change", { detail: { value } }));
+</script>
+```
+
+The explicit type argument is what makes `detail` typed — it is read verbatim,
+with no type checker involved. Relying on inference from the `detail` value
+instead still records the event, but its detail becomes `unknown`.
+
+Callback props (`onPick`) are _not_ treated as events. They appear on the DOM
+element interface, where `element.onPick = fn` genuinely works, but never on
+the template surface: in a template `onPick={fn}` is event-handler syntax
+rather than a property assignment, so listing it there would type-check a
+handler that never runs.
+
+### Slots & CSS Custom Properties
+
+Statically named `<slot>` elements are collected automatically. CSS custom
+properties are collected when the component _reads_ one it does not itself
+define — those are the ones a consumer is expected to supply. A `var()`
+fallback becomes the documented default.
+
+Anything the scan cannot see can be documented on the component comment, which
+also supplies descriptions:
+
+```svelte
+<!-- @component
+A fancy button.
+
+@slot - The button label.
+@event change - Fired when the selection changes.
+@cssprop --fancy-radius - Corner radius.
+-->
+```
+
+Documentation is additive: it adds descriptions, or declares a member the scan
+could not find. It never overrides inferred structure.
+
 ## Manual Configuration
 
 Package exports are the recommended configuration for straightforward
