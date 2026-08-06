@@ -11,6 +11,13 @@ export interface SvelteOptions {
     lastPropertyEnd: number;
     // true when the user already provides their own `extend` — we must not inject a second one
     hasExtend: boolean;
+    // the custom element tag from `tag: "my-el"`. Injection never needs this
+    // (it only ever appends alongside an existing `tag`), but metadata
+    // consumers key everything off the tag name, so it is extracted here
+    // rather than re-parsing svelte:options elsewhere. `null` when the object
+    // form omits `tag` — svelte rejects a non-literal tag at parse time, so a
+    // present tag is always a statically-known string.
+    tag: string | null;
     props: {
       propsStart: number;
       propsEnd: number;
@@ -111,6 +118,22 @@ export const extractSvelteOptions = (
       property.key.name === "extend",
   );
 
+  const tagProperty = expression.properties.find(
+    (property) =>
+      property.type === "Property" &&
+      "name" in property.key &&
+      property.key.name === "tag",
+  );
+  // only a plain string literal is a statically-known tag; anything else
+  // (a template literal, an identifier, a member expression) would need
+  // evaluation we cannot do at build time
+  const tag =
+    tagProperty?.type === "Property" &&
+    tagProperty.value.type === "Literal" &&
+    typeof tagProperty.value.value === "string"
+      ? tagProperty.value.value
+      : null;
+
   // if custom element options exist, but no props
   const propsOptions = expression.properties.find(
     (
@@ -148,6 +171,7 @@ export const extractSvelteOptions = (
         propertyInjectIndex,
         lastPropertyEnd,
         hasExtend,
+        tag,
         props: null,
       },
     };
@@ -184,6 +208,7 @@ export const extractSvelteOptions = (
       propertyInjectIndex,
       lastPropertyEnd,
       hasExtend,
+      tag,
       props: {
         propsStart,
         propsEnd,

@@ -193,19 +193,26 @@ const resolvePrimitiveType = (
   }
 };
 
-export const inferPropsFromTypes = (
-  // WARNING: this object is being mutated
-  inferredProps: InferredSvelteOptionProps,
+/**
+ * Resolves the `$props()` type annotation down to its member signatures,
+ * following a `TSTypeReference` back to the interface or type alias it names.
+ *
+ * Shared by prop inference and by metadata extraction (which reads the same
+ * members for their JSDoc and declared type text), so the two can never
+ * disagree about which members make up a component's props.
+ *
+ * Returns `undefined` when there is no usable type annotation.
+ */
+export const resolvePropsTypeMembers = (
   propsDeclaration: TypedVariableDeclarator,
   typeDeclarations: TypeDeclaration[],
-) => {
+): InterfaceDeclaration["body"]["body"] | undefined => {
   // if there are no types we bail early
   if (!("typeAnnotation" in propsDeclaration.id)) {
-    return;
+    return undefined;
   }
   const { typeAnnotation: propsAnnotation } =
     propsDeclaration.id.typeAnnotation;
-  let typedProps: InterfaceDeclaration["body"]["body"] | undefined;
 
   if (
     propsAnnotation.type === "TSTypeReference" &&
@@ -223,21 +230,33 @@ export const inferPropsFromTypes = (
           console.warn(
             `${WARNING_PREFIX} could not resolve prop types since they were not of expected shape`,
           );
-          return;
+          return undefined;
         }
-        typedProps = resolvedTypeDeclaration.typeAnnotation.members;
-        break;
+        return resolvedTypeDeclaration.typeAnnotation.members;
       case "TSInterfaceDeclaration":
-        typedProps = resolvedTypeDeclaration?.body.body;
-        break;
+        return resolvedTypeDeclaration?.body.body;
       default:
-        return;
+        return undefined;
     }
   }
 
   if (propsAnnotation.type === "TSTypeLiteral") {
-    typedProps = propsAnnotation.members;
+    return propsAnnotation.members;
   }
+
+  return undefined;
+};
+
+export const inferPropsFromTypes = (
+  // WARNING: this object is being mutated
+  inferredProps: InferredSvelteOptionProps,
+  propsDeclaration: TypedVariableDeclarator,
+  typeDeclarations: TypeDeclaration[],
+) => {
+  const typedProps = resolvePropsTypeMembers(
+    propsDeclaration,
+    typeDeclarations,
+  );
 
   // if we could not find any typed props, so be it!
   if (!typedProps) {
