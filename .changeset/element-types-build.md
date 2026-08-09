@@ -20,12 +20,18 @@ is enough to type `document.querySelector("my-el")`. Per element it exports:
 - `XEventHandlers` — `onname`-style handler props for dispatched events
 - `XEventMap` — event name to `CustomEvent<Detail>`
 
-Framework template augmentations are **not** generated. They have to name types
+Svelte template types are registered automatically when the package declares
+`svelte` as a required dependency of its consumers (a `dependency`, or a
+`peerDependency` not marked optional). That gate matters: the augmentation
+imports from `svelte/elements`, and a package whose standalone build bundles
+Svelte may be consumed by an application with no `svelte` installed, which
+would then fail to resolve it under `skipLibCheck: false`.
+
+Vue and React augmentations are **not** generated. They have to name types
 from frameworks this package neither depends on nor tests against, and those
 conventions change between major versions, so a subtly wrong generated
 augmentation would be worse than a few lines the consumer controls. The docs'
-Types section carries verified Svelte, React and Vue recipes built from the
-exported types.
+Types section carries verified recipes built from the exported types.
 
 Property-only props (functions, snippets) appear on the element interface but
 never among the attributes: in a template `onPick={fn}` is event-handler syntax

@@ -406,17 +406,103 @@ const declarationFileFor = (
  * `svebcomponents.config.ts` build, say), which tells the caller to fall back
  * to attaching to whatever each entry emitted.
  */
-const readTypesTargets = async (
-  cwd: string,
-): Promise<Set<string> | undefined> => {
-  let packageJson: unknown;
+/**
+ * Renders the `svelte/elements` augmentation that teaches Svelte templates
+ * about these elements.
+ *
+ * Emitted only for packages that require `svelte` of their consumers — see
+ * `requiresSvelte`. It imports `HTMLAttributes` from `svelte/elements`, and a
+ * consumer without svelte installed would hit "Cannot find module
+ * 'svelte/elements'" whenever they type-check with `skipLibCheck: false`.
+ * Composing `HTMLAttributes` is what keeps `class`, `id` and the standard DOM
+ * event handlers working alongside the element's own attributes.
+ */
+export const renderSvelteAugmentation = (
+  components: AnalyzedComponentFile[],
+  outputDir: string,
+  packageRoot: string,
+): string => {
+  const declarations = components.map((component) =>
+    buildComponentDeclaration(component, outputDir, packageRoot),
+  );
+
+  const entries = declarations.map((declaration) => {
+    const members = [
+      ...declaration.templateMembers.map(
+        (member) =>
+          `${jsDocBlock(member.description, "      ")}      "${member.name}"?: ${member.type};`,
+      ),
+      ...declaration.eventMap.map(
+        (event) =>
+          `${jsDocBlock(event.description, "      ")}      "on${event.name}"?: (event: CustomEvent<${event.detail}>) => void;`,
+      ),
+    ].join("\n");
+    return `    "${declaration.tagName}": __SvebHTMLAttributes<${declaration.className}Element> & {\n${members}\n    };`;
+  });
+
+  return [
+    "// Svelte template types, registered automatically because this package",
+    "// declares svelte as a required dependency of its consumers.",
+    'import type { HTMLAttributes as __SvebHTMLAttributes } from "svelte/elements";',
+    "",
+    'declare module "svelte/elements" {',
+    "  interface SvelteHTMLElements {",
+    ...entries,
+    "  }",
+    "}",
+    "",
+  ].join("\n");
+};
+
+/**
+ * Whether every consumer of this package is guaranteed to have `svelte`
+ * installed — true when it is a runtime dependency, or a peer dependency that
+ * is not marked optional. An optional peer may be absent, which is exactly the
+ * case the svelte augmentation must not be emitted for.
+ */
+export const requiresSvelte = (packageJson: unknown): boolean => {
+  if (typeof packageJson !== "object" || packageJson === null) return false;
+  const record = packageJson as Record<string, unknown>;
+
+  const dependencies = record["dependencies"];
+  if (
+    typeof dependencies === "object" &&
+    dependencies !== null &&
+    "svelte" in dependencies
+  ) {
+    return true;
+  }
+
+  const peers = record["peerDependencies"];
+  if (typeof peers !== "object" || peers === null || !("svelte" in peers)) {
+    return false;
+  }
+  const meta = record["peerDependenciesMeta"];
+  const svelteMeta =
+    typeof meta === "object" && meta !== null
+      ? (meta as Record<string, unknown>)["svelte"]
+      : undefined;
+  const optional =
+    typeof svelteMeta === "object" &&
+    svelteMeta !== null &&
+    (svelteMeta as { optional?: unknown })["optional"] === true;
+  return !optional;
+};
+
+const readPackageJson = async (cwd: string): Promise<unknown> => {
   try {
-    packageJson = JSON.parse(
+    return JSON.parse(
       await fs.readFile(path.resolve(cwd, "package.json"), "utf8"),
     );
   } catch {
     return undefined;
   }
+};
+
+const readTypesTargets = async (
+  cwd: string,
+): Promise<Set<string> | undefined> => {
+  const packageJson = await readPackageJson(cwd);
   if (
     typeof packageJson !== "object" ||
     packageJson === null ||
@@ -473,6 +559,12 @@ export const emitElementTypes = async (
   // `HTMLElementTagNameMap` entry.
   const typesTargets = await readTypesTargets(cwd);
 
+  // Svelte template types ride along only when every consumer is guaranteed
+  // to have svelte — otherwise the `svelte/elements` import in the emitted
+  // declarations would fail to resolve for them.
+  const packageJson = await readPackageJson(cwd);
+  const withSvelteTypes = requiresSvelte(packageJson);
+
   const attached = new Set<string>();
   for (const options of tsdownOptions) {
     const { entry, outDir } = options;
@@ -502,9 +594,15 @@ export const emitElementTypes = async (
     }
 
     const declarationDir = path.dirname(declarationFile);
+    const generated = [
+      renderCoreDeclarations(owned, declarationDir, cwd),
+      ...(withSvelteTypes
+        ? [renderSvelteAugmentation(owned, declarationDir, cwd)]
+        : []),
+    ].join("\n");
     await fs.writeFile(
       declarationFile,
-      `${existing.trimEnd()}\n\n${renderCoreDeclarations(owned, declarationDir, cwd)}`,
+      `${existing.trimEnd()}\n\n${generated}`,
       "utf8",
     );
     attached.add(declarationFile);

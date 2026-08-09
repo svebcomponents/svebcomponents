@@ -262,21 +262,57 @@ A `<simple-component>` declared by the `.` export yields:
 The element is also registered in `HTMLElementTagNameMap`, so
 `document.querySelector("simple-component")` is typed without any setup.
 
-### Teaching Your Framework
+### Svelte: Registered For You
 
-Framework template checking needs one augmentation, which you write once in
-your own project. Svebcomponents deliberately does **not** generate these:
-they must name types from a framework this package neither depends on nor
-tests against, and those conventions change between major versions — a
-generated augmentation that is subtly wrong is worse than four lines you
-control.
+If your package declares `svelte` as a required dependency of its consumers —
+a `dependency`, or a `peerDependency` not marked optional — the Svelte
+template types are registered automatically. Consumers need no setup:
+
+```svelte
+<script lang="ts">
+  import "my-components";
+</script>
+
+<simple-component count={3} enabled title="Hello" class="styled" />
+```
+
+`count={"nope"}` and unknown attributes are both errors. Attributes also
+accept their string form (`count="3"`), since that is what markup produces.
+
+This is gated rather than unconditional because the augmentation imports from
+`svelte/elements`. A package whose standalone build bundles Svelte can be
+consumed by an application with no `svelte` installed at all, and for them
+that import fails to resolve under `skipLibCheck: false`. Declaring the
+dependency is what makes it safe:
+
+```json
+{
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  }
+}
+```
+
+:::caution
+`SvelteHTMLElements` ends with a catch-all index signature, so a tag that is
+not declared is silently accepted with any attributes. Typo protection only
+applies to elements that were registered.
+:::
+
+### Teaching Other Frameworks
+
+Vue and React need one augmentation, which you write once in your own
+project. Svebcomponents deliberately does **not** generate these: they must
+name types from a framework it neither depends on nor tests against, and
+those conventions change between major versions — a generated augmentation
+that is subtly wrong is worse than a few lines you control.
 
 :::note
 Put the augmentation in a `.d.ts` (or any module) that your `tsconfig.json`
 includes. It applies project-wide.
 :::
 
-#### Svelte
+The same recipe works for Svelte when your package does not require `svelte`:
 
 ```ts
 import type { HTMLAttributes } from "svelte/elements";
@@ -294,22 +330,6 @@ declare module "svelte/elements" {
   }
 }
 ```
-
-Composing `HTMLAttributes` is what keeps `class`, `id`, `style` and the
-standard DOM event handlers available alongside your own attributes.
-
-```svelte
-<simple-component count={3} enabled title="Hello" class="styled" />
-```
-
-`count={"nope"}` and unknown attributes are both errors. Attributes also
-accept their string form (`count="3"`), since that is what markup produces.
-
-:::caution
-`SvelteHTMLElements` ends with a catch-all index signature, so a tag you have
-_not_ declared is silently accepted with any attributes. Typo protection only
-applies to elements you augment.
-:::
 
 #### React
 

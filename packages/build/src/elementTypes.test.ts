@@ -9,7 +9,11 @@ import {
   classNameFromTag,
   findComponentSources,
 } from "./manifest.js";
-import { renderCoreDeclarations } from "./elementTypes.js";
+import {
+  renderCoreDeclarations,
+  renderSvelteAugmentation,
+  requiresSvelte,
+} from "./elementTypes.js";
 
 let workspace: string;
 
@@ -514,6 +518,102 @@ declare module "svelte/elements" {
 
 export {};
 `);
+      expect(diagnostics).toEqual([]);
+    },
+    COMPILER_TIMEOUT_MS,
+  );
+});
+
+describe("requiresSvelte", () => {
+  it("is true for a runtime dependency", () => {
+    expect(requiresSvelte({ dependencies: { svelte: "^5" } })).toBe(true);
+  });
+
+  it("is true for a plain peer dependency", () => {
+    expect(requiresSvelte({ peerDependencies: { svelte: "^5" } })).toBe(true);
+  });
+
+  it("is false for an optional peer dependency", () => {
+    // an optional peer may simply be absent, which is precisely the consumer
+    // the `svelte/elements` import would break
+    expect(
+      requiresSvelte({
+        peerDependencies: { svelte: "^5" },
+        peerDependenciesMeta: { svelte: { optional: true } },
+      }),
+    ).toBe(false);
+  });
+
+  it("is false when svelte is only a dev dependency", () => {
+    expect(requiresSvelte({ devDependencies: { svelte: "^5" } })).toBe(false);
+  });
+
+  it("is false for a package.json it cannot read", () => {
+    expect(requiresSvelte(undefined)).toBe(false);
+  });
+});
+
+describe("renderSvelteAugmentation", () => {
+  const render = async () =>
+    renderSvelteAugmentation(await analyzeWorkspace(), workspace, workspace);
+
+  it("composes HTMLAttributes so class and id keep working", async () => {
+    await writeComponent("Element.svelte", BUTTON);
+    const output = await render();
+    expect(output).toContain(
+      'import type { HTMLAttributes as __SvebHTMLAttributes } from "svelte/elements";',
+    );
+    expect(output).toContain(
+      '"my-button": __SvebHTMLAttributes<MyButtonElement> & {',
+    );
+  });
+
+  it("exposes attributes and event handlers", async () => {
+    await writeComponent("Element.svelte", BUTTON);
+    const output = await render();
+    expect(output).toContain('"count"?: number | string;');
+    expect(output).toContain(
+      '"onchange"?: (event: CustomEvent<MyButton$ChangeDetail>) => void;',
+    );
+  });
+
+  it("keeps property-only props off the template surface", async () => {
+    await writeComponent("Element.svelte", BUTTON);
+    expect(await render()).not.toContain("onPick");
+  });
+
+  it(
+    "type-checks against the real svelte/elements",
+    async () => {
+      await writeComponent("Element.svelte", BUTTON);
+      const components = await analyzeWorkspace();
+      const ts = await import("typescript");
+      const scratch = await fs.mkdtemp(
+        path.join(path.resolve(import.meta.dirname, ".."), ".recipe-check-"),
+      );
+      const file = path.join(scratch, "elements.ts");
+      await fs.writeFile(
+        file,
+        `${renderCoreDeclarations(components, scratch, workspace)}\n${renderSvelteAugmentation(components, scratch, workspace)}`,
+        "utf8",
+      );
+      const program = ts.createProgram([file], {
+        strict: true,
+        noEmit: true,
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.ESNext,
+        moduleResolution: ts.ModuleResolutionKind.Bundler,
+        lib: ["lib.es2022.d.ts", "lib.dom.d.ts"],
+        skipLibCheck: true,
+      });
+      const source = program.getSourceFile(file);
+      const diagnostics = [
+        ...program.getSyntacticDiagnostics(source),
+        ...program.getSemanticDiagnostics(source),
+      ].map((diagnostic) =>
+        ts.flattenDiagnosticMessageText(diagnostic.messageText, " "),
+      );
+      await fs.rm(scratch, { recursive: true, force: true });
       expect(diagnostics).toEqual([]);
     },
     COMPILER_TIMEOUT_MS,
