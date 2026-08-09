@@ -43,28 +43,17 @@ camelizeKebabCase("favorite-number"); // "favoriteNumber"
 
 Used by `@svebcomponents/ssr` when mapping non-string kebab-case values to component properties during server rendering.
 
-### `defineElement(tagName, component)`
+## Registering custom elements
 
-Manually registers a compiled custom element, guarding against the ways a
-bare `customElements.define()` call can fail: no `customElements` registry
-(SSR before the DOM shim installs), no compiled constructor (`component`
-wasn't built with `customElement: true`, e.g. the server build), or the tag
-already being registered (first registration wins).
+There is no registration helper here. Declare the tag in the component and let
+`@svebcomponents/build` handle it:
 
-```ts
-import { defineElement } from "@svebcomponents/utils";
-import MyComponent from "./MyComponent.svelte";
-
-export default MyComponent;
-defineElement("my-component", MyComponent);
+```svelte
+<svelte:options customElement="my-component" />
 ```
 
-Components built with `@svebcomponents/build` don't need this: declaring the
-tag in `<svelte:options customElement="my-component" />` is enough, since the
-build already guards Svelte's own generated registration call. That declaration
-is also what lets the build describe the element — a tag registered only through
-`defineElement` is invisible to the manifest and the generated types, so prefer
-`<svelte:options>` wherever the tag is known.
-
-`defineElement` remains available for registering a compiled component by hand,
-outside that pipeline.
+The build makes Svelte's own generated `customElements.define()` call
+idempotent, so importing the component is safe even if it (or a bundle
+containing it) is evaluated more than once. That declaration is also what lets
+the build describe the element — see
+[Static tags only](https://svebcomponents.dev/core-concepts/build/#static-tags-only).
