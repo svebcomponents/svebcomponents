@@ -94,16 +94,17 @@
     }
   },
   "devDependencies": {
-    "@svebcomponents/typescript-config": "workspace:*",
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
+    "@svebcomponents/typescript-config": "workspace:*",
+    "@svebcomponents/vitest-config": "workspace:*",
     "@sveltejs/package": "catalog:",
     "@types/node": "catalog:",
     "publint": "catalog:",
     "rolldown": "catalog:",
-    "tsdown": "catalog:",
     "svelte": "catalog:",
     "svelte-check": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"

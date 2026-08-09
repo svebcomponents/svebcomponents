@@ -31,6 +31,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./analyze": {
+      "types": "./dist/analyze.d.ts",
+      "import": "./dist/analyze.js"
     }
   },
   "peerDependencies": {
@@ -40,14 +44,15 @@
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
+    "@svebcomponents/vitest-config": "workspace:*",
     "@types/estree": "catalog:",
     "@types/node": "catalog:",
     "publint": "catalog:",
     "rolldown": "catalog:",
     "svelte": "catalog:",
-    "vitest": "catalog:",
+    "typescript": "catalog:",
     "vite": "catalog:",
-    "typescript": "catalog:"
+    "vitest": "catalog:"
   },
   "dependencies": {
     "@svebcomponents/utils": "workspace:*",

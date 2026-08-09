@@ -11,6 +11,10 @@
     "./ssr": {
       "import": "./dist/ssr.js",
       "types": "./dist/ssr.d.ts"
+    },
+    "./node": {
+      "import": "./dist/node.js",
+      "types": "./dist/node.d.ts"
     }
   },
   "scripts": {

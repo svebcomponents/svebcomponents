@@ -7,6 +7,7 @@ import { loadConfig as loadSvebcomponentsConfig } from "unconfig";
 
 import { defineConfig } from "./index.js";
 import { inferComponents } from "./inferComponents.js";
+import { emitElementTypes } from "./elementTypes.js";
 import type { SvelteBuildConfig } from "@svebcomponents/ssr/svelte-config";
 
 const getSvelteConfig = async (): Promise<SvelteBuildConfig | undefined> => {
@@ -63,6 +64,11 @@ async function main() {
   );
 
   await Promise.all(tsdownOptions.map(build));
+
+  // Emitted after the builds so a failing build fails before we advertise an
+  // element surface that was never produced. Analysis reads sources directly,
+  // so it is independent of the bundlers' output.
+  await emitElementTypes(process.cwd(), tsdownOptions);
 }
 
 main().catch((error) => {

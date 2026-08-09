@@ -32,3 +32,10 @@ npm-debug.log*
 *.pem
 
 *storybook.log
+
+# Generated element metadata (rebuilt by `svebcomponents`)
+e2e/*/custom-elements.json
+e2e/*/custom-elements*.d.ts
+
+# scratch dir used by the recipe type-check test
+packages/build/.recipe-check-*
