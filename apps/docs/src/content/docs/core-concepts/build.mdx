@@ -159,13 +159,10 @@ Every build describes the elements your package declares, in two forms:
   [custom elements manifest](https://github.com/webcomponents/custom-elements-manifest)
   (schema 2.1.0). Editors read it for HTML completions, and the wider custom
   elements tooling ecosystem consumes it.
-- TypeScript declarations, so consuming templates know your tags.
+- TypeScript types, appended to the declaration file each entry already emits
+  — the one its `types` condition points at.
 
-### What Ships Where
-
-The element interfaces and the `HTMLElementTagNameMap` entries are appended to
-the declaration file each entry already emits — the one its `types` condition
-points at. Nothing extra is needed to get them:
+Nothing extra is needed for the TypeScript half:
 
 ```ts
 // defines <simple-component> and types it
@@ -175,61 +172,14 @@ const el = document.querySelector("simple-component");
 el?.count; // number | undefined
 ```
 
-The framework template augmentations are **separate, opt-in files**, because
-each one imports from its framework — a Svelte-only consumer must never be
-made to resolve `vue`:
-
-- `custom-elements-svelte.d.ts`
-- `custom-elements-vue.d.ts`
-- `custom-elements-react.d.ts`
-
-### Publishing
-
-The build hints at this if it is missing. Expose the generated files:
+Expose the manifest to consumers (the build hints at this if it is missing):
 
 ```json
 {
   "customElements": "custom-elements.json",
-  "files": ["dist", "custom-elements.json", "custom-elements-*.d.ts"],
-  "exports": {
-    ".": {
-      "types": "./dist/client/index.d.ts",
-      "default": "./dist/client/index.js"
-    },
-    "./custom-elements-svelte.d.ts": "./custom-elements-svelte.d.ts"
-  }
+  "files": ["dist", "custom-elements.json"]
 }
 ```
-
-With `exports` declared, a subpath that is not mapped cannot be referenced by
-a consumer at all — so each framework file you intend to ship needs an entry.
-
-### Consuming
-
-Reference the file for your framework once, anywhere in the project:
-
-```ts
-/// <reference types="my-components/custom-elements-svelte.d.ts" />
-```
-
-Then templates are checked:
-
-```svelte
-<script lang="ts">
-  import "my-components";
-</script>
-
-<simple-component count={3} enabled title="Hello" class="styled" />
-```
-
-`count={"nope"}` and unknown attributes are both errors. Attributes also
-accept their string form (`count="3"`), since that is what markup produces.
-
-:::note
-The React augmentation targets React 19 and later. Earlier versions stringify
-every prop passed to a custom element and do not attach listeners for custom
-event names, so these signatures would not describe their behaviour.
-:::
 
 ### What Gets Described
 
@@ -258,16 +208,16 @@ The explicit type argument is what makes `detail` typed — it is read verbatim,
 with no type checker involved. Relying on inference from the `detail` value
 instead still records the event, but its detail becomes `unknown`.
 
-Each event becomes an `onchange`-style handler prop in templates, and an entry
-in a typed event map so `addEventListener` narrows:
+Each event becomes an entry in a typed event map, so `addEventListener`
+narrows:
 
 ```ts
 el.addEventListener("change", (event) => event.detail.value);
 ```
 
 Callback props (`onPick`) are _not_ treated as events. They appear on the DOM
-element interface, where `element.onPick = fn` genuinely works, but never on
-the template surface: in a template `onPick={fn}` is event-handler syntax
+element interface, where `element.onPick = fn` genuinely works, but never
+among the attributes: in a template `onPick={fn}` is event-handler syntax
 rather than a property assignment, so listing it there would type-check a
 handler that never runs.
 
@@ -296,6 +246,131 @@ A fancy button.
 
 Documentation is additive: it adds descriptions, or declares a member the scan
 could not find. It never overrides inferred structure.
+
+## Types
+
+For each element, the build exports four types from the component module.
+A `<simple-component>` declared by the `.` export yields:
+
+| Type                           | What it describes                                                             |
+| ------------------------------ | ----------------------------------------------------------------------------- |
+| `SimpleComponentElement`       | The DOM element: every prop as a property, plus a narrowed `addEventListener` |
+| `SimpleComponentAttributes`    | What may be set in markup — each attribute also accepting its string form     |
+| `SimpleComponentEventHandlers` | `onchange`-style handler props for dispatched events                          |
+| `SimpleComponentEventMap`      | Event name to `CustomEvent<Detail>`, for `addEventListener`                   |
+
+The element is also registered in `HTMLElementTagNameMap`, so
+`document.querySelector("simple-component")` is typed without any setup.
+
+### Teaching Your Framework
+
+Framework template checking needs one augmentation, which you write once in
+your own project. Svebcomponents deliberately does **not** generate these:
+they must name types from a framework this package neither depends on nor
+tests against, and those conventions change between major versions — a
+generated augmentation that is subtly wrong is worse than four lines you
+control.
+
+:::note
+Put the augmentation in a `.d.ts` (or any module) that your `tsconfig.json`
+includes. It applies project-wide.
+:::
+
+#### Svelte
+
+```ts
+import type { HTMLAttributes } from "svelte/elements";
+import type {
+  SimpleComponentElement,
+  SimpleComponentAttributes,
+  SimpleComponentEventHandlers,
+} from "my-components";
+
+declare module "svelte/elements" {
+  interface SvelteHTMLElements {
+    "simple-component": HTMLAttributes<SimpleComponentElement> &
+      SimpleComponentAttributes &
+      SimpleComponentEventHandlers;
+  }
+}
+```
+
+Composing `HTMLAttributes` is what keeps `class`, `id`, `style` and the
+standard DOM event handlers available alongside your own attributes.
+
+```svelte
+<simple-component count={3} enabled title="Hello" class="styled" />
+```
+
+`count={"nope"}` and unknown attributes are both errors. Attributes also
+accept their string form (`count="3"`), since that is what markup produces.
+
+:::caution
+`SvelteHTMLElements` ends with a catch-all index signature, so a tag you have
+_not_ declared is silently accepted with any attributes. Typo protection only
+applies to elements you augment.
+:::
+
+#### React
+
+Requires React 19 or later. Earlier versions stringify every prop passed to a
+custom element and do not attach listeners for custom event names, so these
+signatures would not describe their behaviour.
+
+```ts
+import type { DetailedHTMLProps, HTMLAttributes } from "react";
+import type {
+  SimpleComponentElement,
+  SimpleComponentAttributes,
+  SimpleComponentEventHandlers,
+} from "my-components";
+
+declare module "react" {
+  namespace JSX {
+    interface IntrinsicElements {
+      "simple-component": DetailedHTMLProps<
+        HTMLAttributes<SimpleComponentElement>,
+        SimpleComponentElement
+      > &
+        SimpleComponentAttributes &
+        SimpleComponentEventHandlers;
+    }
+  }
+}
+```
+
+#### Vue
+
+Vue's template checker reads `$props` and `$emit`, so the entry must be a
+component-like type rather than a bag of props:
+
+```ts
+import type { HTMLAttributes, PublicProps } from "vue";
+import type {
+  SimpleComponentElement,
+  SimpleComponentAttributes,
+  SimpleComponentEventMap,
+} from "my-components";
+
+type DefineCustomElement<
+  ElementType extends HTMLElement,
+  Events extends Record<string, Event>,
+  Attributes,
+> = new () => ElementType & {
+  $props: HTMLAttributes & Partial<Attributes> & PublicProps;
+  $emit: <K extends keyof Events>(event: K, payload: Events[K]) => void;
+};
+
+declare module "vue" {
+  interface GlobalComponents {
+    "simple-component": DefineCustomElement<
+      SimpleComponentElement,
+      SimpleComponentEventMap,
+      SimpleComponentAttributes
+    >;
+  }
+}
+```
 
 ## Manual Configuration
 

@@ -9,10 +9,7 @@ import {
   classNameFromTag,
   findComponentSources,
 } from "./manifest.js";
-import {
-  renderCoreDeclarations,
-  renderFrameworkDeclarations,
-} from "./elementTypes.js";
+import { renderCoreDeclarations } from "./elementTypes.js";
 
 let workspace: string;
 
@@ -384,69 +381,112 @@ describe("generated declarations compile", () => {
   });
 });
 
-describe("renderFrameworkDeclarations", () => {
-  const render = async (framework: "svelte" | "vue" | "react") =>
-    renderFrameworkDeclarations(
-      framework,
-      await analyzeWorkspace(),
-      workspace,
-      workspace,
-      new Map([["src/Element.svelte", "./dist/client/index.js"]]),
-    );
+describe("exported building blocks", () => {
+  const render = async () =>
+    renderCoreDeclarations(await analyzeWorkspace(), workspace, workspace);
 
-  it("imports the element interfaces from the module that declares them", async () => {
+  it("exports the attributes a template may set", async () => {
     await writeComponent("Element.svelte", BUTTON);
-    expect(await render("svelte")).toContain('from "./dist/client/index.js";');
+    const output = await render();
+    expect(output).toContain("export interface MyButtonAttributes {");
+    expect(output).toContain('"count"?: number | string;');
+    // a string-typed attribute needs no widening
+    expect(output).toContain('"label"?: string;');
   });
 
-  it("composes svelte's HTMLAttributes so class and id keep working", async () => {
+  it("exports handler props for dispatched events", async () => {
     await writeComponent("Element.svelte", BUTTON);
-    const output = await render("svelte");
+    const output = await render();
+    expect(output).toContain("export interface MyButtonEventHandlers {");
     expect(output).toContain(
-      'import type { HTMLAttributes } from "svelte/elements";',
-    );
-    expect(output).toContain(
-      '"my-button": HTMLAttributes<MyButtonElement> & {',
-    );
-  });
-
-  it("composes react's DetailedHTMLProps", async () => {
-    await writeComponent("Element.svelte", BUTTON);
-    expect(await render("react")).toContain(
-      '"my-button": DetailedHTMLProps<HTMLAttributes<MyButtonElement>, MyButtonElement> & {',
-    );
-  });
-
-  it("gives vue a component-like type rather than a bag of props", async () => {
-    await writeComponent("Element.svelte", BUTTON);
-    const output = await render("vue");
-    // vue's template checker reads `$props` and `$emit`; a plain object of
-    // attributes is not a component and would not type-check
-    expect(output).toContain("$props: VueHTMLAttributes");
-    expect(output).toContain("$emit:");
-    expect(output).toContain(
-      '"my-button": SvebDefineCustomElement<MyButtonElement, MyButtonEventMap, MyButtonAttributes>;',
-    );
-  });
-
-  it("keeps property-only props off every template surface", async () => {
-    await writeComponent("Element.svelte", BUTTON);
-    for (const framework of ["svelte", "vue", "react"] as const) {
-      expect(await render(framework)).not.toContain("onPick");
-    }
-  });
-
-  it("exposes dispatched events as handler props", async () => {
-    await writeComponent("Element.svelte", BUTTON);
-    expect(await render("svelte")).toContain(
       '"onchange"?: (event: CustomEvent<MyButton$ChangeDetail>) => void;',
     );
   });
 
-  it("lets a markup string satisfy a non-string attribute", async () => {
+  it("keeps property-only props out of the attributes", async () => {
     await writeComponent("Element.svelte", BUTTON);
-    const output = await render("svelte");
-    expect(output).toContain('"count"?: number | string;');
-    expect(output).toContain('"label"?: string;');
+    const output = await render();
+    const attributes = output.slice(
+      output.indexOf("export interface MyButtonAttributes {"),
+    );
+    // `onPick={fn}` in a template is event-handler syntax, not a property
+    // assignment, so it must not look settable from markup
+    expect(attributes).not.toContain("onPick");
+    expect(output).toContain("onPick?: (value: string) => void;");
+  });
+
+  it("omits the interfaces entirely when there is nothing to describe", async () => {
+    await writeComponent(
+      "Element.svelte",
+      `<svelte:options customElement="bare-el" />`,
+    );
+    const output = await render();
+    expect(output).not.toContain("Attributes {");
+    expect(output).not.toContain("EventHandlers {");
+  });
+});
+
+describe("documented augmentation recipes", () => {
+  /**
+   * The recipes in the docs are the product now that no framework
+   * augmentation is generated, so they are type-checked here against the real
+   * `svelte/elements` rather than left to rot in prose.
+   */
+  const checkWithSvelte = async (recipe: string) => {
+    const ts = await import("typescript");
+    // inside the package, so a bare `svelte/elements` resolves through this
+    // package's own node_modules the way a consumer's would
+    const scratch = await fs.mkdtemp(
+      path.join(path.resolve(import.meta.dirname, ".."), ".recipe-check-"),
+    );
+    const core = path.join(scratch, "elements.d.ts");
+    const usage = path.join(scratch, "augmentation.ts");
+    await fs.writeFile(
+      core,
+      renderCoreDeclarations(await analyzeWorkspace(), workspace, workspace),
+      "utf8",
+    );
+    await fs.writeFile(usage, recipe, "utf8");
+
+    const program = ts.createProgram([core, usage], {
+      strict: true,
+      noEmit: true,
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      lib: ["lib.es2022.d.ts", "lib.dom.d.ts"],
+      skipLibCheck: true,
+    });
+    const diagnostics = ts
+      .getPreEmitDiagnostics(program)
+      .filter((diagnostic) => diagnostic.file?.fileName === usage)
+      .map((diagnostic) =>
+        ts.flattenDiagnosticMessageText(diagnostic.messageText, " "),
+      );
+    await fs.rm(scratch, { recursive: true, force: true });
+    return diagnostics;
+  };
+
+  it("the svelte recipe type-checks against svelte/elements", async () => {
+    await writeComponent("Element.svelte", BUTTON);
+    const diagnostics = await checkWithSvelte(`
+import type { HTMLAttributes } from "svelte/elements";
+import type {
+  MyButtonElement,
+  MyButtonAttributes,
+  MyButtonEventHandlers,
+} from "./elements.js";
+
+declare module "svelte/elements" {
+  interface SvelteHTMLElements {
+    "my-button": HTMLAttributes<MyButtonElement> &
+      MyButtonAttributes &
+      MyButtonEventHandlers;
+  }
+}
+
+export {};
+`);
+    expect(diagnostics).toEqual([]);
   });
 });
