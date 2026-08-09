@@ -235,6 +235,56 @@ describe("renderDeclarations", () => {
     expect(output).not.toContain('from "react"');
   });
 
+  it("leaves literal types whose value spells a local type name alone", async () => {
+    // `qualifyLocalTypes` rewrites references to inlined local types, but a
+    // string literal is a value, not a reference. Rewriting it would advertise
+    // a type the component cannot actually be given: `mode="Detail"` — the
+    // value it accepts — would stop type-checking.
+    await writeComponent(
+      "Element.svelte",
+      `<svelte:options customElement={{ tag: 'my-widget' }} />
+<script lang="ts">
+  interface Detail { id: string }
+  type Mode = "Detail" | "summary";
+  interface Props {
+    mode: Mode;
+    onpick?: (detail: Detail) => void;
+  }
+  let { mode, onpick }: Props = $props();
+</script>
+<button>{mode}</button>`,
+    );
+    const output = await render();
+    expect(output).toContain('type MyWidget$Mode = "Detail" | "summary";');
+    expect(output).not.toContain('"MyWidget$Detail"');
+    // the genuine type *reference* is still qualified
+    expect(output).toContain("interface MyWidget$Detail");
+    expect(output).toContain("(detail: MyWidget$Detail) => void");
+  });
+
+  it("does not re-qualify a name a previous rewrite just introduced", async () => {
+    // `Wrapper` is rewritten to `MyWidget$Wrapper`, which puts the literal text
+    // `MyWidget` — itself a local type name — into the output. Replacing names
+    // one after another would then match it again and yield
+    // `MyWidget$MyWidget$Wrapper`. Matching every name in a single alternation
+    // is what makes each position rewritten exactly once.
+    await writeComponent(
+      "Element.svelte",
+      `<svelte:options customElement={{ tag: 'my-widget' }} />
+<script lang="ts">
+  type Wrapper = { inner: MyWidget };
+  interface MyWidget { id: string }
+  interface Props { detail: Wrapper }
+  let { detail }: Props = $props();
+</script>
+<span>{detail.inner.id}</span>`,
+    );
+    const output = await render();
+    expect(output).toContain("type MyWidget$Wrapper");
+    expect(output).not.toContain("MyWidget$MyWidget$Wrapper");
+    expect(output).toContain("inner: MyWidget$MyWidget");
+  });
+
   it("inlines a referenced local type under a component-qualified name", async () => {
     await writeComponent("Element.svelte", BUTTON);
     const output = await render();

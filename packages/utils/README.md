@@ -61,6 +61,10 @@ defineElement("my-component", MyComponent);
 
 Components built with `@svebcomponents/build` don't need this: declaring the
 tag in `<svelte:options customElement="my-component" />` is enough, since the
-build already guards Svelte's own generated registration call. Reach for
-`defineElement` only when a tag can't be a literal in `<svelte:options>` —
-e.g. one computed at build time.
+build already guards Svelte's own generated registration call. That declaration
+is also what lets the build describe the element — a tag registered only through
+`defineElement` is invisible to the manifest and the generated types, so prefer
+`<svelte:options>` wherever the tag is known.
+
+`defineElement` remains available for registering a compiled component by hand,
+outside that pipeline.

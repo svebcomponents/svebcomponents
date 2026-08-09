@@ -24,6 +24,11 @@ Consumers import the entrypoint for the side effect of defining
 idempotent at build time, so it no-ops if the component (or a bundle
 containing it) is ever evaluated more than once.
 
+The tag has to be a literal. Svebcomponents reads it from the source at build
+time to write the manifest, the element types and the self-registering SSR
+renderer, so a tag assembled at runtime cannot be described — see
+[Static tags only](#static-tags-only).
+
 ## Zero-config Builds
 
 For the common case, the CLI infers component entrypoints from the `exports`
@@ -51,6 +56,8 @@ The inference follows these rules:
    plain tsdown build.
 5. Exactly one matching source must exist. Ambiguous basenames fail with an
    error instead of silently choosing one.
+6. Subpath patterns (`"./*"`) are not inferred. Give each entry its own export
+   key, or use [manual configuration](#manual-configuration).
 
 In this example, `./dist/client/FavoriteNumber.js` resolves to
 `src/FavoriteNumber.svelte`.
@@ -78,9 +85,9 @@ ordinary module. Ordinary modules use the normal TypeScript/JavaScript build
 pipeline and do not receive component SSR output automatically.
 
 :::info[Dynamic custom-element tags]
-Zero-config builds expect a literal tag in `<svelte:options>`. If a tag must be
-computed at build time, use manual configuration with a script entry that
-registers the component explicitly.
+A tag computed at build time is not supported. Svebcomponents reads the literal
+from `<svelte:options>` to produce the manifest, the element types and the SSR
+renderer's self-registration — see [Static tags only](#static-tags-only).
 :::
 
 ## Svelte Conditional Exports
@@ -201,6 +208,27 @@ Expose the manifest to consumers (the build hints at this if it is missing):
   "files": ["dist", "custom-elements.json"]
 }
 ```
+
+### Static Tags Only
+
+Both forms are produced by reading your `.svelte` sources at build time, which
+means an element is only describable when its tag is a literal in
+`<svelte:options>` and the component is a direct entry.
+
+Two consequences:
+
+- A tag assembled at runtime cannot appear in the manifest or the generated
+  types. Nothing else about the component is affected — it still compiles and
+  still registers itself.
+- A component reached only through a script entry is not described either. If
+  `src/index.ts` imports `Button.svelte` and re-exports it, the build treats
+  `src/index.ts` as an ordinary module: no manifest declaration, no element
+  types. Make the component the entry instead.
+
+This is a deliberate floor rather than a limitation to work around. A tag that
+is not knowable at build time cannot be typed, cannot be put in
+`HTMLElementTagNameMap`, and cannot be self-registered by the SSR renderer, so
+supporting it would mean shipping a description that is quietly incomplete.
 
 ### What Gets Described
 
