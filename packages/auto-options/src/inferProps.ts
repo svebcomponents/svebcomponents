@@ -5,9 +5,9 @@ import type {
   TypedVariableDeclarator,
   Type,
   TypeDeclaration,
-} from "./types";
+} from "./types.js";
 import { kebabize } from "@svebcomponents/utils";
-import type { SvelteOptions } from "./extractSvelteOptionsProps";
+import type { SvelteOptions } from "./extractSvelteOptionsProps.js";
 
 const WARNING_PREFIX = "[svebcomponents/auto-options]";
 

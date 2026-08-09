@@ -58,6 +58,12 @@ component. Declaring the tag in `<svelte:options>` registers the custom element.
 `@svebcomponents/build` guards that registration, so importing the component
 is safe even if it (or a bundle containing it) is evaluated more than once.
 
+:::note
+The tag must be a literal. Svebcomponents reads it from your source to generate
+the manifest, the element types and the SSR renderer's self-registration — see
+[Static tags only](/core-concepts/build/#static-tags-only).
+:::
+
 ## Package Exports
 
 The `exports` field of your component's `package.json` tells consumers where the custom element lives:

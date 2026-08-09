@@ -4,7 +4,7 @@ import type {
   InferredSvelteOptionProps,
   TypeDeclaration,
   TypedVariableDeclarator,
-} from "./types";
+} from "./types.js";
 import {
   inferPropsFromComponentPropDeclaration,
   inferPropsFromSvelteOptions,

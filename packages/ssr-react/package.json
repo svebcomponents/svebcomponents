@@ -1,6 +1,9 @@
 {
   "name": "@svebcomponents/ssr-react",
   "version": "0.2.0",
+  "description": "Server-render Svelte-built custom elements inside a React application.",
+  "license": "MIT",
+  "homepage": "https://svebcomponents.dev/packages/ssr-react/",
   "engines": {
     "node": ">=20.19.0"
   },
@@ -53,6 +56,7 @@
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
+    "@svebcomponents/vitest-config": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

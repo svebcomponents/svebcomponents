@@ -1,6 +1,9 @@
 {
   "name": "@svebcomponents/utils",
   "version": "0.2.0",
+  "description": "Custom element helpers shared by the svebcomponents packages: tag-name conversion, validation and safe registration.",
+  "license": "MIT",
+  "homepage": "https://svebcomponents.dev/packages/utils/",
   "engines": {
     "node": ">=20.19.0"
   },
@@ -24,7 +27,9 @@
     "test:dev": "vitest --watch"
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/**/*.spec.*"
   ],
   "exports": {
     ".": {

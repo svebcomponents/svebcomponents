@@ -23,9 +23,13 @@ const resolveSourceEntry = (entryPath: string): SourceEntry => {
   // The `existsSync` filesystem checks are safe with posix separators because
   // Node's fs APIs accept forward slashes on Windows as well.
   const outputExtension = path.posix.extname(entryPath);
-  const sourceBase = entryPath
-    .replace("dist/client", "src")
-    .slice(0, -outputExtension.length);
+  const mappedPath = entryPath.replace("dist/client", "src");
+  // An export may legally point at an extensionless file. `slice(0, -0)` would
+  // return the empty string rather than the whole path, so guard it — otherwise
+  // every candidate below collapses to a bare extension ("./.svelte").
+  const sourceBase = outputExtension
+    ? mappedPath.slice(0, -outputExtension.length)
+    : mappedPath;
   const candidates = [
     { entry: `${sourceBase}.svelte`, kind: "component" as const },
     { entry: `${sourceBase}.ts`, kind: "module" as const },
