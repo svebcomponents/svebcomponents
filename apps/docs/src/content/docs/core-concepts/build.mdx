@@ -171,9 +171,13 @@ The browser export defines the custom element. The matching SSR export
 provides the renderer that a server application can register.
 
 An SSR component can add an adjacent `ColorPicker.ssr.ts` (or `.js`)
-preparation hook next to `ColorPicker.svelte`. The hook is compiled only into the server output;
-see the [build package reference](/packages/build/#server-preparation) for its
-`SsrPrepare` signature and hydration behavior.
+preparation hook next to `ColorPicker.svelte`, letting the component acquire its
+own data on the server. The hook is compiled only into the server output. See the
+[build package reference](/packages/build/#server-preparation) for its
+`SsrPrepare` signature, and
+[What makes a component asynchronous](/core-concepts/ssr/#what-makes-a-component-asynchronous)
+for when a hook puts the component on the async path and why it is preferable to
+awaiting in the component.
 
 SSR is currently in beta. See [SSR](/core-concepts/ssr/) for its stability and
 security considerations.
