@@ -35,4 +35,4 @@ npm-debug.log*
 
 # Generated element metadata (rebuilt by `svebcomponents`)
 e2e/*/custom-elements.json
-e2e/*/custom-elements.d.ts
+e2e/*/custom-elements*.d.ts

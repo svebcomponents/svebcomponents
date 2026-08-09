@@ -153,30 +153,83 @@ security considerations.
 
 ## Element Types & Manifest
 
-Every build also writes two files describing the elements your package
-declares:
+Every build describes the elements your package declares, in two forms:
 
 - `custom-elements.json` — a
   [custom elements manifest](https://github.com/webcomponents/custom-elements-manifest)
-  (schema 2.1.0). Editors read it directly for HTML completions, and the wider
-  custom elements tooling ecosystem consumes it.
-- `custom-elements.d.ts` — TypeScript declarations generated from the same
-  analysis, so consuming templates know your tags and what they accept.
+  (schema 2.1.0). Editors read it for HTML completions, and the wider custom
+  elements tooling ecosystem consumes it.
+- TypeScript declarations, so consuming templates know your tags.
 
-Publish both by listing them in `files`, and point tooling at the manifest:
+### What Ships Where
+
+The element interfaces and the `HTMLElementTagNameMap` entries are appended to
+the declaration file each entry already emits — the one its `types` condition
+points at. Nothing extra is needed to get them:
+
+```ts
+// defines <simple-component> and types it
+import "my-components";
+
+const el = document.querySelector("simple-component");
+el?.count; // number | undefined
+```
+
+The framework template augmentations are **separate, opt-in files**, because
+each one imports from its framework — a Svelte-only consumer must never be
+made to resolve `vue`:
+
+- `custom-elements-svelte.d.ts`
+- `custom-elements-vue.d.ts`
+- `custom-elements-react.d.ts`
+
+### Publishing
+
+The build hints at this if it is missing. Expose the generated files:
 
 ```json
 {
   "customElements": "custom-elements.json",
-  "files": ["dist", "custom-elements.json", "custom-elements.d.ts"]
+  "files": ["dist", "custom-elements.json", "custom-elements-*.d.ts"],
+  "exports": {
+    ".": {
+      "types": "./dist/client/index.d.ts",
+      "default": "./dist/client/index.js"
+    },
+    "./custom-elements-svelte.d.ts": "./custom-elements-svelte.d.ts"
+  }
 }
 ```
 
-Consumers pick up the declarations by including the file once:
+With `exports` declared, a subpath that is not mapped cannot be referenced by
+a consumer at all — so each framework file you intend to ship needs an entry.
+
+### Consuming
+
+Reference the file for your framework once, anywhere in the project:
 
 ```ts
-/// <reference types="my-components/custom-elements.d.ts" />
+/// <reference types="my-components/custom-elements-svelte.d.ts" />
 ```
+
+Then templates are checked:
+
+```svelte
+<script lang="ts">
+  import "my-components";
+</script>
+
+<simple-component count={3} enabled title="Hello" class="styled" />
+```
+
+`count={"nope"}` and unknown attributes are both errors. Attributes also
+accept their string form (`count="3"`), since that is what markup produces.
+
+:::note
+The React augmentation targets React 19 and later. Earlier versions stringify
+every prop passed to a custom element and do not attach listeners for custom
+event names, so these signatures would not describe their behaviour.
+:::
 
 ### What Gets Described
 
@@ -185,19 +238,6 @@ Props become attributes with the type and reflection settings
 TypeScript carry their declared type and JSDoc description; untyped props fall
 back to the attribute converter's type, so a `Number` prop is still typed
 `number`.
-
-The declarations register your tag in `HTMLElementTagNameMap` — so
-`document.querySelector("my-button")` returns the right element type — and
-augment the template surfaces of Svelte (`SvelteHTMLElements`), Vue
-(`GlobalComponents`) and React (`JSX.IntrinsicElements`). Augmenting a
-framework you do not use is inert, so a Svelte-only consumer is unaffected by
-the Vue and React blocks.
-
-:::note
-The React augmentation describes React 19 and later. Earlier versions
-stringify every prop passed to a custom element and do not attach listeners
-for custom event names.
-:::
 
 ### Events
 
@@ -218,6 +258,13 @@ The explicit type argument is what makes `detail` typed — it is read verbatim,
 with no type checker involved. Relying on inference from the `detail` value
 instead still records the event, but its detail becomes `unknown`.
 
+Each event becomes an `onchange`-style handler prop in templates, and an entry
+in a typed event map so `addEventListener` narrows:
+
+```ts
+el.addEventListener("change", (event) => event.detail.value);
+```
+
 Callback props (`onPick`) are _not_ treated as events. They appear on the DOM
 element interface, where `element.onPick = fn` genuinely works, but never on
 the template surface: in a template `onPick={fn}` is event-handler syntax
@@ -230,6 +277,9 @@ Statically named `<slot>` elements are collected automatically. CSS custom
 properties are collected when the component _reads_ one it does not itself
 define — those are the ones a consumer is expected to supply. A `var()`
 fallback becomes the documented default.
+
+These appear in the manifest, which is what editors and documentation tooling
+read; they have no TypeScript representation.
 
 Anything the scan cannot see can be documented on the component comment, which
 also supplies descriptions:

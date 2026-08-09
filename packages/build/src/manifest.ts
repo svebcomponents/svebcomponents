@@ -47,39 +47,128 @@ const entryPaths = (entry: UserConfig["entry"]): string[] => {
   return [];
 };
 
+const IMPORT_SPECIFIER =
+  /(?:from|import)\s*\(?\s*["']([^"']+)["']|require\(\s*["']([^"']+)["']\s*\)/g;
+
 /**
- * Finds the component sources a set of build configs covers.
+ * Resolves a relative import specifier to a file on disk, trying the
+ * extensionless and `.js`-to-source rewrites TypeScript packages rely on.
+ */
+const resolveRelativeImport = async (
+  fromFile: string,
+  specifier: string,
+): Promise<string | undefined> => {
+  const base = path.resolve(path.dirname(fromFile), specifier);
+  const candidates = [
+    base,
+    // `./Component.js` in TS source usually means `./Component.ts`
+    base.replace(/\.js$/, ".ts"),
+    base.replace(/\.js$/, ".svelte"),
+    `${base}.ts`,
+    `${base}.js`,
+    `${base}.svelte`,
+    path.join(base, "index.ts"),
+    path.join(base, "index.js"),
+  ];
+  for (const candidate of candidates) {
+    try {
+      const stats = await fs.stat(candidate);
+      if (stats.isFile()) return candidate;
+    } catch {
+      continue;
+    }
+  }
+  return undefined;
+};
+
+/**
+ * Follows an entry module's relative imports to the `.svelte` files it pulls
+ * in.
  *
  * Build entries point at the module that re-exports a component
- * (`src/index.ts`), not at the `.svelte` file itself, so rather than resolving
- * each entry's import graph we search the directories the entries live in.
- * Components that declare no custom element tag are dropped by the caller, so
- * a stray internal `.svelte` file in those directories cannot leak into the
- * manifest.
+ * (`src/index.ts`), not at the `.svelte` file itself. Walking the imports
+ * rather than scanning a directory is what lets a package with several
+ * exports know which element belongs to which entry — each entry's generated
+ * declarations may only describe its own elements, since two entries both
+ * declaring the same tag globally would collide.
+ */
+export const findComponentSourcesForEntry = async (
+  cwd: string,
+  entry: string,
+): Promise<string[]> => {
+  const start = path.resolve(cwd, entry);
+  const seen = new Set<string>();
+  const components = new Set<string>();
+
+  // A configured entry that is not on disk cannot be walked. Rather than
+  // contributing nothing, fall back to scanning its directory — the caller
+  // drops anything without a custom element tag, so this stays conservative.
+  let reachable = true;
+  try {
+    await fs.access(start);
+  } catch {
+    reachable = false;
+  }
+  if (!reachable) {
+    const root = path.dirname(start);
+    try {
+      const entries = await fs.readdir(root, { recursive: true });
+      return entries
+        .filter((candidate) => candidate.endsWith(".svelte"))
+        .map((candidate) => path.resolve(root, candidate))
+        .sort();
+    } catch {
+      return [];
+    }
+  }
+
+  const queue = [start];
+
+  while (queue.length > 0) {
+    const file = queue.pop();
+    if (file === undefined || seen.has(file)) continue;
+    seen.add(file);
+
+    if (file.endsWith(".svelte")) {
+      components.add(file);
+      // a component may itself compose other custom elements, and those are
+      // part of the same entry's surface, so keep following
+    }
+
+    let code: string;
+    try {
+      code = await fs.readFile(file, "utf8");
+    } catch {
+      continue;
+    }
+
+    for (const match of code.matchAll(IMPORT_SPECIFIER)) {
+      const specifier = match[1] ?? match[2];
+      if (!specifier || !specifier.startsWith(".")) continue;
+      const resolved = await resolveRelativeImport(file, specifier);
+      if (resolved && !seen.has(resolved)) queue.push(resolved);
+    }
+  }
+
+  return [...components].sort();
+};
+
+/**
+ * Finds the component sources a set of build configs covers, across every
+ * entry. Used for the package-wide manifest, which describes all elements
+ * regardless of which entry exposes them.
  */
 export const findComponentSources = async (
   cwd: string,
   tsdownOptions: UserConfig[],
 ): Promise<string[]> => {
-  const searchRoots = new Set(
-    tsdownOptions
-      .flatMap((options) => entryPaths(options.entry))
-      .map((entry) => path.dirname(path.resolve(cwd, entry))),
+  const entries = new Set(
+    tsdownOptions.flatMap((options) => entryPaths(options.entry)),
   );
-
   const found = new Set<string>();
-  for (const root of searchRoots) {
-    let entries: string[];
-    try {
-      entries = await fs.readdir(root, { recursive: true });
-    } catch {
-      // a configured entry may point outside the package (or at a path that
-      // no longer exists); nothing to contribute to the manifest either way
-      continue;
-    }
-    for (const entry of entries) {
-      if (!entry.endsWith(".svelte")) continue;
-      found.add(path.resolve(root, entry));
+  for (const entry of entries) {
+    for (const component of await findComponentSourcesForEntry(cwd, entry)) {
+      found.add(component);
     }
   }
   return [...found].sort();

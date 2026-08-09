@@ -2,15 +2,27 @@
 "@svebcomponents/build": minor
 ---
 
-Emit `custom-elements.json` (custom elements manifest 2.1.0) and
-`custom-elements.d.ts` alongside the build, so editors and consuming templates
-know which elements a package declares and what they accept.
+Emit a custom elements manifest and TypeScript declarations for the elements a
+package ships, so editors and consuming templates know the tags and what they
+accept.
 
-The manifest describes attributes, property-only members, events with their
-detail type, slots and CSS custom properties. The declaration file turns that
-into an `HTMLElementTagNameMap` entry — typing `document.querySelector("my-el")`
-— plus template augmentations for Svelte (`SvelteHTMLElements`), Vue
-(`GlobalComponents`) and React (`JSX.IntrinsicElements`).
+`custom-elements.json` (custom elements manifest 2.1.0) describes attributes,
+property-only members, events with their detail type, slots and CSS custom
+properties.
+
+The element interfaces and `HTMLElementTagNameMap` entries are appended to the
+declaration file each entry already emits — the one its `types` condition
+points at — so `import "my-components"` is enough to type
+`document.querySelector("my-el")`. The framework template augmentations ship as
+separate opt-in files (`custom-elements-svelte.d.ts`, `-vue`, `-react`) because
+each imports from its framework, and a Svelte-only consumer must not be made to
+resolve `vue`.
+
+Each template entry composes the framework's own base attribute type — Svelte's
+`HTMLAttributes`, React's `DetailedHTMLProps`, and for Vue a component-like type
+exposing `$props`/`$emit`, which is what its template checker reads — so
+`class`, `id` and DOM event handlers keep working alongside the element's own
+attributes.
 
 Property-only props (functions, snippets) appear on the DOM element interface
 but deliberately not on the template surface: in a template `onPick={fn}` is

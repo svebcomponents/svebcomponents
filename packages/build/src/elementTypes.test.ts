@@ -9,7 +9,10 @@ import {
   classNameFromTag,
   findComponentSources,
 } from "./manifest.js";
-import { renderDeclarations } from "./elementTypes.js";
+import {
+  renderCoreDeclarations,
+  renderFrameworkDeclarations,
+} from "./elementTypes.js";
 
 let workspace: string;
 
@@ -24,6 +27,21 @@ afterEach(async () => {
 
 const writeComponent = async (name: string, source: string) => {
   await fs.writeFile(path.join(workspace, "src", name), source, "utf8");
+  // mirror a real package: the entry re-exports every component, which is
+  // what component discovery walks
+  const components = (await fs.readdir(path.join(workspace, "src"))).filter(
+    (file) => file.endsWith(".svelte"),
+  );
+  await fs.writeFile(
+    path.join(workspace, "src", "index.ts"),
+    components
+      .map(
+        (file, index) =>
+          `import C${index} from "./${file}";\nexport { C${index} };`,
+      )
+      .join("\n"),
+    "utf8",
+  );
 };
 
 const analyzeWorkspace = async () => {
@@ -61,12 +79,26 @@ describe("classNameFromTag", () => {
 });
 
 describe("findComponentSources", () => {
-  it("finds components below every entry's directory", async () => {
-    await writeComponent("A.svelte", `<svelte:options customElement="a-el" />`);
+  it("follows the entry's imports, including nested modules", async () => {
     await fs.mkdir(path.join(workspace, "src", "nested"), { recursive: true });
     await fs.writeFile(
       path.join(workspace, "src", "nested", "B.svelte"),
       `<svelte:options customElement="b-el" />`,
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(workspace, "src", "nested", "index.ts"),
+      `import B from "./B.svelte";\nexport { B };`,
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(workspace, "src", "A.svelte"),
+      `<svelte:options customElement="a-el" />`,
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(workspace, "src", "index.ts"),
+      `import A from "./A.svelte";\nexport * from "./nested/index.js";\nexport { A };`,
       "utf8",
     );
     const sources = await findComponentSources(workspace, [
@@ -75,6 +107,26 @@ describe("findComponentSources", () => {
     expect(sources.map((source) => path.basename(source)).sort()).toEqual([
       "A.svelte",
       "B.svelte",
+    ]);
+  });
+
+  it("leaves out a component the entry never imports", async () => {
+    await writeComponent("A.svelte", `<svelte:options customElement="a-el" />`);
+    await fs.writeFile(
+      path.join(workspace, "src", "Orphan.svelte"),
+      `<svelte:options customElement="orphan-el" />`,
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(workspace, "src", "index.ts"),
+      `import A from "./A.svelte";\nexport { A };`,
+      "utf8",
+    );
+    const sources = await findComponentSources(workspace, [
+      { entry: "src/index.ts" },
+    ]);
+    expect(sources.map((source) => path.basename(source))).toEqual([
+      "A.svelte",
     ]);
   });
 
@@ -164,7 +216,7 @@ describe("buildManifest", () => {
 
 describe("renderDeclarations", () => {
   const render = async () =>
-    renderDeclarations(await analyzeWorkspace(), workspace, workspace);
+    renderCoreDeclarations(await analyzeWorkspace(), workspace, workspace);
 
   it("maps the tag to the element interface", async () => {
     await writeComponent("Element.svelte", BUTTON);
@@ -173,12 +225,14 @@ describe("renderDeclarations", () => {
     expect(output).toContain("interface HTMLElementTagNameMap");
   });
 
-  it("augments svelte, vue and react template surfaces", async () => {
+  it("keeps framework augmentations out of the module's own types", async () => {
     await writeComponent("Element.svelte", BUTTON);
     const output = await render();
-    expect(output).toContain('declare module "svelte/elements"');
-    expect(output).toContain('declare module "vue"');
-    expect(output).toContain("namespace React");
+    // these import from their framework, so they must stay opt-in — a
+    // svelte-only consumer must never be made to resolve `vue`
+    expect(output).not.toContain('declare module "svelte/elements"');
+    expect(output).not.toContain('declare module "vue"');
+    expect(output).not.toContain('from "react"');
   });
 
   it("inlines a referenced local type under a component-qualified name", async () => {
@@ -196,29 +250,18 @@ describe("renderDeclarations", () => {
     expect(output).not.toContain("MyButton$Props");
   });
 
-  it("keeps property-only props off the template surface", async () => {
+  it("exposes property-only props on the element interface", async () => {
     await writeComponent("Element.svelte", BUTTON);
-    const output = await render();
-    const [, templateHalf] = output.split('declare module "svelte/elements"');
-    expect(output).toContain("onPick?: (value: string) => void;");
-    expect(templateHalf).not.toContain("onPick");
+    expect(await render()).toContain("onPick?: (value: string) => void;");
   });
 
-  it("exposes dispatched events as handler props and an event map", async () => {
+  it("exports a typed event map for addEventListener", async () => {
     await writeComponent("Element.svelte", BUTTON);
     const output = await render();
-    expect(output).toContain("interface MyButtonEventMap {");
+    expect(output).toContain("export interface MyButtonEventMap {");
     expect(output).toContain(
-      '"onchange"?: (event: CustomEvent<MyButton$ChangeDetail>) => void;',
+      "addEventListener<K extends keyof MyButtonEventMap>",
     );
-  });
-
-  it("lets a markup string satisfy a non-string attribute", async () => {
-    await writeComponent("Element.svelte", BUTTON);
-    const output = await render();
-    expect(output).toContain('"count"?: number | string;');
-    // a string-typed attribute needs no widening
-    expect(output).toContain('"label"?: string;');
   });
 
   it("omits a shadowed built-in DOM property from the base interface", async () => {
@@ -312,7 +355,7 @@ describe("generated declarations compile", () => {
       ).replace("count?: number;", "count?: number;\n    size?: Size;"),
     );
     await expectCompiles(
-      renderDeclarations(await analyzeWorkspace(), workspace, workspace),
+      renderCoreDeclarations(await analyzeWorkspace(), workspace, workspace),
     );
   });
 
@@ -325,7 +368,7 @@ describe("generated declarations compile", () => {
 </script>`,
     );
     await expectCompiles(
-      renderDeclarations(await analyzeWorkspace(), workspace, workspace),
+      renderCoreDeclarations(await analyzeWorkspace(), workspace, workspace),
     );
   });
 
@@ -336,7 +379,74 @@ describe("generated declarations compile", () => {
       BUTTON.replace("my-button", "other-button"),
     );
     await expectCompiles(
-      renderDeclarations(await analyzeWorkspace(), workspace, workspace),
+      renderCoreDeclarations(await analyzeWorkspace(), workspace, workspace),
     );
+  });
+});
+
+describe("renderFrameworkDeclarations", () => {
+  const render = async (framework: "svelte" | "vue" | "react") =>
+    renderFrameworkDeclarations(
+      framework,
+      await analyzeWorkspace(),
+      workspace,
+      workspace,
+      new Map([["src/Element.svelte", "./dist/client/index.js"]]),
+    );
+
+  it("imports the element interfaces from the module that declares them", async () => {
+    await writeComponent("Element.svelte", BUTTON);
+    expect(await render("svelte")).toContain('from "./dist/client/index.js";');
+  });
+
+  it("composes svelte's HTMLAttributes so class and id keep working", async () => {
+    await writeComponent("Element.svelte", BUTTON);
+    const output = await render("svelte");
+    expect(output).toContain(
+      'import type { HTMLAttributes } from "svelte/elements";',
+    );
+    expect(output).toContain(
+      '"my-button": HTMLAttributes<MyButtonElement> & {',
+    );
+  });
+
+  it("composes react's DetailedHTMLProps", async () => {
+    await writeComponent("Element.svelte", BUTTON);
+    expect(await render("react")).toContain(
+      '"my-button": DetailedHTMLProps<HTMLAttributes<MyButtonElement>, MyButtonElement> & {',
+    );
+  });
+
+  it("gives vue a component-like type rather than a bag of props", async () => {
+    await writeComponent("Element.svelte", BUTTON);
+    const output = await render("vue");
+    // vue's template checker reads `$props` and `$emit`; a plain object of
+    // attributes is not a component and would not type-check
+    expect(output).toContain("$props: VueHTMLAttributes");
+    expect(output).toContain("$emit:");
+    expect(output).toContain(
+      '"my-button": SvebDefineCustomElement<MyButtonElement, MyButtonEventMap, MyButtonAttributes>;',
+    );
+  });
+
+  it("keeps property-only props off every template surface", async () => {
+    await writeComponent("Element.svelte", BUTTON);
+    for (const framework of ["svelte", "vue", "react"] as const) {
+      expect(await render(framework)).not.toContain("onPick");
+    }
+  });
+
+  it("exposes dispatched events as handler props", async () => {
+    await writeComponent("Element.svelte", BUTTON);
+    expect(await render("svelte")).toContain(
+      '"onchange"?: (event: CustomEvent<MyButton$ChangeDetail>) => void;',
+    );
+  });
+
+  it("lets a markup string satisfy a non-string attribute", async () => {
+    await writeComponent("Element.svelte", BUTTON);
+    const output = await render("svelte");
+    expect(output).toContain('"count"?: number | string;');
+    expect(output).toContain('"label"?: string;');
   });
 });
