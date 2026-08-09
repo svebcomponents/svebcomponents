@@ -762,6 +762,9 @@ importers:
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
+      '@svebcomponents/vitest-config':
+        specifier: workspace:*
+        version: link:../../configs/vitest-config
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -802,6 +805,9 @@ importers:
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
+      '@svebcomponents/vitest-config':
+        specifier: workspace:*
+        version: link:../../configs/vitest-config
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -854,6 +860,9 @@ importers:
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
+      '@svebcomponents/vitest-config':
+        specifier: workspace:*
+        version: link:../../configs/vitest-config
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3

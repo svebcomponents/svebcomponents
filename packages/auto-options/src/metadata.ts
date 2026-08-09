@@ -3,7 +3,7 @@ import type {
   PrimitiveType,
   TypeDeclaration,
   TypedVariableDeclarator,
-} from "./types";
+} from "./types.js";
 import { resolvePropsTypeMembers } from "./inferProps.js";
 
 export interface PropMetadata {

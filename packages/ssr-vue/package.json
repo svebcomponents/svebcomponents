@@ -1,6 +1,9 @@
 {
   "name": "@svebcomponents/ssr-vue",
   "version": "0.1.0",
+  "description": "Server-render Svelte-built custom elements inside a Vue application.",
+  "license": "MIT",
+  "homepage": "https://svebcomponents.dev/packages/ssr-vue/",
   "engines": {
     "node": ">=20.19.0"
   },
@@ -51,6 +54,7 @@
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
+    "@svebcomponents/vitest-config": "workspace:*",
     "@types/node": "catalog:",
     "publint": "catalog:",
     "typescript": "catalog:",
