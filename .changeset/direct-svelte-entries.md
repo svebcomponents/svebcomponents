@@ -3,30 +3,30 @@
 ---
 
 Infer custom elements directly from same-basename `.svelte` source files and
-build same-basename `.ts`/`.js` sources as ordinary modules. Component packages
-no longer need TypeScript files whose only job is to re-export a Svelte
-component, and mixed packages can ship helpers without running them through the
-custom-element pipeline.
+build same-basename `.ts`/`.js` sources as ordinary modules. Mixed packages can
+ship helpers without running them through the custom-element pipeline.
 
 ## Migration
 
-Remove re-export-only entry modules and rename each component to match its
-declared JavaScript output. Given this export:
+Rename each component to match its declared JavaScript output. Given this
+export:
 
 ```json
 {
   "exports": {
     ".": {
-      "types": "./dist/client/index.d.ts",
-      "default": "./dist/client/index.js"
+      "types": "./dist/client/ExampleComponent.d.ts",
+      "default": "./dist/client/ExampleComponent.js"
     }
   }
 }
 ```
 
-replace `src/index.ts` plus `src/Component.svelte` with
-`src/index.svelte`. Alternatively, change all three output basenames to
-`Component` and keep `src/Component.svelte`.
+use `src/ExampleComponent.svelte` as the source entry.
+
+When upgrading, delete any entry module that only exported the component. If
+the module also contains runtime logic or additional exports, keep it as an
+ordinary module or move to an explicit `svebcomponents.config.ts`.
 
 The source convention is strict:
 
@@ -36,8 +36,7 @@ The source convention is strict:
   `svebcomponents.config.ts` for non-conventional layouts.
 
 For SSR preparation, place `<name>.ssr.ts` or `<name>.ssr.js` next to
-`<name>.svelte`. Component-style `<export>/ssr` subpaths are accepted only for
-component entries; expose ordinary server modules under independent keys.
+`<name>.svelte`.
 
 Direct component declarations are now generated from component analysis and
 include the module's default custom-element constructor together with the

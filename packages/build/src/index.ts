@@ -84,7 +84,11 @@ const inferSsrPrepareEntry = (entry: string): string | undefined => {
 export const defineConfig = (
   options: DefineConfigOptions = {},
 ): UserConfig[] => {
-  const { ssr = true, entry = "src/index.svelte", svelteConfig } = options;
+  const {
+    ssr = true,
+    entry = "src/ExampleComponent.svelte",
+    svelteConfig,
+  } = options;
   const outDir = options.outDir ?? "dist/client";
   const svelteOutDir = options.svelteOutDir;
   const ssrOutDir = options.ssrOutDir ?? "dist/server";

@@ -10,9 +10,8 @@ the JavaScript output.
 
 ## Component Entrypoints
 
-Each custom element is its own entrypoint. Its source filename matches the
-JavaScript output basename declared in `package.json`; no re-export module is
-needed.
+Each custom element is its own entrypoint. Its PascalCase source filename
+matches the JavaScript output basename declared in `package.json`.
 
 The component itself declares its tag:
 
@@ -25,19 +24,6 @@ Consumers import the entrypoint for the side effect of defining
 idempotent at build time, so it no-ops if the component (or a bundle
 containing it) is ever evaluated more than once.
 
-For a tag that cannot be a literal in `<svelte:options>` (for example, one
-computed at build time), use manual configuration and an explicit script entry
-that calls `defineElement`:
-
-```ts
-import { defineElement } from "@svebcomponents/utils";
-
-import Component from "./Component.svelte";
-
-export default Component;
-defineElement(tagName, Component);
-```
-
 ## Zero-config Builds
 
 For the common case, the CLI infers component entrypoints from the `exports`
@@ -47,9 +33,9 @@ field in `package.json`:
 {
   "exports": {
     ".": {
-      "types": "./dist/client/index.d.ts",
-      "svelte": "./dist/client-svelte/index.js",
-      "default": "./dist/client/index.js"
+      "types": "./dist/client/FavoriteNumber.d.ts",
+      "svelte": "./dist/client-svelte/FavoriteNumber.js",
+      "default": "./dist/client/FavoriteNumber.js"
     }
   }
 }
@@ -66,7 +52,8 @@ The inference follows these rules:
 5. Exactly one matching source must exist. Ambiguous basenames fail with an
    error instead of silently choosing one.
 
-In this example, `./dist/client/index.js` resolves to `src/index.svelte`.
+In this example, `./dist/client/FavoriteNumber.js` resolves to
+`src/FavoriteNumber.svelte`.
 
 This distinction lets one package ship components and ordinary helpers without
 running helpers through custom-element compilation:
@@ -75,8 +62,8 @@ running helpers through custom-element compilation:
 {
   "exports": {
     ".": {
-      "types": "./dist/client/index.d.ts",
-      "default": "./dist/client/index.js"
+      "types": "./dist/client/FavoriteNumber.d.ts",
+      "default": "./dist/client/FavoriteNumber.js"
     },
     "./helpers": {
       "types": "./dist/client/helpers.d.ts",
@@ -86,9 +73,15 @@ running helpers through custom-element compilation:
 }
 ```
 
-Here `src/index.svelte` is a component while `src/helpers.ts` is an ordinary
-module. A component-style `./helpers/ssr` export is rejected; server-only
-modules should be independent exports.
+Here `src/FavoriteNumber.svelte` is a component while `src/helpers.ts` is an
+ordinary module. Ordinary modules use the normal TypeScript/JavaScript build
+pipeline and do not receive component SSR output automatically.
+
+:::info[Dynamic custom-element tags]
+Zero-config builds expect a literal tag in `<svelte:options>`. If a tag must be
+computed at build time, use manual configuration with a script entry that
+registers the component explicitly.
+:::
 
 ## Svelte Conditional Exports
 
@@ -103,16 +96,16 @@ to create a second build that leaves `svelte` and `svelte/*` imports external:
 {
   "exports": {
     ".": {
-      "types": "./dist/client/index.d.ts",
-      "svelte": "./dist/client-svelte/index.js",
-      "default": "./dist/client/index.js"
+      "types": "./dist/client/FavoriteNumber.d.ts",
+      "svelte": "./dist/client-svelte/FavoriteNumber.js",
+      "default": "./dist/client/FavoriteNumber.js"
     }
   }
 }
 ```
 
 Svelte-aware tooling such as SvelteKit and `@sveltejs/vite-plugin-svelte` can
-select `dist/client-svelte/index.js` and share the host application's Svelte
+select `dist/client-svelte/FavoriteNumber.js` and share the host application's Svelte
 runtime. Other consumers select the standalone `default` build.
 
 :::caution
@@ -132,14 +125,14 @@ can expose more than one custom element:
 {
   "exports": {
     ".": {
-      "types": "./dist/client/index.d.ts",
-      "svelte": "./dist/client-svelte/index.js",
-      "default": "./dist/client/index.js"
+      "types": "./dist/client/FavoriteNumber.d.ts",
+      "svelte": "./dist/client-svelte/FavoriteNumber.js",
+      "default": "./dist/client/FavoriteNumber.js"
     },
-    "./button": {
-      "types": "./dist/client/button.d.ts",
-      "svelte": "./dist/client-svelte/button.js",
-      "default": "./dist/client/button.js"
+    "./color-picker": {
+      "types": "./dist/client/ColorPicker.d.ts",
+      "svelte": "./dist/client-svelte/ColorPicker.js",
+      "default": "./dist/client/ColorPicker.js"
     }
   }
 }
@@ -147,21 +140,21 @@ can expose more than one custom element:
 
 ## Optional SSR Output
 
-SSR is enabled per component by adding an export with the same key followed by
-`/ssr`:
+SSR is enabled per component by adding a second export whose key is the
+component's public export key followed by `/ssr`:
 
 ```json
 {
   "exports": {
-    "./button": {
-      "types": "./dist/client/button.d.ts",
-      "svelte": "./dist/client-svelte/button.js",
-      "default": "./dist/client/button.js"
+    "./color-picker": {
+      "types": "./dist/client/ColorPicker.d.ts",
+      "svelte": "./dist/client-svelte/ColorPicker.js",
+      "default": "./dist/client/ColorPicker.js"
     },
-    "./button/ssr": {
-      "types": "./dist/server/button-ssr.d.ts",
-      "svelte": "./dist/server-svelte/button-ssr.js",
-      "default": "./dist/server/button-ssr.js"
+    "./color-picker/ssr": {
+      "types": "./dist/server/ColorPicker.ssr.d.ts",
+      "svelte": "./dist/server-svelte/ColorPicker.ssr.js",
+      "default": "./dist/server/ColorPicker.ssr.js"
     }
   }
 }
@@ -170,8 +163,8 @@ SSR is enabled per component by adding an export with the same key followed by
 The browser export defines the custom element. The matching SSR export
 provides the renderer that a server application can register.
 
-An SSR component can add an adjacent `button.ssr.ts` (or `.js`) preparation
-hook next to `button.svelte`. The hook is compiled only into the server output;
+An SSR component can add an adjacent `ColorPicker.ssr.ts` (or `.js`)
+preparation hook next to `ColorPicker.svelte`. The hook is compiled only into the server output;
 see the [build package reference](/packages/build/#server-preparation) for its
 `SsrPrepare` signature and hydration behavior.
 
@@ -430,7 +423,7 @@ packages. When you need different source paths or output directories, create
 import { defineConfig } from "@svebcomponents/build";
 
 export default defineConfig({
-  entry: "src/index.svelte",
+  entry: "src/ExampleComponent.svelte",
   outDir: "dist/client",
   svelteOutDir: "dist/client-svelte",
   ssr: true,

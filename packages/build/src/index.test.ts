@@ -22,7 +22,7 @@ describe("defineConfig", () => {
     const config = defineConfig({ ssr: false });
 
     expect(config).toHaveLength(1);
-    expect(config[0]).toHaveProperty("entry", "src/index.svelte");
+    expect(config[0]).toHaveProperty("entry", "src/ExampleComponent.svelte");
     expect(config[0]).toHaveProperty("outDir", "dist/client");
   });
 
@@ -66,11 +66,11 @@ describe("defineConfig", () => {
     expect(config).toHaveLength(3);
 
     // Client config
-    expect(config[0]).toHaveProperty("entry", "src/index.svelte");
+    expect(config[0]).toHaveProperty("entry", "src/ExampleComponent.svelte");
     expect(config[0]).toHaveProperty("outDir", "dist/client");
 
     // SSR config
-    expect(config[1]).toHaveProperty("entry", "src/index.svelte");
+    expect(config[1]).toHaveProperty("entry", "src/ExampleComponent.svelte");
     expect(config[1]).toHaveProperty("outDir", "dist/server");
 
     // Hydration host config
@@ -120,11 +120,11 @@ describe("defineConfig", () => {
     expect(config).toHaveLength(3);
 
     // Client config
-    expect(config[0]).toHaveProperty("entry", "src/index.svelte");
+    expect(config[0]).toHaveProperty("entry", "src/ExampleComponent.svelte");
     expect(config[0]).toHaveProperty("outDir", "dist/client");
 
     // SSR config
-    expect(config[1]).toHaveProperty("entry", "src/index.svelte");
+    expect(config[1]).toHaveProperty("entry", "src/ExampleComponent.svelte");
     expect(config[1]).toHaveProperty("outDir", "dist/server");
   });
 
@@ -138,15 +138,15 @@ describe("defineConfig", () => {
 
   test("automatically includes an adjacent SSR preparation module", () => {
     mockExistsSync.mockImplementation(
-      (candidate) => String(candidate) === "src/index.ssr.ts",
+      (candidate) => String(candidate) === "src/ExampleComponent.ssr.ts",
     );
 
     const config = defineConfig();
 
-    expect(config[0]).toHaveProperty("entry", "src/index.svelte");
+    expect(config[0]).toHaveProperty("entry", "src/ExampleComponent.svelte");
     expect(config[1]).toHaveProperty("entry", {
-      index: "src/index.svelte",
-      "index.ssr": "src/index.ssr.ts",
+      ExampleComponent: "src/ExampleComponent.svelte",
+      "ExampleComponent.ssr": "src/ExampleComponent.ssr.ts",
     });
   });
 
@@ -179,8 +179,8 @@ describe("defineConfig", () => {
     const config = defineConfig({});
 
     expect(config).toHaveLength(3);
-    expect(config[0]).toHaveProperty("entry", "src/index.svelte");
-    expect(config[1]).toHaveProperty("entry", "src/index.svelte");
+    expect(config[0]).toHaveProperty("entry", "src/ExampleComponent.svelte");
+    expect(config[1]).toHaveProperty("entry", "src/ExampleComponent.svelte");
   });
 
   test("builds the browser bundles against the production export condition", () => {

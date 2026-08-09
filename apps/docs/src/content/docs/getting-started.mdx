@@ -53,20 +53,10 @@ attribute from a string to a number.
 
 ## Component Entrypoint
 
-The Svelte file is the package entrypoint directly. No TypeScript re-export is
-needed: the output basename in `package.json` identifies the same-basename
-source component.
-
-Declaring the tag in `<svelte:options>` registers the custom element.
+The output basename in `package.json` identifies the same-basename Svelte
+component. Declaring the tag in `<svelte:options>` registers the custom element.
 `@svebcomponents/build` guards that registration, so importing the component
 is safe even if it (or a bundle containing it) is evaluated more than once.
-
-:::note
-For a tag that cannot be a literal in `<svelte:options>` (for example, one
-computed at build time), use an explicit `svebcomponents.config.ts` entry and
-perform the custom registration there rather than relying on zero-config
-source classification.
-:::
 
 ## Package Exports
 

@@ -386,7 +386,8 @@ export const renderCoreDeclarations = (
 
 /**
  * The public declaration path for an entry, which is what the export's `types`
- * condition points at (`src/index.svelte` → `dist/client/index.d.ts`).
+ * condition points at
+ * (`src/ExampleComponent.svelte` → `dist/client/ExampleComponent.d.ts`).
  */
 const declarationFileFor = (
   cwd: string,

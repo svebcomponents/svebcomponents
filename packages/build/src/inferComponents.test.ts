@@ -293,11 +293,11 @@ describe("infer components", () => {
       /index\.svelte.*index\.ts.*index\.js/,
     );
   });
-  it("rejects component-style SSR exports for ordinary modules", () => {
+  it("does not treat a paired SSR export as component configuration for an ordinary module", () => {
     mockSources("./src/index.ts");
-    expect(() => inferComponents(ssrPackageJson)).toThrow(
-      /ordinary module.*\.\/ssr/,
-    );
+    expect(inferComponents(ssrPackageJson)).toEqual([
+      createModuleConfig({ entry: "src/index.ts", outDir: "dist/client" }),
+    ]);
   });
   it("generates the SSR entry filename from the declared ssr export", async () => {
     mockComponentEntriesOnly();

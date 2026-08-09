@@ -75,12 +75,6 @@ export const inferComponents = (
     const sveltePath = value["svelte"];
 
     if (source.kind === "module") {
-      const ssrExportDeclaration = `${key}/ssr`;
-      if (ssrExportDeclaration in exports) {
-        throw new Error(
-          `[svebcomponents]: ${key} is an ordinary module, so ${ssrExportDeclaration} cannot be used as a component SSR export. Use a .svelte source or name the server module as an independent export.`,
-        );
-      }
       return [
         createModuleConfig({ entry, outDir }),
         ...(typeof sveltePath === "string"
