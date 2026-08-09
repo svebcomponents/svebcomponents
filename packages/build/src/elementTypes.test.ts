@@ -307,6 +307,13 @@ describe("renderDeclarations", () => {
   });
 });
 
+/**
+ * Spinning up the TypeScript compiler is seconds-scale work even for one
+ * file, and a shared CI runner is several times slower than a dev machine —
+ * well past vitest's 5s default.
+ */
+const COMPILER_TIMEOUT_MS = 60_000;
+
 describe("generated declarations compile", () => {
   /**
    * Type-checks the emitted file with the real compiler. The declarations are
@@ -329,56 +336,73 @@ describe("generated declarations compile", () => {
       skipLibCheck: false,
       types: [],
     });
-    const diagnostics = ts
-      .getPreEmitDiagnostics(program)
-      .filter((diagnostic) => diagnostic.file?.fileName === file)
-      .map((diagnostic) =>
-        ts.flattenDiagnosticMessageText(diagnostic.messageText, " "),
-      );
+    // Diagnostics are requested for this one file rather than via
+    // `getPreEmitDiagnostics`, which computes them for every file in the
+    // program — including the whole DOM lib, since `skipLibCheck` has to stay
+    // off for a `.d.ts` under test to be checked at all.
+    const source = program.getSourceFile(file);
+    const diagnostics = [
+      ...program.getSyntacticDiagnostics(source),
+      ...program.getSemanticDiagnostics(source),
+    ].map((diagnostic) =>
+      ts.flattenDiagnosticMessageText(diagnostic.messageText, " "),
+    );
     expect(diagnostics).toEqual([]);
   };
 
-  it("compiles a component with events, local types and imports", async () => {
-    await fs.writeFile(
-      path.join(workspace, "src", "types.ts"),
-      `export interface Size { width: number }`,
-      "utf8",
-    );
-    await writeComponent(
-      "Element.svelte",
-      BUTTON.replace(
-        `<script lang="ts">`,
-        `<script lang="ts">\n  import type { Size } from "./types.js";`,
-      ).replace("count?: number;", "count?: number;\n    size?: Size;"),
-    );
-    await expectCompiles(
-      renderCoreDeclarations(await analyzeWorkspace(), workspace, workspace),
-    );
-  });
+  it(
+    "compiles a component with events, local types and imports",
+    async () => {
+      await fs.writeFile(
+        path.join(workspace, "src", "types.ts"),
+        `export interface Size { width: number }`,
+        "utf8",
+      );
+      await writeComponent(
+        "Element.svelte",
+        BUTTON.replace(
+          `<script lang="ts">`,
+          `<script lang="ts">\n  import type { Size } from "./types.js";`,
+        ).replace("count?: number;", "count?: number;\n    size?: Size;"),
+      );
+      await expectCompiles(
+        renderCoreDeclarations(await analyzeWorkspace(), workspace, workspace),
+      );
+    },
+    COMPILER_TIMEOUT_MS,
+  );
 
-  it("compiles a component whose prop shadows a built-in DOM property", async () => {
-    await writeComponent(
-      "Element.svelte",
-      `<svelte:options customElement={{ tag: 'titled-el' }} />
+  it(
+    "compiles a component whose prop shadows a built-in DOM property",
+    async () => {
+      await writeComponent(
+        "Element.svelte",
+        `<svelte:options customElement={{ tag: 'titled-el' }} />
 <script lang="ts">
   let { title, hidden }: { title: number; hidden: string } = $props();
 </script>`,
-    );
-    await expectCompiles(
-      renderCoreDeclarations(await analyzeWorkspace(), workspace, workspace),
-    );
-  });
+      );
+      await expectCompiles(
+        renderCoreDeclarations(await analyzeWorkspace(), workspace, workspace),
+      );
+    },
+    COMPILER_TIMEOUT_MS,
+  );
 
-  it("compiles several components in one file", async () => {
-    await writeComponent("A.svelte", BUTTON);
-    await writeComponent(
-      "B.svelte",
-      BUTTON.replace("my-button", "other-button"),
-    );
-    await expectCompiles(
-      renderCoreDeclarations(await analyzeWorkspace(), workspace, workspace),
-    );
-  });
+  it(
+    "compiles several components in one file",
+    async () => {
+      await writeComponent("A.svelte", BUTTON);
+      await writeComponent(
+        "B.svelte",
+        BUTTON.replace("my-button", "other-button"),
+      );
+      await expectCompiles(
+        renderCoreDeclarations(await analyzeWorkspace(), workspace, workspace),
+      );
+    },
+    COMPILER_TIMEOUT_MS,
+  );
 });
 
 describe("exported building blocks", () => {
@@ -457,19 +481,22 @@ describe("documented augmentation recipes", () => {
       lib: ["lib.es2022.d.ts", "lib.dom.d.ts"],
       skipLibCheck: true,
     });
-    const diagnostics = ts
-      .getPreEmitDiagnostics(program)
-      .filter((diagnostic) => diagnostic.file?.fileName === usage)
-      .map((diagnostic) =>
-        ts.flattenDiagnosticMessageText(diagnostic.messageText, " "),
-      );
+    const source = program.getSourceFile(usage);
+    const diagnostics = [
+      ...program.getSyntacticDiagnostics(source),
+      ...program.getSemanticDiagnostics(source),
+    ].map((diagnostic) =>
+      ts.flattenDiagnosticMessageText(diagnostic.messageText, " "),
+    );
     await fs.rm(scratch, { recursive: true, force: true });
     return diagnostics;
   };
 
-  it("the svelte recipe type-checks against svelte/elements", async () => {
-    await writeComponent("Element.svelte", BUTTON);
-    const diagnostics = await checkWithSvelte(`
+  it(
+    "the svelte recipe type-checks against svelte/elements",
+    async () => {
+      await writeComponent("Element.svelte", BUTTON);
+      const diagnostics = await checkWithSvelte(`
 import type { HTMLAttributes } from "svelte/elements";
 import type {
   MyButtonElement,
@@ -487,6 +514,8 @@ declare module "svelte/elements" {
 
 export {};
 `);
-    expect(diagnostics).toEqual([]);
-  });
+      expect(diagnostics).toEqual([]);
+    },
+    COMPILER_TIMEOUT_MS,
+  );
 });
