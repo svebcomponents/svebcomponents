@@ -42,14 +42,15 @@
     "@svebcomponents/eslint-config": "workspace:*",
     "@svebcomponents/prettier-config": "workspace:*",
     "@svebcomponents/typescript-config": "workspace:*",
+    "@svebcomponents/vitest-config": "workspace:*",
     "@types/node": "catalog:",
     "publint": "catalog:",
+    "rolldown": "catalog:",
     "svelte": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:",
-    "rolldown": "catalog:",
-    "tsdown": "catalog:"
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "tsdown": ">=0.15.0"

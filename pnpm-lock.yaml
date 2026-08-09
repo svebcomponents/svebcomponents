@@ -387,6 +387,9 @@ importers:
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
+      '@svebcomponents/vitest-config':
+        specifier: workspace:*
+        version: link:../../configs/vitest-config
       '@types/estree':
         specifier: 'catalog:'
         version: 1.0.9
@@ -442,6 +445,9 @@ importers:
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
+      '@svebcomponents/vitest-config':
+        specifier: workspace:*
+        version: link:../../configs/vitest-config
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -500,6 +506,9 @@ importers:
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
+      '@svebcomponents/vitest-config':
+        specifier: workspace:*
+        version: link:../../configs/vitest-config
       '@sveltejs/package':
         specifier: 'catalog:'
         version: 2.5.8(svelte@5.56.8(@typescript-eslint/types@8.65.0))(typescript@5.9.3)
@@ -542,6 +551,9 @@ importers:
       '@svebcomponents/typescript-config':
         specifier: workspace:*
         version: link:../../configs/typescript-config
+      '@svebcomponents/vitest-config':
+        specifier: workspace:*
+        version: link:../../configs/vitest-config
       publint:
         specifier: 'catalog:'
         version: 0.3.22
