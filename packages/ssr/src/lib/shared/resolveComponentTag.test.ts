@@ -1,38 +1,5 @@
 import { expect, test, describe } from "vitest";
-import {
-  findSvelteImportPath,
-  extractComponentTag,
-} from "./resolveComponentTag.js";
-
-describe("findSvelteImportPath", () => {
-  test("finds a double-quoted relative .svelte import", () => {
-    const source = `
-      import Component from "./Component.svelte";
-      export default Component;
-    `;
-    expect(findSvelteImportPath(source)).toBe("./Component.svelte");
-  });
-
-  test("finds a single-quoted relative .svelte import", () => {
-    const source = `import Component from './Component.svelte';`;
-    expect(findSvelteImportPath(source)).toBe("./Component.svelte");
-  });
-
-  test("finds a nested relative .svelte import", () => {
-    const source = `import Component from "../components/Component.svelte";`;
-    expect(findSvelteImportPath(source)).toBe("../components/Component.svelte");
-  });
-
-  test("returns undefined when there is no .svelte import", () => {
-    const source = `import { defineElement } from "@svebcomponents/utils";`;
-    expect(findSvelteImportPath(source)).toBeUndefined();
-  });
-
-  test("ignores a non-relative .svelte import", () => {
-    const source = `import Component from "some-package/Component.svelte";`;
-    expect(findSvelteImportPath(source)).toBeUndefined();
-  });
-});
+import { extractComponentTag } from "./resolveComponentTag.js";
 
 describe("extractComponentTag", () => {
   test("extracts a string-shorthand tag", () => {

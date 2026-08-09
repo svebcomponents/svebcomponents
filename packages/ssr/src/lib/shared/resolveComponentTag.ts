@@ -1,18 +1,6 @@
 import { parse } from "svelte/compiler";
 import { isValidCustomElementTagName } from "./customElementName.js";
 
-/** Matches a relative default import of a `.svelte` file, e.g. `import X from "./X.svelte";`. */
-const SVELTE_IMPORT = /import\s+\w+\s+from\s+(["'])(\.[^"']*\.svelte)\1/;
-
-/**
- * Best-effort: finds the relative import path of the `.svelte` component an
- * entry file (e.g. `src/index.ts`) exports, so its declared tag can be read
- * (see `extractComponentTag`). Returns `undefined` when no such import is
- * found — callers should fail open rather than error the build.
- */
-export const findSvelteImportPath = (entrySource: string): string | undefined =>
-  SVELTE_IMPORT.exec(entrySource)?.[2];
-
 /**
  * Best-effort: reads a component's declared custom element tag from its
  * `.svelte` source, via `svelte/compiler`'s `parse()` — which normalizes

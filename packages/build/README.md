@@ -46,9 +46,18 @@ For the common case, describe your component entrypoints in `package.json` expor
 }
 ```
 
-The CLI looks for exports whose `default` or `import` condition points at `dist/client/*`, maps them back to matching files in `src/*`, and builds them.
+The CLI looks for exports whose `default` or `import` condition points at
+`./dist/client/*`, maps each output basename into `src`, and classifies the
+matching source by extension:
 
-For the example above, `./dist/client/index.js` maps to `src/index.ts` and produces:
+- `src/<name>.svelte` is compiled as a svebcomponent.
+- `src/<name>.ts` or `src/<name>.js` is built as an ordinary module, without
+  the custom-element, hydration, or component SSR pipeline.
+
+Exactly one matching source must exist. Ambiguous basenames fail the build and
+can be expressed with an explicit configuration instead.
+
+For the example above, `./dist/client/index.js` maps to `src/index.svelte` and produces:
 
 - `dist/client/index.js` for the standalone browser custom element entrypoint.
 - `dist/client/index.d.ts` for TypeScript consumers.
@@ -56,12 +65,14 @@ For the example above, `./dist/client/index.js` maps to `src/index.ts` and produ
 - `dist/server/*` for the server-renderable build because the matching `./ssr` export exists.
 - `dist/server-svelte/*` for Svelte-aware SSR tooling because the `./ssr` export also has a `svelte` condition.
 
-If an export does not have a matching SSR export, only the browser build is generated for that entrypoint.
+If a component export does not have a matching SSR export, only the browser
+build is generated. A matching `/ssr` export is invalid for an ordinary module;
+name server-only modules as independent exports instead.
 
 ### Server preparation
 
 An SSR-enabled entrypoint can prepare properties before rendering by adding an
-adjacent `.ssr` module. For `src/index.ts`, create `src/index.ssr.ts` and export
+adjacent `.ssr` module. For `src/index.svelte`, create `src/index.ssr.ts` and export
 an `SsrPrepare` function as the default export:
 
 ```ts
@@ -104,7 +115,8 @@ export. Consumers that cannot guarantee that should use the standalone
 
 ## Multiple Components
 
-Each export that points into `dist/client` is treated as a component entrypoint.
+Each export that points into `dist/client` is classified from its
+same-basename source file.
 
 ```json
 {
@@ -128,7 +140,11 @@ Each export that points into `dist/client` is treated as a component entrypoint.
 }
 ```
 
-This builds `src/index.ts` as a browser-only entrypoint, and `src/button.ts` as both a browser and SSR entrypoint. Each `svelte` condition also gets a Svelte-aware build in the matching `*-svelte` output directory.
+This builds `src/index.svelte` as a browser-only component, and
+`src/button.svelte` as both a browser and SSR component. Each `svelte`
+condition also gets a Svelte-aware build in the matching `*-svelte` output
+directory. A sibling export targeting `dist/client/helpers.js` would build
+`src/helpers.ts` as an ordinary module.
 
 ## Manual Configuration
 
@@ -138,7 +154,7 @@ Create `svebcomponents.config.ts` when package export inference is not enough.
 import { defineConfig } from "@svebcomponents/build";
 
 export default defineConfig({
-  entry: "src/index.ts",
+  entry: "src/index.svelte",
   outDir: "dist/client",
   svelteOutDir: "dist/client-svelte",
   ssr: true,
@@ -149,8 +165,8 @@ export default defineConfig({
 
 `defineConfig` returns an array of `tsdown` options. By default it creates two builds:
 
-- a browser build from `src/index.ts` to `dist/client`
-- an SSR build from `src/index.ts` to `dist/server`
+- a browser build from `src/index.svelte` to `dist/client`
+- an SSR build from `src/index.svelte` to `dist/server`
 
 Set `svelteOutDir` and `ssrSvelteOutDir` to also emit Svelte-aware builds that externalize Svelte runtime imports.
 
@@ -167,14 +183,14 @@ those SSR renderers must use an async-capable host integration.
 
 ## Options
 
-| Option            | Default          | Description                                                       |
-| ----------------- | ---------------- | ----------------------------------------------------------------- |
-| `entry`           | `"src/index.ts"` | Entry file for the Svelte custom element package.                 |
-| `outDir`          | `"dist/client"`  | Output directory for the standalone browser custom element build. |
-| `svelteOutDir`    | `undefined`      | Output directory for the Svelte-aware browser build.              |
-| `ssr`             | `true`           | Whether to generate the SSR build.                                |
-| `ssrOutDir`       | `"dist/server"`  | Output directory for the standalone SSR build.                    |
-| `ssrSvelteOutDir` | `undefined`      | Output directory for the Svelte-aware SSR build.                  |
+| Option            | Default              | Description                                                       |
+| ----------------- | -------------------- | ----------------------------------------------------------------- |
+| `entry`           | `"src/index.svelte"` | Entry file for the Svelte custom element package.                 |
+| `outDir`          | `"dist/client"`      | Output directory for the standalone browser custom element build. |
+| `svelteOutDir`    | `undefined`          | Output directory for the Svelte-aware browser build.              |
+| `ssr`             | `true`               | Whether to generate the SSR build.                                |
+| `ssrOutDir`       | `"dist/server"`      | Output directory for the standalone SSR build.                    |
+| `ssrSvelteOutDir` | `undefined`          | Output directory for the Svelte-aware SSR build.                  |
 
 ## Build Pipeline
 
@@ -185,7 +201,7 @@ The browser build uses:
 3. a guard that makes Svelte's generated `customElements.define(...)` call
    idempotent, so evaluating the compiled component (or a bundle containing
    it) more than once never throws
-4. `tsdown` declaration generation
+4. declaration generation from the component analyzer
 
 When a Svelte-aware browser build is generated, it uses the same pipeline but
 marks `svelte` and `svelte/*` imports as external.
@@ -211,4 +227,4 @@ If the CLI cannot load `svebcomponents.config.ts` or infer any component exports
 defineConfig({});
 ```
 
-That builds `src/index.ts` to `dist/client` and `dist/server`.
+That builds `src/index.svelte` to `dist/client` and `dist/server`.

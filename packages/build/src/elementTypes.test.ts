@@ -10,6 +10,7 @@ import {
   findComponentSources,
 } from "./manifest.js";
 import {
+  renderComponentDefaultExport,
   renderCoreDeclarations,
   renderSvelteAugmentation,
   requiresSvelte,
@@ -28,26 +29,14 @@ afterEach(async () => {
 
 const writeComponent = async (name: string, source: string) => {
   await fs.writeFile(path.join(workspace, "src", name), source, "utf8");
-  // mirror a real package: the entry re-exports every component, which is
-  // what component discovery walks
-  const components = (await fs.readdir(path.join(workspace, "src"))).filter(
-    (file) => file.endsWith(".svelte"),
-  );
-  await fs.writeFile(
-    path.join(workspace, "src", "index.ts"),
-    components
-      .map(
-        (file, index) =>
-          `import C${index} from "./${file}";\nexport { C${index} };`,
-      )
-      .join("\n"),
-    "utf8",
-  );
 };
 
 const analyzeWorkspace = async () => {
+  const components = (await fs.readdir(path.join(workspace, "src"))).filter(
+    (file) => file.endsWith(".svelte"),
+  );
   const sources = await findComponentSources(workspace, [
-    { entry: "src/index.ts" },
+    ...components.map((file) => ({ entry: `src/${file}` })),
   ]);
   return analyzeComponentFiles(workspace, sources);
 };
@@ -94,16 +83,11 @@ describe("findComponentSources", () => {
     );
     await fs.writeFile(
       path.join(workspace, "src", "A.svelte"),
-      `<svelte:options customElement="a-el" />`,
-      "utf8",
-    );
-    await fs.writeFile(
-      path.join(workspace, "src", "index.ts"),
-      `import A from "./A.svelte";\nexport * from "./nested/index.js";\nexport { A };`,
+      `<svelte:options customElement="a-el" />\n<script>import "./nested/index.js";</script>`,
       "utf8",
     );
     const sources = await findComponentSources(workspace, [
-      { entry: "src/index.ts" },
+      { entry: "src/A.svelte" },
     ]);
     expect(sources.map((source) => path.basename(source)).sort()).toEqual([
       "A.svelte",
@@ -118,13 +102,8 @@ describe("findComponentSources", () => {
       `<svelte:options customElement="orphan-el" />`,
       "utf8",
     );
-    await fs.writeFile(
-      path.join(workspace, "src", "index.ts"),
-      `import A from "./A.svelte";\nexport { A };`,
-      "utf8",
-    );
     const sources = await findComponentSources(workspace, [
-      { entry: "src/index.ts" },
+      { entry: "src/A.svelte" },
     ]);
     expect(sources.map((source) => path.basename(source))).toEqual([
       "A.svelte",
@@ -133,7 +112,19 @@ describe("findComponentSources", () => {
 
   it("ignores an entry directory that does not exist", async () => {
     await expect(
-      findComponentSources(workspace, [{ entry: "nope/index.ts" }]),
+      findComponentSources(workspace, [{ entry: "nope/Element.svelte" }]),
+    ).resolves.toEqual([]);
+  });
+
+  it("does not classify an ordinary module by walking its imports", async () => {
+    await writeComponent("Element.svelte", BUTTON);
+    await fs.writeFile(
+      path.join(workspace, "src", "helpers.ts"),
+      `import "./Element.svelte";`,
+      "utf8",
+    );
+    await expect(
+      findComponentSources(workspace, [{ entry: "src/helpers.ts" }]),
     ).resolves.toEqual([]);
   });
 });
@@ -224,6 +215,14 @@ describe("renderDeclarations", () => {
     const output = await render();
     expect(output).toContain('"my-button": MyButtonElement;');
     expect(output).toContain("interface HTMLElementTagNameMap");
+  });
+
+  it("renders the direct component module's default constructor", async () => {
+    await writeComponent("Element.svelte", BUTTON);
+    const [component] = await analyzeWorkspace();
+    expect(renderComponentDefaultExport(component!)).toBe(
+      "declare const MyButton: {\n  new (): MyButtonElement;\n};\n\nexport default MyButton;",
+    );
   });
 
   it("keeps framework augmentations out of the module's own types", async () => {
@@ -403,6 +402,18 @@ describe("generated declarations compile", () => {
       );
       await expectCompiles(
         renderCoreDeclarations(await analyzeWorkspace(), workspace, workspace),
+      );
+    },
+    COMPILER_TIMEOUT_MS,
+  );
+
+  it(
+    "compiles a complete direct component module declaration",
+    async () => {
+      await writeComponent("Element.svelte", BUTTON);
+      const components = await analyzeWorkspace();
+      await expectCompiles(
+        `${renderCoreDeclarations(components, workspace, workspace)}\n${renderComponentDefaultExport(components[0]!)}`,
       );
     },
     COMPILER_TIMEOUT_MS,

@@ -65,21 +65,26 @@ const entryOutputFile = (outDir: string, entry: string) =>
   );
 
 /**
- * An adjacent `<entry>.ssr.<ext>` module is a server-only preparation hook.
- * Keeping the extension the same makes the convention predictable for both
- * TypeScript and JavaScript package sources.
+ * An adjacent `<entry>.ssr.ts` or `<entry>.ssr.js` module is a server-only
+ * preparation hook. TypeScript/JavaScript entries first retain their own
+ * extension; direct Svelte entries use a script module rather than an
+ * impossible `.ssr.svelte` preparation component.
  */
 const inferSsrPrepareEntry = (entry: string): string | undefined => {
   const extension = path.posix.extname(entry);
   if (!extension) return undefined;
-  const candidate = `${entry.slice(0, -extension.length)}.ssr${extension}`;
-  return existsSync(candidate) ? candidate : undefined;
+  const base = entry.slice(0, -extension.length);
+  const candidates =
+    extension === ".svelte"
+      ? [`${base}.ssr.ts`, `${base}.ssr.js`]
+      : [`${base}.ssr${extension}`];
+  return candidates.find((candidate) => existsSync(candidate));
 };
 
 export const defineConfig = (
   options: DefineConfigOptions = {},
 ): UserConfig[] => {
-  const { ssr = true, entry = "src/index.ts", svelteConfig } = options;
+  const { ssr = true, entry = "src/index.svelte", svelteConfig } = options;
   const outDir = options.outDir ?? "dist/client";
   const svelteOutDir = options.svelteOutDir;
   const ssrOutDir = options.ssrOutDir ?? "dist/server";

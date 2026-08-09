@@ -258,9 +258,9 @@ const buildComponentDeclaration = (
  * plus the `HTMLElementTagNameMap` entries that make `querySelector` and
  * `createElement` return them.
  *
- * This half references nothing outside the DOM lib, so it is safe to append
- * to the component module's own emitted `.d.ts` — every consumer gets it just
- * by importing the package, whatever framework they use (or none).
+ * This half references nothing outside the DOM lib, so it is safe in the
+ * component module's generated `.d.ts` — every consumer gets it just by
+ * importing the package, whatever framework they use (or none).
  */
 export const renderCoreDeclarations = (
   components: AnalyzedComponentFile[],
@@ -385,8 +385,8 @@ export const renderCoreDeclarations = (
 };
 
 /**
- * The declaration file tsdown emits for an entry, which is what the export's
- * `types` condition points at (`src/index.ts` → `dist/client/index.d.ts`).
+ * The public declaration path for an entry, which is what the export's `types`
+ * condition points at (`src/index.svelte` → `dist/client/index.d.ts`).
  */
 const declarationFileFor = (
   cwd: string,
@@ -398,6 +398,12 @@ const declarationFileFor = (
     outDir,
     `${path.basename(entry, path.extname(entry))}.d.ts`,
   );
+
+/** The runtime default export of a directly compiled custom element entry. */
+export const renderComponentDefaultExport = (
+  component: AnalyzedComponentFile,
+): string =>
+  `declare const ${component.className}: {\n  new (): ${component.className}Element;\n};\n\nexport default ${component.className};`;
 
 /**
  * The absolute paths every export's `types` condition points at.
@@ -524,14 +530,13 @@ const readTypesTargets = async (
 };
 
 /**
- * Writes the manifest, then attaches each entry's element types to the
- * declaration file that entry already ships.
+ * Writes the manifest, then emits each direct component entry's complete
+ * declaration. Explicit non-Svelte entries retain tsdown's declaration and
+ * receive the generated element surface as an appendix.
  *
- * Appending to the module's own `.d.ts` means a consumer needs no reference
- * directive: importing the package for its side effect of defining the
- * element is enough to type `document.querySelector("my-el")`. Only the
- * framework template augmentations stay separate, since each imports from its
- * framework and must therefore be opt-in.
+ * Keeping everything in the export's own `.d.ts` means a consumer needs no
+ * reference directive: importing the package is enough to type both its
+ * default constructor and `document.querySelector("my-el")`.
  */
 export const emitElementTypes = async (
   cwd: string,
@@ -585,24 +590,31 @@ export const emitElementTypes = async (
       );
     if (owned.length === 0) continue;
 
-    let existing: string;
+    const directComponent = entry.endsWith(".svelte");
+    let existing = "";
     try {
       existing = await fs.readFile(declarationFile, "utf8");
     } catch {
-      // the entry produced no declarations (dts disabled for this config)
-      continue;
+      // Direct Svelte entries deliberately disable tsdown declarations; this
+      // function owns their complete public declaration instead.
+      if (!directComponent) continue;
     }
 
     const declarationDir = path.dirname(declarationFile);
+    const primary = byPath.get(path.resolve(cwd, entry));
+    if (directComponent && primary === undefined) continue;
     const generated = [
       renderCoreDeclarations(owned, declarationDir, cwd),
+      ...(directComponent && primary
+        ? [renderComponentDefaultExport(primary)]
+        : []),
       ...(withSvelteTypes
         ? [renderSvelteAugmentation(owned, declarationDir, cwd)]
         : []),
     ].join("\n");
     await fs.writeFile(
       declarationFile,
-      `${existing.trimEnd()}\n\n${generated}`,
+      `${existing.trimEnd()}${existing.length > 0 ? "\n\n" : ""}${generated}\n`,
       "utf8",
     );
     attached.add(declarationFile);

@@ -5,6 +5,7 @@ import { defineConfig } from "./index.js";
 import fs from "node:fs";
 import path from "node:path";
 import fsPromises from "fs/promises";
+import { createModuleConfig } from "./moduleConfig.js";
 
 vi.mock("node:fs");
 const mockFs = fs as unknown as {
@@ -12,8 +13,15 @@ const mockFs = fs as unknown as {
 };
 
 const mockComponentEntriesOnly = () => {
-  mockFs.existsSync.mockImplementation(
-    (candidate) => !String(candidate).match(/\.ssr\.[cm]?[jt]s$/),
+  mockFs.existsSync.mockImplementation((candidate) =>
+    String(candidate).endsWith(".svelte"),
+  );
+};
+
+const mockSources = (...sources: string[]) => {
+  const available = new Set(sources);
+  mockFs.existsSync.mockImplementation((candidate) =>
+    available.has(String(candidate)),
   );
 };
 
@@ -109,20 +117,31 @@ const multipleComponentsPackageJson = {
   },
 };
 
+const mixedPackageJson = {
+  exports: {
+    ".": { import: "./dist/client/index.js" },
+    "./helpers": {
+      types: "./dist/client/helpers.d.ts",
+      svelte: "./dist/client-svelte/helpers.js",
+      default: "./dist/client/helpers.js",
+    },
+  },
+};
+
 const manualConfig = defineConfig({
-  entry: "src/index.js",
+  entry: "src/index.svelte",
   outDir: "dist/client",
   ssr: false,
 });
 
 const manualSSRConfig = defineConfig({
-  entry: "src/index.js",
+  entry: "src/index.svelte",
   outDir: "dist/client",
   ssr: true,
 });
 
 const manualSvelteConditionConfig = defineConfig({
-  entry: "src/index.js",
+  entry: "src/index.svelte",
   outDir: "dist/client",
   svelteOutDir: "dist/client-svelte",
   ssr: true,
@@ -132,12 +151,12 @@ const manualSvelteConditionConfig = defineConfig({
 
 const manualMultipleComponentsConfig = [
   ...defineConfig({
-    entry: "src/index.js",
+    entry: "src/index.svelte",
     outDir: "dist/client",
     ssr: false,
   }),
   ...defineConfig({
-    entry: "src/componentA.js",
+    entry: "src/componentA.svelte",
     outDir: "dist/client",
     ssr: true,
     ssrEntryFileName: "componentA-ssr",
@@ -233,6 +252,52 @@ describe("infer components", () => {
       ssrPipeline,
       hydrationHostPipeline,
     ]);
+  });
+  it("builds non-component exports with the ordinary module pipeline", () => {
+    mockSources("./src/index.svelte", "./src/helpers.ts");
+    const inferred = inferComponents(mixedPackageJson);
+    expect(inferred).toHaveLength(3);
+    expect(pluginNames(inferred[0]!)).toEqual(clientPipeline);
+    expect(inferred[1]).toEqual(
+      createModuleConfig({
+        entry: "src/helpers.ts",
+        outDir: "dist/client",
+      }),
+    );
+    expect(inferred[2]).toEqual(
+      createModuleConfig({
+        entry: "src/helpers.ts",
+        outDir: "dist/client-svelte",
+        externalSvelte: true,
+      }),
+    );
+    expect(inferred[1]?.plugins).toBeUndefined();
+  });
+  it("classifies a same-basename JavaScript source as an ordinary module", () => {
+    mockSources("./src/index.js");
+    const [config] = inferComponents(packageJson);
+    expect(config).toEqual(
+      createModuleConfig({ entry: "src/index.js", outDir: "dist/client" }),
+    );
+    expect(config?.dts).toBe(false);
+  });
+  it("rejects ambiguous same-basename sources", () => {
+    mockSources("./src/index.svelte", "./src/index.ts");
+    expect(() => inferComponents(packageJson)).toThrow(
+      /multiple sources match.*index\.svelte.*index\.ts/,
+    );
+  });
+  it("reports every expected source when no source exists", () => {
+    mockSources();
+    expect(() => inferComponents(packageJson)).toThrow(
+      /index\.svelte.*index\.ts.*index\.js/,
+    );
+  });
+  it("rejects component-style SSR exports for ordinary modules", () => {
+    mockSources("./src/index.ts");
+    expect(() => inferComponents(ssrPackageJson)).toThrow(
+      /ordinary module.*\.\/ssr/,
+    );
   });
   it("generates the SSR entry filename from the declared ssr export", async () => {
     mockComponentEntriesOnly();

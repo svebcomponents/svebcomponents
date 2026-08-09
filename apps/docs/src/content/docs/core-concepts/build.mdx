@@ -10,13 +10,9 @@ the JavaScript output.
 
 ## Component Entrypoints
 
-Each custom element needs an entrypoint that re-exports the Svelte component:
-
-```ts
-import Component from "./Component.svelte";
-
-export default Component;
-```
+Each custom element is its own entrypoint. Its source filename matches the
+JavaScript output basename declared in `package.json`; no re-export module is
+needed.
 
 The component itself declares its tag:
 
@@ -29,9 +25,9 @@ Consumers import the entrypoint for the side effect of defining
 idempotent at build time, so it no-ops if the component (or a bundle
 containing it) is ever evaluated more than once.
 
-For a tag that can't be a literal in `<svelte:options>` (e.g. computed at
-build time), fall back to `@svebcomponents/utils`'s `defineElement` in the
-entrypoint instead — the same guarded registration, called by hand:
+For a tag that cannot be a literal in `<svelte:options>` (for example, one
+computed at build time), use manual configuration and an explicit script entry
+that calls `defineElement`:
 
 ```ts
 import { defineElement } from "@svebcomponents/utils";
@@ -59,14 +55,40 @@ field in `package.json`:
 }
 ```
 
-The inference follows three rules:
+The inference follows these rules:
 
-1. The export's `default` or `import` condition must contain `dist/client`.
+1. The export's `default` or `import` condition must start with
+   `./dist/client/`.
 2. The output path is mapped from `dist/client` to `src`.
-3. If that exact source file does not exist, the CLI looks for the same path
-   with a `.ts` extension.
+3. A same-basename `.svelte` source is a svebcomponent.
+4. A same-basename `.ts` or `.js` source is an ordinary module and receives a
+   plain tsdown build.
+5. Exactly one matching source must exist. Ambiguous basenames fail with an
+   error instead of silently choosing one.
 
-In this example, `./dist/client/index.js` resolves to `src/index.ts`.
+In this example, `./dist/client/index.js` resolves to `src/index.svelte`.
+
+This distinction lets one package ship components and ordinary helpers without
+running helpers through custom-element compilation:
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./dist/client/index.d.ts",
+      "default": "./dist/client/index.js"
+    },
+    "./helpers": {
+      "types": "./dist/client/helpers.d.ts",
+      "default": "./dist/client/helpers.js"
+    }
+  }
+}
+```
+
+Here `src/index.svelte` is a component while `src/helpers.ts` is an ordinary
+module. A component-style `./helpers/ssr` export is rejected; server-only
+modules should be independent exports.
 
 ## Svelte Conditional Exports
 
@@ -103,8 +125,8 @@ version. Keep the standalone `default` export as the safe fallback for other
 consumers.
 :::
 
-Every matching export becomes a component entrypoint, so a package can expose
-more than one custom element:
+Every matching `.svelte` source becomes a component entrypoint, so a package
+can expose more than one custom element:
 
 ```json
 {
@@ -148,6 +170,11 @@ SSR is enabled per component by adding an export with the same key followed by
 The browser export defines the custom element. The matching SSR export
 provides the renderer that a server application can register.
 
+An SSR component can add an adjacent `button.ssr.ts` (or `.js`) preparation
+hook next to `button.svelte`. The hook is compiled only into the server output;
+see the [build package reference](/packages/build/#server-preparation) for its
+`SsrPrepare` signature and hydration behavior.
+
 SSR is currently in beta. See [SSR](/core-concepts/ssr/) for its stability and
 security considerations.
 
@@ -159,8 +186,9 @@ Every build describes the elements your package declares, in two forms:
   [custom elements manifest](https://github.com/webcomponents/custom-elements-manifest)
   (schema 2.1.0). Editors read it for HTML completions, and the wider custom
   elements tooling ecosystem consumes it.
-- TypeScript types, appended to the declaration file each entry already emits
-  — the one its `types` condition points at.
+- TypeScript types in the declaration file the entry's `types` condition points
+  at. Direct `.svelte` entries receive a complete declaration for their default
+  custom-element constructor as well as their tag, props, and events.
 
 Nothing extra is needed for the TypeScript half:
 
@@ -402,7 +430,7 @@ packages. When you need different source paths or output directories, create
 import { defineConfig } from "@svebcomponents/build";
 
 export default defineConfig({
-  entry: "src/index.ts",
+  entry: "src/index.svelte",
   outDir: "dist/client",
   svelteOutDir: "dist/client-svelte",
   ssr: true,
