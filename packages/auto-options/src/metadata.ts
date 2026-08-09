@@ -454,7 +454,9 @@ export const extractTypeImports = (
         return;
       }
       const names = (node.specifiers ?? [])
-        .map((specifier: { local?: { name?: string } }) => specifier.local?.name)
+        .map(
+          (specifier: { local?: { name?: string } }) => specifier.local?.name,
+        )
         .filter((name: unknown): name is string => typeof name === "string");
       imports.push({ text: code.slice(node.start, node.end), source, names });
       context.next();
