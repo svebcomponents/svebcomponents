@@ -57,7 +57,9 @@ When using `@svebcomponents/build`, an adjacent server module such as
 `src/index.ssr.ts` is discovered automatically. Its default `SsrPrepare` export
 runs after host attributes and properties have been applied but before the
 component renders. Values written with `setProperty` are serialized into
-hydratable output for reuse in the browser.
+hydratable output for reuse in the browser. Returning a promise puts the
+component on the async path — see
+[What makes a component asynchronous](https://svebcomponents.dev/core-concepts/ssr/#what-makes-a-component-asynchronous).
 
 If the package's Svelte config enables Svelte async rendering, the generated
 `./ssr` renderer can yield async Lit `RenderResult` chunks. Async-capable host

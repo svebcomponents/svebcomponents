@@ -103,8 +103,9 @@ Then write custom elements in any single-file component:
 
 Vue's `renderToString` fully awaits an async `setup()` and emits its output in
 order, so one wrapper handles both synchronous and asynchronous element
-renderers. Nothing extra is needed for a component that awaits while rendering
-or that has an async `SsrPrepare` hook — beyond the
+renderers. An
+[asynchronous component](/core-concepts/ssr/#what-makes-a-component-asynchronous)
+needs nothing extra here beyond the
 [`enable-async` opt-in](/core-concepts/ssr/#async-rendering-outside-svelte)
 every non-Svelte host needs.
 
@@ -154,9 +155,9 @@ import { CustomElement } from "@svebcomponents/ssr-react";
 
 ### Synchronous by default, with an RSC opt-in
 
-React's `renderToString` cannot await, so a component that performs
-asynchronous work — one that awaits while rendering, or that has an async
-`SsrPrepare` hook — cannot be server-rendered by the default `CustomElement`.
+React's `renderToString` cannot await, so an
+[asynchronous component](/core-concepts/ssr/#what-makes-a-component-asynchronous)
+cannot be server-rendered by the default `CustomElement`.
 
 Rather than failing the page, such an element is emitted without
 server-rendered shadow content and rendered in the browser only, with a
@@ -174,8 +175,9 @@ import { CustomElement } from "@svebcomponents/ssr-react/rsc";
 
 An RSC async function component runs to completion before any markup is
 emitted, so it can simply `await` the renderer — no cache, no `use()`, no
-Suspense boundary required, and it accepts asynchronous `SsrPrepare` hooks and
-components that await while rendering (given the
+Suspense boundary required, and it accepts
+[asynchronous components](/core-concepts/ssr/#what-makes-a-component-asynchronous)
+in either form (given the
 [`enable-async` opt-in](/core-concepts/ssr/#async-rendering-outside-svelte)
 every non-Svelte host needs for that).
 
@@ -219,7 +221,9 @@ applies there instead.
 ### No async split either
 
 Astro frontmatter is an async module scope, so the wrapper awaits the element
-renderer directly — asynchronous components need nothing extra beyond the
+renderer directly —
+[asynchronous components](/core-concepts/ssr/#what-makes-a-component-asynchronous)
+need nothing extra beyond the
 [`enable-async` opt-in](/core-concepts/ssr/#async-rendering-outside-svelte)
 every non-Svelte host needs.
 

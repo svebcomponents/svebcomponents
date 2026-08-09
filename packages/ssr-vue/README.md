@@ -69,10 +69,11 @@ that honest.
 ## Async Components
 
 Unlike the Svelte integration, there is no sync/async wrapper split. Vue's
-`renderToString` fully awaits an async `setup()` and emits its output in
-order, so a component that awaits while rendering — or whose `index.ssr.ts`
-exports an async `SsrPrepare` hook — renders through the same wrapper a
-synchronous one does.
+`renderToString` fully awaits an async `setup()` and emits its output in order,
+so an asynchronous component renders through the same wrapper a synchronous one
+does. A component is asynchronous if it awaits while rendering, or if its
+`<entry>.ssr.ts` preparation hook returns a promise — see
+[What makes a component asynchronous](https://svebcomponents.dev/core-concepts/ssr/#what-makes-a-component-asynchronous).
 
 There is one catch, and it applies to any non-Svelte host. Svelte gates async
 SSR behind a module-global flag that is normally flipped by a Svelte app
