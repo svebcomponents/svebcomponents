@@ -44,7 +44,7 @@ Neither `svebcomponents.config.ts` nor any `exports` entry pointing into
 
 ### custom-elements.json is not exposed to consumers
 
-A hint, not an error — the manifest was written but consumers cannot find it.
+A hint, not an error. The manifest was written, but consumers cannot find it.
 Add both fields:
 
 ```json
@@ -62,7 +62,7 @@ Add both fields:
 
 auto-options needs a statically readable tag. When it cannot read one it leaves
 `<svelte:options>` untouched entirely, so the component gets **no inferred prop
-metadata and no hydration wrapper** — attributes stay strings.
+metadata and no hydration wrapper**: attributes stay strings.
 
 Use a plain string literal, or the object form:
 
@@ -89,7 +89,7 @@ Unions that resolve to one kind (`string | null`, `"a" | "b"`) infer fine.
 ### could not resolve prop types since they were not of expected shape
 
 The type annotation on `$props()` is not an object type, an interface, or a
-type alias for one — or it references a type imported from another module.
+type alias for one, or it references a type imported from another module.
 auto-options only inspects declarations in the same component instance script.
 Move the type into the component, or write the props metadata by hand.
 
@@ -118,8 +118,8 @@ If the host is a Svelte app, compile it with
 
 ### AsyncRendererError: `<my-element>` renders asynchronously…
 
-The element was rendered through a synchronous path — `renderCustomElementSync`,
-or a host integration that cannot await — but turned out to need awaiting,
+The element was rendered through a synchronous path (`renderCustomElementSync`,
+or a host integration that cannot await) but turned out to need awaiting,
 either because it awaits while rendering or because its `<entry>.ssr.ts` hook
 returned a promise.
 
@@ -173,7 +173,7 @@ The server markup did not structurally match what the client expected. Svelte's
 own recovery clears the shadow root and mounts from scratch, so the component
 still works.
 
-The usual cause is the server and browser rendering different content — a
+The usual cause is the server and browser rendering different content: a
 timestamp, a random value, or data that changed between the two. Move
 non-deterministic work into an
 [`<entry>.ssr.ts` preparation hook](/core-concepts/build/#server-preparation)

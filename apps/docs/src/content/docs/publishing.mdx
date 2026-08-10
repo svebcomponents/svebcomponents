@@ -39,7 +39,7 @@ rules.
 Every build emits `custom-elements.json`, a
 [custom elements manifest](https://github.com/webcomponents/custom-elements-manifest)
 that editors read for HTML completions. Expose it, and include it in the
-published files — the build prints a hint if you forget:
+published files. The build prints a hint if you forget:
 
 ```json
 {
@@ -50,8 +50,8 @@ published files — the build prints a hint if you forget:
 
 ## Declare `svelte` if your consumers need it
 
-If your package declares `svelte` as a required dependency of its consumers —
-a `dependency`, or a `peerDependency` not marked optional — svebcomponents
+If your package declares `svelte` as a required dependency of its consumers
+(a `dependency`, or a `peerDependency` not marked optional), svebcomponents
 registers your elements with Svelte's template types automatically, and your
 Svelte consumers need no setup at all:
 
@@ -147,4 +147,4 @@ entries do not overwrite each other.
 
 Importing the entrypoint defines the element. Svelte's generated
 `customElements.define()` call is made idempotent at build time, so importing
-the component — or a bundle containing it — more than once never throws.
+the component, or a bundle containing it, more than once never throws.

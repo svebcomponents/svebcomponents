@@ -2,7 +2,7 @@ Server-side rendering support for Svelte-built custom elements inside React apps
 
 This is the React counterpart to `@svebcomponents/ssr`'s Svelte integration.
 The element renderers, the DOM shim, the renderer registry and the client-side
-hydration machinery are all shared — this package only supplies the two pieces
+hydration machinery are all shared; this package only supplies the two pieces
 that are host-framework specific: routing custom element tags to a wrapper, and
 emitting declarative shadow DOM around them.
 
@@ -21,7 +21,7 @@ Components" below for the RSC opt-in.
   Components, which server-renders asynchronous elements instead of degrading.
 
 Unlike the Svelte and Vue integrations, there is no bundler plugin. The JSX
-runtime swap is a compiler setting, so this works anywhere React does —
+runtime swap is a compiler setting, so this works anywhere React does,
 including hosts that are not Vite-based.
 
 ## Any custom element, not just Svelte-built ones
@@ -89,17 +89,17 @@ import { CustomElement } from "@svebcomponents/ssr-react/rsc";
 ```
 
 An RSC async function component runs to completion before any markup is
-emitted, so it can `await` the renderer directly — no cache, no `use()`, no
+emitted, so it can `await` the renderer directly: no cache, no `use()`, no
 Suspense boundary. That only works for elements rendered from a Server
 Component, though: an async function component cannot be imported into a
 Client Component (`"use client"`), so an element rendered from client-side
-React — on an RSC framework or not — has no async path and keeps the default's
+React, on an RSC framework or not, has no async path and keeps the default's
 degrade-to-client-only behavior.
 
 ## Requirements
 
 `svelte` must be installed as a server-side dependency of the React app, even
-though no Svelte components appear in it — see
+though no Svelte components appear in it; see
 [Compatibility](https://svebcomponents.dev/reference/compatibility/).
 
 ## How It Works

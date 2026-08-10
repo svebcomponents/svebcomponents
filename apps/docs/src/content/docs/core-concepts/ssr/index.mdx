@@ -71,7 +71,7 @@ export default defineConfig({
 ```
 
 The plugin automatically adds `@svebcomponents/ssr` to Vite's `ssr.noExternal`
-— you don't need to configure that yourself. If your own component package
+so you don't need to configure it yourself. If your own component package
 also ships a raw-`.svelte` export (e.g. an `externalSvelte` build sharing
 this app's Svelte runtime), add it alongside via the plugin's `noExternal`
 option instead of editing `vite.config.ts`'s `ssr.noExternal` separately:
@@ -93,8 +93,8 @@ is guaranteed to install first regardless of import order or how a bundler
 chunks things.
 
 :::note
-If the component's tag could not be read at build time — see
-[static tags only](/core-concepts/build/#static-tags-only) — the generated
+If the component's tag could not be read at build time (see
+[static tags only](/core-concepts/build/#static-tags-only)), the generated
 renderer does not self-register, and the app registers it by hand:
 
 ```ts
@@ -111,7 +111,7 @@ ElementRendererRegistry.set("my-component", MyComponentRenderer);
 Nothing in the SSR pipeline is specific to how a custom element is
 implemented. Rendering goes through Lit's `ElementRenderer` contract and
 nothing else, so any element with a conforming renderer can be server-rendered
-— including Lit elements:
+, including Lit elements:
 
 ```ts
 import { LitElementRenderer } from "@lit-labs/ssr/lib/lit-element-renderer.js";
@@ -152,8 +152,8 @@ server-render it. There are exactly two ways onto the async path:
    whose default-exported `SsrPrepare` function may return a promise.
 
 Everything else renders synchronously, including a hook that returns nothing.
-A hook that bails out early — because the host already supplied the value it
-would have fetched — therefore keeps the synchronous path available, which is
+A hook that bails out early, because the host already supplied the value it
+would have fetched, keeps the synchronous path available, which is
 what makes the second form safe to add to a component that hosts may render
 either way.
 
@@ -169,7 +169,7 @@ cannot cover:
 - **The result survives hydration.** Properties set through the hook's
   `setProperty` join rich-property serialization, so the client adopts the
   prepared value instead of fetching it again. A value awaited inside the
-  component is local state — it is not serialized, and the browser repeats the
+  component is local state: it is not serialized, and the browser repeats the
   work.
 
 Awaiting in the component is the right tool when the asynchrony is part of
@@ -183,7 +183,7 @@ is normally set for you by a Svelte app compiled with
 `compilerOptions.experimental.async`.
 
 A host application that is not a Svelte app has no such compilation, and a
-component package's own server bundle cannot set the flag either — it carries
+component package's own server bundle cannot set the flag either: it carries
 its own copy of Svelte, while `render()` is called through the copy
 `@svebcomponents/ssr` imports. Such an app must therefore opt in explicitly on
 the server:
@@ -208,11 +208,11 @@ and rewrites them to a wrapper component. The wrapper:
 
 On the client, the wrapper renders the original custom element tag so the
 browser can upgrade it normally. When the element upgrades, the
-server-rendered shadow DOM is [hydrated](/core-concepts/hydration/) — adopted
-in place — rather than wiped and re-rendered.
+server-rendered shadow DOM is [hydrated](/core-concepts/hydration/): adopted
+in place rather than wiped and re-rendered.
 
-The examples above use Svelte. Nothing about the element is Svelte-specific
-— only the host application's wiring is. For Vue, and for building an
+The examples above use Svelte. Nothing about the element is Svelte-specific;
+only the host application's wiring is. For Vue, and for building an
 integration against another framework, see
 [Framework Integrations](/core-concepts/ssr/framework-integrations/).
 

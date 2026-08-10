@@ -7,8 +7,8 @@ description: Supported Svelte, Node, bundler and host framework versions for eac
 
 | Requirement | Version                                                              |
 | ----------- | -------------------------------------------------------------------- |
-| Node        | 22 or later                                                          |
-| Svelte      | 5.x — Svelte 4 and the legacy component API are not supported        |
+| Node        | 20.19 or later                                                       |
+| Svelte      | 5.x. Svelte 4 and the legacy component API are not supported.        |
 | Browsers    | any with support for declarative shadow DOM, for server-rendered use |
 
 ## Packages
@@ -21,7 +21,7 @@ description: Supported Svelte, Node, bundler and host framework versions for eac
 | `@svebcomponents/ssr-vue`      | Experimental | `vue ^3.5`, `vite ^6 \|\| ^7 \|\| ^8`                                            |
 | `@svebcomponents/ssr-react`    | Experimental | `react ^19`                                                                      |
 | `@svebcomponents/ssr-astro`    | Experimental | `astro ^5`                                                                       |
-| `@svebcomponents/utils`        | Beta         | none — an internal dependency of the packages above                              |
+| `@svebcomponents/utils`        | Beta         | none (an internal dependency of the packages above)                              |
 
 **Beta** means ready for real-world evaluation and early production adoption,
 with APIs that may still change before 1.0. **Experimental** means the API is
@@ -40,7 +40,7 @@ expected to change.
 - **Astro 5+** — no client-side counterpart; the element hydrates itself.
 
 Every non-Svelte host must also opt into Svelte's async SSR mode explicitly
-before rendering an asynchronous component — see
+before rendering an asynchronous component; see
 [async rendering outside Svelte](/core-concepts/ssr/#async-rendering-outside-svelte).
 
 ## Server rendering requires Svelte

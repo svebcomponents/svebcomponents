@@ -2,7 +2,7 @@ Server-side rendering support for Svelte-built custom elements inside Vue apps.
 
 This is the Vue counterpart to `@svebcomponents/ssr`'s Svelte integration. The
 element renderers, the DOM shim, the renderer registry and the client-side
-hydration machinery are all shared — this package only supplies the two pieces
+hydration machinery are all shared; this package only supplies the two pieces
 that are host-framework specific: finding custom element tags in Vue templates,
 and emitting declarative shadow DOM around them.
 
@@ -82,7 +82,7 @@ component throws `await_invalid`.
 ## Requirements
 
 `svelte` must be installed as a server-side dependency of the Vue app, even
-though no Svelte components appear in it — see
+though no Svelte components appear in it; see
 [Compatibility](https://svebcomponents.dev/reference/compatibility/).
 
 ## How It Works

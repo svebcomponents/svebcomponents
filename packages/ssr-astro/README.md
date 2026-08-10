@@ -2,7 +2,7 @@ Server-side rendering support for custom elements inside Astro apps.
 
 This is the Astro counterpart to `@svebcomponents/ssr`'s Svelte integration.
 The element renderers, the DOM shim, the renderer registry and the client-side
-hydration machinery are all shared — this package only supplies what is
+hydration machinery are all shared; this package only supplies what is
 specific to Astro: finding custom element tags in `.astro` templates, and
 emitting declarative shadow DOM around them.
 
@@ -83,7 +83,7 @@ included. See
 ## Requirements
 
 `svelte` must be installed as a server-side dependency of the Astro app, even
-though no Svelte components appear in it — see
+though no Svelte components appear in it; see
 [Compatibility](https://svebcomponents.dev/reference/compatibility/).
 
 ## How It Works

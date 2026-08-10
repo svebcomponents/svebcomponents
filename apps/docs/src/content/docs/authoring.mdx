@@ -4,7 +4,7 @@ description: Props, events, slots and styling in a Svelte component that ships a
 ---
 
 A svebcomponent is a normal Svelte 5 component. What changes is that its public
-surface — props, events, slots, CSS custom properties — is also the public
+surface (props, events, slots, CSS custom properties) is also the public
 surface of an HTML element. This page covers how each one crosses that
 boundary.
 
@@ -79,7 +79,7 @@ svebcomponents endorses, and the only one it can describe:
 ```
 
 The explicit type argument on `CustomEvent` is what types `detail`. It is read
-verbatim from your source — no type checker is involved — so inferring it from
+verbatim from your source, with no type checker involved, so inferring it from
 the `detail` value instead still records the event, but its detail becomes
 `unknown`.
 
@@ -148,7 +148,7 @@ than expecting them to reach inside:
 ```
 
 A CSS custom property the component _reads_ without defining is treated as part
-of its public API and collected into the manifest — those are the ones a
+of its public API and collected into the manifest: those are the ones a
 consumer is expected to supply. The `var()` fallback becomes the documented
 default.
 
@@ -192,8 +192,8 @@ The object form works identically and is what you want when you also need
 svebcomponents reads the tag from your source at build time to write the
 manifest, the element types and the SSR renderer's self-registration. A
 dynamically interpolated tag (`customElement="{x}"`) or the bare
-`customElement` boolean shorthand cannot be read, so auto-options warns and
-leaves `<svelte:options>` untouched — meaning no inferred props and no
+`customElement` boolean shorthand cannot be read. auto-options warns and leaves
+`<svelte:options>` untouched, which also means no inferred props and no
 hydration. Use a plain string literal or the object form.
 :::
 
