@@ -82,7 +82,9 @@ Every build describes the elements your package declares, in two forms:
 - `custom-elements.json` — a
   [custom elements manifest](https://github.com/webcomponents/custom-elements-manifest)
   (schema 2.1.0). Editors read it for HTML completions, and the wider custom
-  elements tooling ecosystem consumes it.
+  elements tooling ecosystem consumes it. It reaches consumers only if
+  `package.json` declares it — see
+  [Ship the manifest](/publishing/#ship-the-manifest).
 - TypeScript declarations at the path the entry's `types` condition points at.
   Direct `.svelte` entries receive a complete declaration for their custom
   element constructor as well as their tag, props and events.

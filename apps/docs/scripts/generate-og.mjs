@@ -13,9 +13,10 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
   <rect x="0" y="0" width="${W}" height="10" fill="#2980c2"/>
   <rect x="0" y="${H - 10}" width="${W}" height="10" fill="#c7e23b"/>
   <text x="80" y="290" font-family="Helvetica, Arial, sans-serif" font-size="86" font-weight="700" fill="#111111" letter-spacing="-3">svebcomponents</text>
-  <text x="80" y="368" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="38" fill="#2980c2">Everything after customElement: true</text>
-  <text x="80" y="450" font-family="Helvetica, Arial, sans-serif" font-size="30" fill="#555555">Build Svelte components into web components that package</text>
-  <text x="80" y="492" font-family="Helvetica, Arial, sans-serif" font-size="30" fill="#555555">themselves, type themselves, and server-render with real hydration.</text>
+  <text x="80" y="366" font-family="Helvetica, Arial, sans-serif" font-size="34" fill="#2980c2">Boilerplate-free, type-safe, server-rendered</text>
+  <text x="80" y="410" font-family="Helvetica, Arial, sans-serif" font-size="34" fill="#2980c2">web components \u2014 with Svelte.</text>
+  <text x="80" y="486" font-family="Helvetica, Arial, sans-serif" font-size="28" fill="#555555">Packaging, types for your consumers, and server rendering:</text>
+  <text x="80" y="524" font-family="Helvetica, Arial, sans-serif" font-size="28" fill="#555555">everything Svelte&#8217;s customElement: true leaves to you.</text>
 </svg>`;
 
 await sharp(Buffer.from(svg))

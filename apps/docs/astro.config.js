@@ -3,8 +3,6 @@ import starlight from "@astrojs/starlight";
 
 import { remarkStripLeadingH1 } from "./src/plugins/remarkStripLeadingH1.js";
 
-const experimental = { text: "Experimental", variant: "caution" };
-
 // https://astro.build/config
 export default defineConfig({
   site: "https://svebcomponents.dev",
@@ -77,7 +75,6 @@ export default defineConfig({
             {
               label: "Other frameworks",
               slug: "server-rendering/other-frameworks",
-              badge: experimental,
             },
           ],
         },
@@ -119,17 +116,14 @@ export default defineConfig({
                 {
                   label: "@svebcomponents/ssr-vue",
                   slug: "packages/ssr-vue",
-                  badge: experimental,
                 },
                 {
                   label: "@svebcomponents/ssr-react",
                   slug: "packages/ssr-react",
-                  badge: experimental,
                 },
                 {
                   label: "@svebcomponents/ssr-astro",
                   slug: "packages/ssr-astro",
-                  badge: experimental,
                 },
               ],
             },

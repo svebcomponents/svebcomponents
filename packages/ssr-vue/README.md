@@ -6,8 +6,8 @@ hydration machinery are all shared; this package only supplies the two pieces
 that are host-framework specific: finding custom element tags in Vue templates,
 and emitting declarative shadow DOM around them.
 
-This package is experimental. Its API may change before it is released
-alongside the rest of the toolchain.
+This package is in beta: ready for real-world evaluation and early production
+adoption, with an API that may still change before 1.0.
 
 ## What It Provides
 
@@ -122,7 +122,6 @@ compiles observe the same template.
 
 ## Current Limitations
 
-- Experimental; the API may change.
 - Custom element tags are detected structurally (a dash, minus the HTML spec's
   reserved SVG/MathML names). Pass `tags` to the Vite plugin to narrow it.
 - Only SFC `<template>` blocks are rewritten. Custom elements written directly

@@ -6,8 +6,8 @@ hydration machinery are all shared; this package only supplies what is
 specific to Astro: finding custom element tags in `.astro` templates, and
 emitting declarative shadow DOM around them.
 
-This package is experimental. Its API may change before it is released
-alongside the rest of the toolchain.
+This package is in beta: ready for real-world evaluation and early production
+adoption, with an API that may still change before 1.0.
 
 ## Installation
 
@@ -126,7 +126,6 @@ than a renderer registration.
 
 ## Current Limitations
 
-- Experimental; the API may change.
 - Only `.astro` templates are rewritten. Custom elements inside `.mdx` are
   untested.
 - The consuming app must import the browser custom element module and register

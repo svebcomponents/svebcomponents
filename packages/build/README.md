@@ -1,4 +1,4 @@
-Build Svelte custom element packages with the `svebcomponents` CLI.
+Build Svelte custom element packages with the `svebcomponents` command.
 
 This package wraps `tsdown` with the defaults svebcomponents needs:
 
@@ -15,7 +15,8 @@ This package wraps `tsdown` with the defaults svebcomponents needs:
 pnpm add -D @svebcomponents/build
 ```
 
-Add a build script:
+Installing it puts a `svebcomponents` executable on your `PATH`. Wire it to a
+build script:
 
 ```json
 {
@@ -27,7 +28,8 @@ Add a build script:
 
 ## Zero-config Builds
 
-For the common case, describe your component entrypoints in `package.json` exports and run `svebcomponents`.
+For the common case, describe your component entrypoints in `package.json`
+exports:
 
 ```json
 {
@@ -46,7 +48,13 @@ For the common case, describe your component entrypoints in `package.json` expor
 }
 ```
 
-The CLI looks for exports whose `default` or `import` condition points at
+Then run the command:
+
+```bash
+svebcomponents
+```
+
+It looks for exports whose `default` or `import` condition points at
 `./dist/client/*`, maps each output basename into `src`, and classifies the
 matching source by extension:
 

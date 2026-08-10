@@ -6,8 +6,8 @@ hydration machinery are all shared; this package only supplies the two pieces
 that are host-framework specific: routing custom element tags to a wrapper, and
 emitting declarative shadow DOM around them.
 
-This package is experimental. Its API may change before it is released
-alongside the rest of the toolchain.
+This package is in beta: ready for real-world evaluation and early production
+adoption, with an API that may still change before 1.0.
 
 **The default `CustomElement` is synchronous rendering only.** See "Async
 Components" below for the RSC opt-in.
@@ -132,7 +132,6 @@ list, so the two trees agree.
 
 ## Current Limitations
 
-- Experimental; the API may change.
 - Synchronous element renderers only when server-rendering (see above).
 - Custom element tags are detected structurally (a dash, minus the HTML spec's
   reserved SVG/MathML names).

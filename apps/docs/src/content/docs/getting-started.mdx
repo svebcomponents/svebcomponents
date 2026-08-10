@@ -112,7 +112,7 @@ custom element lives — and doubles as the build configuration:
 }
 ```
 
-The `svebcomponents` CLI maps `dist/client/FavoriteNumber.js` back to the
+The `svebcomponents` command maps `dist/client/FavoriteNumber.js` back to the
 same-basename `src/FavoriteNumber.svelte` and builds that entrypoint. The
 `svelte` condition asks for a second, lighter build that Svelte tooling can
 select to share the host application's Svelte runtime.
@@ -123,26 +123,37 @@ custom-element pipeline entirely.
 
 ## Build it
 
-From the component package, run the `svebcomponents` CLI:
+`@svebcomponents/build` installs a command called `svebcomponents`, and the
+package's `build` script runs it:
+
+```json title="package.json"
+{
+  "scripts": {
+    "build": "svebcomponents"
+  }
+}
+```
+
+So from the component package:
 
 <Tabs syncKey="pkg">
   <TabItem label="pnpm">
 
-```bash
+```bash frame="terminal"
 pnpm build
 ```
 
   </TabItem>
   <TabItem label="npm">
 
-```bash
+```bash frame="terminal"
 npm run build
 ```
 
   </TabItem>
   <TabItem label="yarn">
 
-```bash
+```bash frame="terminal"
 yarn build
 ```
 
@@ -160,6 +171,19 @@ yarn build
 - **custom-elements.json** manifest for editors and tooling
 
 </FileTree>
+
+The manifest only reaches consumers if `package.json` points at it, so declare
+it alongside the exports:
+
+```json title="package.json"
+{
+  "customElements": "custom-elements.json",
+  "files": ["dist", "custom-elements.json"]
+}
+```
+
+The build prints a hint if you forget. See
+[Publishing your package](/publishing/#ship-the-manifest).
 
 ## Use it
 

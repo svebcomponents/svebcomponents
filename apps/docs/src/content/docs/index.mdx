@@ -3,7 +3,7 @@ title: svebcomponents
 description: Build Svelte components into web components that package themselves, describe themselves to other people's editors, and server-render with real hydration.
 template: splash
 hero:
-  tagline: "Everything after <code>customElement: true</code>."
+  tagline: Boilerplate-free, type-safe, server-rendered web components — with Svelte.
   image:
     file: ../../assets/svebcomponents_logo.svg
   actions:
@@ -21,9 +21,9 @@ hero:
 
 import { Card, CardGrid } from "@astrojs/starlight/components";
 
-Svelte compiles a component to a custom element today. svebcomponents is the
-toolchain for everything that comes next: packaging it, typing it for the people
-who use it, and rendering it on the server.
+Svelte already allows compiling to custom elements today. svebcomponents is
+the toolchain for everything that comes next: packaging it, typing it for the
+people who use it, and rendering it on the server.
 
 <CardGrid>
   <Card title="No boilerplate options" icon="pencil">
@@ -32,8 +32,8 @@ who use it, and rendering it on the server.
     arrives as a number.
   </Card>
   <Card title="package.json is the build config" icon="setting">
-    Declare where the built files go in `exports`, then run `svebcomponents`. No
-    bundler config, no entry list.
+    Declare where the built files go in `exports`, then run the `svebcomponents`
+    command. No bundler config, no entry list.
   </Card>
   <Card title="Typed for your consumers" icon="approve-check">
     A custom elements manifest plus `.d.ts`, so editors autocomplete your tags
@@ -65,13 +65,19 @@ who use it, and rendering it on the server.
       "default": "./dist/client/FavoriteNumber.js"
     }
   },
-  "scripts": { "build": "svebcomponents" }
+  "customElements": "custom-elements.json"
 }
 ```
 
-That is the whole setup. `svebcomponents` compiles the component, infers that
-`value` is a `Number` attribute, emits declarations and a custom elements
-manifest, and makes registration idempotent. Consumers write:
+`@svebcomponents/build` installs a command called `svebcomponents`. Run it:
+
+```bash frame="terminal"
+svebcomponents
+```
+
+That is the whole setup. It compiles the component, infers that `value` is a
+`Number` attribute, emits declarations and a custom elements manifest, and
+makes registration idempotent. Consumers write:
 
 ```html
 <favorite-number value="42"></favorite-number>
