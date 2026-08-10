@@ -1,5 +1,193 @@
 # @svebcomponents/build
 
+## 0.4.0
+
+### Minor Changes
+
+- 86e6596: Infer custom elements directly from same-basename `.svelte` source files and
+  build same-basename `.ts`/`.js` sources as ordinary modules. Mixed packages can
+  ship helpers without running them through the custom-element pipeline.
+
+  ## Migration
+
+  Rename each component to match its declared JavaScript output. Given this
+  export:
+
+  ```json
+  {
+    "exports": {
+      ".": {
+        "types": "./dist/client/ExampleComponent.d.ts",
+        "default": "./dist/client/ExampleComponent.js"
+      }
+    }
+  }
+  ```
+
+  use `src/ExampleComponent.svelte` as the source entry.
+
+  When upgrading, delete any entry module that only exported the component. If
+  the module also contains runtime logic or additional exports, keep it as an
+  ordinary module or move to an explicit `svebcomponents.config.ts`.
+
+  The source convention is strict:
+
+  - `<name>.svelte` is a svebcomponent entry.
+  - `<name>.ts` or `<name>.js` is an ordinary module entry.
+  - More than one matching source is an error; use an explicit
+    `svebcomponents.config.ts` for non-conventional layouts.
+
+  For SSR preparation, place `<name>.ssr.ts` or `<name>.ssr.js` next to
+  `<name>.svelte`.
+
+  Direct component declarations are now generated from component analysis and
+  include the module's default custom-element constructor together with the
+  element, attribute, event, and template types.
+
+- a4e45b7: Emit a custom elements manifest and TypeScript types for the elements a package
+  ships, so editors and consuming templates know the tags and what they accept.
+
+  `custom-elements.json` (custom elements manifest 2.1.0) describes attributes,
+  property-only members, events with their detail type, slots and CSS custom
+  properties. The build points out the `package.json` wiring it needs
+  (`customElements`, `files`) when that is missing.
+
+  The TypeScript half is appended to the declaration file each entry already
+  emits — the one its `types` condition points at — so `import "my-components"`
+  is enough to type `document.querySelector("my-el")`. Per element it exports:
+
+  - `XElement` — the DOM element, with a narrowed `addEventListener`
+  - `XAttributes` — what markup may set, each attribute also accepting its
+    string form
+  - `XEventHandlers` — `onname`-style handler props for dispatched events
+  - `XEventMap` — event name to `CustomEvent<Detail>`
+
+  Svelte template types are registered automatically when the package declares
+  `svelte` as a required dependency of its consumers (a `dependency`, or a
+  `peerDependency` not marked optional). That gate matters: the augmentation
+  imports from `svelte/elements`, and a package whose standalone build bundles
+  Svelte may be consumed by an application with no `svelte` installed, which
+  would then fail to resolve it under `skipLibCheck: false`.
+
+  Vue and React augmentations are **not** generated. They have to name types
+  from frameworks this package neither depends on nor tests against, and those
+  conventions change between major versions, so a subtly wrong generated
+  augmentation would be worse than a few lines the consumer controls. The docs'
+  Types section carries verified recipes built from the exported types.
+
+  Property-only props (functions, snippets) appear on the element interface but
+  never among the attributes: in a template `onPick={fn}` is event-handler syntax
+  rather than a property assignment, so listing it there would type-check a
+  handler that never runs. Dispatched custom events are exposed instead.
+
+### Patch Changes
+
+- 86e6596: Resolve a source entry for exports whose target carries no file extension.
+
+  `exports` may legally point at an extensionless path. Entry inference stripped
+  the extension by slicing `-extension.length` off the end, which for an empty
+  extension is `slice(0, -0)` — the empty string rather than the whole path. Every
+  candidate source then collapsed to a bare extension, so inference failed even
+  when the component was sitting right there, and reported it as:
+
+  ```
+  [svebcomponents]: could not find a source for ./dist/client/index.
+    Expected exactly one of .svelte, .ts, or .js.
+  ```
+
+  Such an export now resolves against `src/` like any other.
+
+- e7267f8: Documentation pass across the package READMEs ahead of the beta launch.
+
+  - `@svebcomponents/ssr`, `ssr-vue`, `ssr-react` and `ssr-astro` gained the
+    install command they were missing.
+  - `@svebcomponents/build`'s options table was missing `hydratable`,
+    `ssrEntryFileName` and `svelteConfig`, and did not show how a package with
+    several components composes `defineConfig` calls.
+  - `@svebcomponents/ssr`'s package-author example used `import` without `types`
+    where every other example in the docs uses `default` with them, and the
+    `enable-async` opt-in for non-Svelte hosts was undocumented.
+  - The three integration READMEs each restated the shared SSR layer's
+    behaviour — the Lit renderer registry, the server-side `svelte` requirement,
+    the declarative shadow DOM contract, the definition of an asynchronous
+    component. Each now links to the canonical explanation and keeps only what
+    is specific to its framework.
+  - Removed references to internal `e2e/*` directories, which readers cannot
+    run, and normalised the product name to lowercase `svebcomponents`.
+
+- e7267f8: Point the CLI and runtime messages at the documentation's new URLs.
+
+  The docs site moved its concept pages to paths that match how the sidebar is
+  organised, so the two links printed from package code moved with them:
+
+  - the manifest hint in `@svebcomponents/build` now points at
+    `/guides/build/#element-types--manifest`
+  - the slotted-component hydration notice in `@svebcomponents/ssr` now points at
+    `/server-rendering/hydration/#limitations`
+
+  The old paths are redirected, so messages printed by already-released versions
+  keep resolving.
+
+- 86e6596: Build `.ts`/`.js` module entries for the browser rather than for Node.
+
+  An ordinary module export is written into `dist/client/`, beside the compiled
+  components, and is loaded by browsers. Its tsdown config did not set
+  `platform`, so it took tsdown's default of `"node"` and resolved the `node` key
+  of a dependency's `exports` map — shipping a dependency's Node build in a bundle
+  served to the browser. Module entries now resolve the same conditions the
+  component build does, including `production`, so `esm-env`-style dev branches
+  are eliminated instead of surviving as runtime checks.
+
+- 86e6596: Declare `license`, `description` and `homepage`, and ship the license text in
+  the published tarball.
+
+  Every package was published without a `license` field and without a license
+  file of its own. npm only includes `LICENSE*` from the package directory, so the
+  repository's MIT license never reached consumers and automated license scanners
+  had nothing to read. Each package now carries its own copy of `LICENSE.md`
+  alongside `"license": "MIT"`.
+
+  `description` is what npm shows on the package page and in search results, and
+  `homepage` now points at each package's reference page on the documentation
+  site.
+
+- 86e6596: Stop corrupting literal types that spell one of a component's local type names.
+
+  Generated declarations prefix a component's local types so several components
+  can share one declaration file (`Detail` becomes `Button$Detail`). The rewrite
+  matched names anywhere in the declaration's source text, including inside string
+  literals, so a literal type whose value happened to match a local type name was
+  rewritten too:
+
+  ```ts
+  // source
+  interface Detail {
+    id: string;
+  }
+  type Mode = "Detail" | "summary";
+
+  // generated, before
+  type MyWidget$Mode = "MyWidget$Detail" | "summary";
+  ```
+
+  Consumers writing `mode="Detail"` — the value the element actually accepts — got
+  a type error, while the bogus `"MyWidget$Detail"` type-checked and failed at
+  runtime. Literals are now stepped over.
+
+  Two adjacent defects went with it: names are matched in a single alternation, so
+  a name introduced by an earlier rewrite can no longer be rewritten again; and
+  names are escaped when built into the pattern, so a local type containing `$`
+  no longer silently fails to match.
+
+- Updated dependencies [86e6596]
+- Updated dependencies [86e6596]
+- Updated dependencies [e7267f8]
+- Updated dependencies [e7267f8]
+- Updated dependencies [a4e45b7]
+- Updated dependencies [86e6596]
+  - @svebcomponents/auto-options@0.3.0
+  - @svebcomponents/ssr@0.5.0
+
 ## 0.3.7
 
 ### Patch Changes

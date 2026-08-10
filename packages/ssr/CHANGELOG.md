@@ -1,5 +1,102 @@
 # @svebcomponents/ssr
 
+## 0.5.0
+
+### Minor Changes
+
+- 86e6596: Resolve a component's custom element tag from a direct `.svelte` entry, and
+  stop asking tsdown for declarations it cannot produce.
+
+  `svebcomponentsSsr` reads the declared tag so the generated SSR renderer can
+  self-register with `ElementRendererRegistry` instead of making the consuming app
+  do it by hand. It previously found that tag by reading the entry as a script
+  module and following its first relative `.svelte` import — the shape a
+  svebcomponent entry had when it was a `.ts` file that re-exported a component.
+  Entries are now the component itself, so the tag is read from the entry
+  directly.
+
+  Declaration generation is also disabled for `.svelte` entries. tsdown cannot
+  emit declarations for a raw Svelte entry; `@svebcomponents/build` writes the
+  component's public declaration from analyzer metadata instead.
+
+  ## Breaking
+
+  Calling `svebcomponentsSsr` directly with a `.ts`/`.js` entry no longer
+  resolves a tag, so the generated renderer will not self-register. This is a
+  silent change in behaviour — SSR stops producing markup for the element rather
+  than failing the build — because tag resolution is deliberately best-effort and
+  falls open.
+
+  Point the entry at the `.svelte` component:
+
+  ```diff
+  -svebcomponentsSsr({ entry: "src/index.ts", outDir: "dist/server" });
+  +svebcomponentsSsr({ entry: "src/index.svelte", outDir: "dist/server" });
+  ```
+
+  If the entry has to stay a script module, register the renderer yourself:
+
+  ```ts
+  import { ElementRendererRegistry } from "@svebcomponents/ssr";
+
+  ElementRendererRegistry.set("my-element", MyElementRenderer);
+  ```
+
+  The internal `findSvelteImportPath` helper is gone. It was never reachable
+  through the package's `exports`, so this affects no supported import path.
+
+### Patch Changes
+
+- e7267f8: Documentation pass across the package READMEs ahead of the beta launch.
+
+  - `@svebcomponents/ssr`, `ssr-vue`, `ssr-react` and `ssr-astro` gained the
+    install command they were missing.
+  - `@svebcomponents/build`'s options table was missing `hydratable`,
+    `ssrEntryFileName` and `svelteConfig`, and did not show how a package with
+    several components composes `defineConfig` calls.
+  - `@svebcomponents/ssr`'s package-author example used `import` without `types`
+    where every other example in the docs uses `default` with them, and the
+    `enable-async` opt-in for non-Svelte hosts was undocumented.
+  - The three integration READMEs each restated the shared SSR layer's
+    behaviour — the Lit renderer registry, the server-side `svelte` requirement,
+    the declarative shadow DOM contract, the definition of an asynchronous
+    component. Each now links to the canonical explanation and keeps only what
+    is specific to its framework.
+  - Removed references to internal `e2e/*` directories, which readers cannot
+    run, and normalised the product name to lowercase `svebcomponents`.
+
+- e7267f8: Point the CLI and runtime messages at the documentation's new URLs.
+
+  The docs site moved its concept pages to paths that match how the sidebar is
+  organised, so the two links printed from package code moved with them:
+
+  - the manifest hint in `@svebcomponents/build` now points at
+    `/guides/build/#element-types--manifest`
+  - the slotted-component hydration notice in `@svebcomponents/ssr` now points at
+    `/server-rendering/hydration/#limitations`
+
+  The old paths are redirected, so messages printed by already-released versions
+  keep resolving.
+
+- 86e6596: Declare `license`, `description` and `homepage`, and ship the license text in
+  the published tarball.
+
+  Every package was published without a `license` field and without a license
+  file of its own. npm only includes `LICENSE*` from the package directory, so the
+  repository's MIT license never reached consumers and automated license scanners
+  had nothing to read. Each package now carries its own copy of `LICENSE.md`
+  alongside `"license": "MIT"`.
+
+  `description` is what npm shows on the package page and in search results, and
+  `homepage` now points at each package's reference page on the documentation
+  site.
+
+- Updated dependencies [e7267f8]
+- Updated dependencies [86e6596]
+- Updated dependencies [86e6596]
+- Updated dependencies [86e6596]
+  - @svebcomponents/utils@0.3.0
+
 ## 0.4.0
 
 ### Minor Changes
