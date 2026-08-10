@@ -57,7 +57,9 @@ export const createTsdownConfig = (
   return {
     entry,
     outDir,
-    dts: true,
+    // tsdown cannot generate declarations for a raw Svelte entry. The CLI
+    // writes the public component declaration from analyzer metadata instead.
+    dts: !entry.endsWith(".svelte"),
     // this is a browser bundle: resolve browser export conditions (svelte's
     // root export otherwise resolves to its server entry, whose `hydrate`
     // and `mount` are unavailable-on-the-server stubs)

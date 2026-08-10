@@ -46,6 +46,15 @@ const HTML_ELEMENT_PROPERTIES = new Set([
 
 export const DECLARATION_FILE_NAME = "custom-elements.d.ts";
 
+const escapeRegExp = (text: string): string =>
+  text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * String and template literals appearing in type text. Their contents are
+ * values, not type references, so name rewriting must skip them.
+ */
+const STRING_LITERAL = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`/g;
+
 /**
  * Rewrites references to a component's locally declared types so several
  * components can contribute to one declaration file without colliding.
@@ -53,20 +62,38 @@ export const DECLARATION_FILE_NAME = "custom-elements.d.ts";
  * A type declared inside `Button.svelte` is file-scoped in the source but
  * module-scoped once inlined here, so `Detail` becomes `Button$Detail`. Only
  * whole-word matches of names we actually inlined are rewritten.
+ *
+ * Literals are stepped over rather than rewritten. A literal type whose value
+ * happens to spell a local type name (`type Mode = "Detail" | "summary"`
+ * alongside `interface Detail`) would otherwise be corrupted into
+ * `"Button$Detail"` — a type consumers cannot satisfy with the value the
+ * component actually accepts.
+ *
+ * All names are matched in one alternation rather than replaced one after
+ * another, so an already-rewritten name can never be rewritten again (which
+ * `Button$Button` would otherwise do for a local type sharing the prefix).
  */
 const qualifyLocalTypes = (
   text: string,
   localTypeNames: Set<string>,
   prefix: string,
 ): string => {
-  let result = text;
-  for (const name of localTypeNames) {
-    result = result.replace(
-      new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "g"),
-      `${prefix}$${name}`,
-    );
+  if (localTypeNames.size === 0) return text;
+  const names = new RegExp(
+    `\\b(?:${[...localTypeNames].map(escapeRegExp).join("|")})\\b`,
+    "g",
+  );
+  const qualify = (segment: string) =>
+    segment.replace(names, (name) => `${prefix}$${name}`);
+
+  let result = "";
+  let index = 0;
+  for (const literal of text.matchAll(STRING_LITERAL)) {
+    result += qualify(text.slice(index, literal.index));
+    result += literal[0];
+    index = literal.index + literal[0].length;
   }
-  return result;
+  return result + qualify(text.slice(index));
 };
 
 /**
@@ -258,9 +285,9 @@ const buildComponentDeclaration = (
  * plus the `HTMLElementTagNameMap` entries that make `querySelector` and
  * `createElement` return them.
  *
- * This half references nothing outside the DOM lib, so it is safe to append
- * to the component module's own emitted `.d.ts` — every consumer gets it just
- * by importing the package, whatever framework they use (or none).
+ * This half references nothing outside the DOM lib, so it is safe in the
+ * component module's generated `.d.ts` — every consumer gets it just by
+ * importing the package, whatever framework they use (or none).
  */
 export const renderCoreDeclarations = (
   components: AnalyzedComponentFile[],
@@ -385,8 +412,9 @@ export const renderCoreDeclarations = (
 };
 
 /**
- * The declaration file tsdown emits for an entry, which is what the export's
- * `types` condition points at (`src/index.ts` → `dist/client/index.d.ts`).
+ * The public declaration path for an entry, which is what the export's `types`
+ * condition points at
+ * (`src/ExampleComponent.svelte` → `dist/client/ExampleComponent.d.ts`).
  */
 const declarationFileFor = (
   cwd: string,
@@ -399,13 +427,12 @@ const declarationFileFor = (
     `${path.basename(entry, path.extname(entry))}.d.ts`,
   );
 
-/**
- * The absolute paths every export's `types` condition points at.
- *
- * Returns `undefined` when the package declares no such targets (a
- * `svebcomponents.config.ts` build, say), which tells the caller to fall back
- * to attaching to whatever each entry emitted.
- */
+/** The runtime default export of a directly compiled custom element entry. */
+export const renderComponentDefaultExport = (
+  component: AnalyzedComponentFile,
+): string =>
+  `declare const ${component.className}: {\n  new (): ${component.className}Element;\n};\n\nexport default ${component.className};`;
+
 /**
  * Renders the `svelte/elements` augmentation that teaches Svelte templates
  * about these elements.
@@ -499,6 +526,13 @@ const readPackageJson = async (cwd: string): Promise<unknown> => {
   }
 };
 
+/**
+ * The absolute paths every export's `types` condition points at.
+ *
+ * Returns `undefined` when the package declares no such targets (a
+ * `svebcomponents.config.ts` build, say), which tells the caller to fall back
+ * to attaching to whatever each entry emitted.
+ */
 const readTypesTargets = async (
   cwd: string,
 ): Promise<Set<string> | undefined> => {
@@ -524,14 +558,19 @@ const readTypesTargets = async (
 };
 
 /**
- * Writes the manifest, then attaches each entry's element types to the
- * declaration file that entry already ships.
+ * Writes the manifest, then emits each direct component entry's complete
+ * declaration.
  *
- * Appending to the module's own `.d.ts` means a consumer needs no reference
- * directive: importing the package for its side effect of defining the
- * element is enough to type `document.querySelector("my-el")`. Only the
- * framework template augmentations stay separate, since each imports from its
- * framework and must therefore be opt-in.
+ * Only direct `.svelte` entries produce element types. A script entry is an
+ * ordinary module — `findComponentSourcesForEntry` reports no components for
+ * one, even when it imports Svelte source — so a component reachable only
+ * through a script entry contributes neither a manifest declaration nor types.
+ * Declaring the tag as a literal in `<svelte:options>` is what makes an element
+ * describable at build time.
+ *
+ * Keeping everything in the export's own `.d.ts` means a consumer needs no
+ * reference directive: importing the package is enough to type both its
+ * default constructor and `document.querySelector("my-el")`.
  */
 export const emitElementTypes = async (
   cwd: string,
@@ -583,28 +622,24 @@ export const emitElementTypes = async (
         (component): component is AnalyzedComponentFile =>
           component !== undefined,
       );
+    // Only a direct `.svelte` entry gets this far: a script entry yields no
+    // component sources, so `owned` is empty. Such an entry therefore always
+    // has a primary component, and tsdown left its declaration file to us —
+    // declarations are disabled for `.svelte` entries because tsdown cannot
+    // produce them, so there is nothing here to preserve.
     if (owned.length === 0) continue;
-
-    let existing: string;
-    try {
-      existing = await fs.readFile(declarationFile, "utf8");
-    } catch {
-      // the entry produced no declarations (dts disabled for this config)
-      continue;
-    }
+    const primary = byPath.get(path.resolve(cwd, entry));
+    if (primary === undefined) continue;
 
     const declarationDir = path.dirname(declarationFile);
     const generated = [
       renderCoreDeclarations(owned, declarationDir, cwd),
+      renderComponentDefaultExport(primary),
       ...(withSvelteTypes
         ? [renderSvelteAugmentation(owned, declarationDir, cwd)]
         : []),
     ].join("\n");
-    await fs.writeFile(
-      declarationFile,
-      `${existing.trimEnd()}\n\n${generated}`,
-      "utf8",
-    );
+    await fs.writeFile(declarationFile, `${generated}\n`, "utf8");
     attached.add(declarationFile);
   }
 

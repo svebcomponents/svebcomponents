@@ -17,8 +17,13 @@
     },
     "fix": {},
     "check": {
+      // `build`, not `^build`: a package may type-check against its own
+      // generated output. `e2e/basic` checks its component-type test against
+      // the declarations `svebcomponents` emits into `dist/client`, which only
+      // its own build produces — and CI runs `check` before `build`. `build`
+      // already depends on `^build`, so upstream packages are still covered.
       "dependsOn": [
-        "^build"
+        "build"
       ]
     },
     "dev": {

@@ -24,6 +24,15 @@ describe("svebcomponentsSsrConfig", () => {
     expect(config.outDir).toEqual(outDir);
   });
 
+  test("disables tsdown declarations for a direct Svelte entry", () => {
+    const config = svebcomponentsSsrConfig({
+      entry: "src/Element.svelte",
+      outDir: "dist/server",
+    });
+
+    expect(config.dts).toBe(false);
+  });
+
   test("compiles a server preparation module as an additional entry", () => {
     const config = svebcomponentsSsrConfig({
       entry: "src/index.ts",

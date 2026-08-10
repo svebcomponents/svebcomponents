@@ -85,41 +85,24 @@ const resolveRelativeImport = async (
  * Follows an entry module's relative imports to the `.svelte` files it pulls
  * in.
  *
- * Build entries point at the module that re-exports a component
- * (`src/index.ts`), not at the `.svelte` file itself. Walking the imports
- * rather than scanning a directory is what lets a package with several
- * exports know which element belongs to which entry — each entry's generated
- * declarations may only describe its own elements, since two entries both
- * declaring the same tag globally would collide.
+ * Inferred component entries point directly at `.svelte` files. Walking their
+ * relative imports additionally finds nested custom elements bundled into the
+ * same public entry. Ordinary TypeScript/JavaScript entries are never passed
+ * here merely because they happen to import Svelte source.
  */
 export const findComponentSourcesForEntry = async (
   cwd: string,
   entry: string,
 ): Promise<string[]> => {
   const start = path.resolve(cwd, entry);
+  if (!start.endsWith(".svelte")) return [];
   const seen = new Set<string>();
   const components = new Set<string>();
 
-  // A configured entry that is not on disk cannot be walked. Rather than
-  // contributing nothing, fall back to scanning its directory — the caller
-  // drops anything without a custom element tag, so this stays conservative.
-  let reachable = true;
   try {
     await fs.access(start);
   } catch {
-    reachable = false;
-  }
-  if (!reachable) {
-    const root = path.dirname(start);
-    try {
-      const entries = await fs.readdir(root, { recursive: true });
-      return entries
-        .filter((candidate) => candidate.endsWith(".svelte"))
-        .map((candidate) => path.resolve(root, candidate))
-        .sort();
-    } catch {
-      return [];
-    }
+    return [];
   }
 
   const queue = [start];

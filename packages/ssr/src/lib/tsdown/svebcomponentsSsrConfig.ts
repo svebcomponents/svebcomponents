@@ -8,10 +8,7 @@ import svelte from "rollup-plugin-svelte";
 import { pluginGenerateSsrEntry } from "../rollup/pluginGenerateSsrEntry.js";
 import { pluginOverrideSvelteSsrSlotImplementation } from "../rollup/pluginOverrideSvelteSsrSlotImplementation.js";
 import { pluginStripCustomElementOptions } from "../rollup/pluginStripCustomElementOptions.js";
-import {
-  extractComponentTag,
-  findSvelteImportPath,
-} from "../shared/resolveComponentTag.js";
+import { extractComponentTag } from "../shared/resolveComponentTag.js";
 import {
   mergeCompilerOptions,
   type SvelteBuildConfig,
@@ -27,8 +24,8 @@ const HYDRATION_HOST_SVELTE_PATH = fileURLToPath(
 );
 
 /**
- * Best-effort: follows the entry file's relative import of its `.svelte`
- * component and reads its declared custom element tag, so the generated SSR
+ * Best-effort: reads the direct `.svelte` entry's declared custom element tag,
+ * so the generated SSR
  * renderer can self-register with `ElementRendererRegistry` instead of
  * requiring the consuming app to do it by hand. Missing/unreadable files
  * (e.g. a synthetic path in a unit test, or a component with no declared
@@ -37,14 +34,8 @@ const HYDRATION_HOST_SVELTE_PATH = fileURLToPath(
  */
 const readEntryTagName = (entry: string): string | undefined => {
   try {
-    const entrySource = fs.readFileSync(entry, "utf8");
-    const sveltePath = findSvelteImportPath(entrySource);
-    if (!sveltePath) return undefined;
-    const svelteSource = fs.readFileSync(
-      path.resolve(path.dirname(entry), sveltePath),
-      "utf8",
-    );
-    return extractComponentTag(svelteSource);
+    if (!entry.endsWith(".svelte")) return undefined;
+    return extractComponentTag(fs.readFileSync(entry, "utf8"));
   } catch {
     return undefined;
   }
@@ -115,7 +106,7 @@ const createSsrTsdownConfig = ({
         }
       : entry,
     outDir,
-    dts: true,
+    dts: !entry.endsWith(".svelte"),
     // Keep the public output paths stable as .js/.d.ts. tsdown 0.22 defaults
     // Node-platform builds to fixed .mjs/.d.mts extensions.
     fixedExtension: false,

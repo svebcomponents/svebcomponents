@@ -1,6 +1,9 @@
 {
   "name": "@svebcomponents/build",
   "version": "0.3.7",
+  "description": "Zero-config build pipeline that turns Svelte components into distributable custom element packages.",
+  "license": "MIT",
+  "homepage": "https://svebcomponents.dev/packages/build/",
   "engines": {
     "node": ">=20.19.0"
   },

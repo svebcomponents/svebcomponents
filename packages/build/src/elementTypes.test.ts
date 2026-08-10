@@ -10,6 +10,7 @@ import {
   findComponentSources,
 } from "./manifest.js";
 import {
+  renderComponentDefaultExport,
   renderCoreDeclarations,
   renderSvelteAugmentation,
   requiresSvelte,
@@ -28,26 +29,14 @@ afterEach(async () => {
 
 const writeComponent = async (name: string, source: string) => {
   await fs.writeFile(path.join(workspace, "src", name), source, "utf8");
-  // mirror a real package: the entry re-exports every component, which is
-  // what component discovery walks
-  const components = (await fs.readdir(path.join(workspace, "src"))).filter(
-    (file) => file.endsWith(".svelte"),
-  );
-  await fs.writeFile(
-    path.join(workspace, "src", "index.ts"),
-    components
-      .map(
-        (file, index) =>
-          `import C${index} from "./${file}";\nexport { C${index} };`,
-      )
-      .join("\n"),
-    "utf8",
-  );
 };
 
 const analyzeWorkspace = async () => {
+  const components = (await fs.readdir(path.join(workspace, "src"))).filter(
+    (file) => file.endsWith(".svelte"),
+  );
   const sources = await findComponentSources(workspace, [
-    { entry: "src/index.ts" },
+    ...components.map((file) => ({ entry: `src/${file}` })),
   ]);
   return analyzeComponentFiles(workspace, sources);
 };
@@ -94,16 +83,11 @@ describe("findComponentSources", () => {
     );
     await fs.writeFile(
       path.join(workspace, "src", "A.svelte"),
-      `<svelte:options customElement="a-el" />`,
-      "utf8",
-    );
-    await fs.writeFile(
-      path.join(workspace, "src", "index.ts"),
-      `import A from "./A.svelte";\nexport * from "./nested/index.js";\nexport { A };`,
+      `<svelte:options customElement="a-el" />\n<script>import "./nested/index.js";</script>`,
       "utf8",
     );
     const sources = await findComponentSources(workspace, [
-      { entry: "src/index.ts" },
+      { entry: "src/A.svelte" },
     ]);
     expect(sources.map((source) => path.basename(source)).sort()).toEqual([
       "A.svelte",
@@ -118,13 +102,8 @@ describe("findComponentSources", () => {
       `<svelte:options customElement="orphan-el" />`,
       "utf8",
     );
-    await fs.writeFile(
-      path.join(workspace, "src", "index.ts"),
-      `import A from "./A.svelte";\nexport { A };`,
-      "utf8",
-    );
     const sources = await findComponentSources(workspace, [
-      { entry: "src/index.ts" },
+      { entry: "src/A.svelte" },
     ]);
     expect(sources.map((source) => path.basename(source))).toEqual([
       "A.svelte",
@@ -133,7 +112,19 @@ describe("findComponentSources", () => {
 
   it("ignores an entry directory that does not exist", async () => {
     await expect(
-      findComponentSources(workspace, [{ entry: "nope/index.ts" }]),
+      findComponentSources(workspace, [{ entry: "nope/Element.svelte" }]),
+    ).resolves.toEqual([]);
+  });
+
+  it("does not classify an ordinary module by walking its imports", async () => {
+    await writeComponent("Element.svelte", BUTTON);
+    await fs.writeFile(
+      path.join(workspace, "src", "helpers.ts"),
+      `import "./Element.svelte";`,
+      "utf8",
+    );
+    await expect(
+      findComponentSources(workspace, [{ entry: "src/helpers.ts" }]),
     ).resolves.toEqual([]);
   });
 });
@@ -226,6 +217,14 @@ describe("renderDeclarations", () => {
     expect(output).toContain("interface HTMLElementTagNameMap");
   });
 
+  it("renders the direct component module's default constructor", async () => {
+    await writeComponent("Element.svelte", BUTTON);
+    const [component] = await analyzeWorkspace();
+    expect(renderComponentDefaultExport(component!)).toBe(
+      "declare const MyButton: {\n  new (): MyButtonElement;\n};\n\nexport default MyButton;",
+    );
+  });
+
   it("keeps framework augmentations out of the module's own types", async () => {
     await writeComponent("Element.svelte", BUTTON);
     const output = await render();
@@ -234,6 +233,56 @@ describe("renderDeclarations", () => {
     expect(output).not.toContain('declare module "svelte/elements"');
     expect(output).not.toContain('declare module "vue"');
     expect(output).not.toContain('from "react"');
+  });
+
+  it("leaves literal types whose value spells a local type name alone", async () => {
+    // `qualifyLocalTypes` rewrites references to inlined local types, but a
+    // string literal is a value, not a reference. Rewriting it would advertise
+    // a type the component cannot actually be given: `mode="Detail"` — the
+    // value it accepts — would stop type-checking.
+    await writeComponent(
+      "Element.svelte",
+      `<svelte:options customElement={{ tag: 'my-widget' }} />
+<script lang="ts">
+  interface Detail { id: string }
+  type Mode = "Detail" | "summary";
+  interface Props {
+    mode: Mode;
+    onpick?: (detail: Detail) => void;
+  }
+  let { mode, onpick }: Props = $props();
+</script>
+<button>{mode}</button>`,
+    );
+    const output = await render();
+    expect(output).toContain('type MyWidget$Mode = "Detail" | "summary";');
+    expect(output).not.toContain('"MyWidget$Detail"');
+    // the genuine type *reference* is still qualified
+    expect(output).toContain("interface MyWidget$Detail");
+    expect(output).toContain("(detail: MyWidget$Detail) => void");
+  });
+
+  it("does not re-qualify a name a previous rewrite just introduced", async () => {
+    // `Wrapper` is rewritten to `MyWidget$Wrapper`, which puts the literal text
+    // `MyWidget` — itself a local type name — into the output. Replacing names
+    // one after another would then match it again and yield
+    // `MyWidget$MyWidget$Wrapper`. Matching every name in a single alternation
+    // is what makes each position rewritten exactly once.
+    await writeComponent(
+      "Element.svelte",
+      `<svelte:options customElement={{ tag: 'my-widget' }} />
+<script lang="ts">
+  type Wrapper = { inner: MyWidget };
+  interface MyWidget { id: string }
+  interface Props { detail: Wrapper }
+  let { detail }: Props = $props();
+</script>
+<span>{detail.inner.id}</span>`,
+    );
+    const output = await render();
+    expect(output).toContain("type MyWidget$Wrapper");
+    expect(output).not.toContain("MyWidget$MyWidget$Wrapper");
+    expect(output).toContain("inner: MyWidget$MyWidget");
   });
 
   it("inlines a referenced local type under a component-qualified name", async () => {
@@ -403,6 +452,18 @@ describe("generated declarations compile", () => {
       );
       await expectCompiles(
         renderCoreDeclarations(await analyzeWorkspace(), workspace, workspace),
+      );
+    },
+    COMPILER_TIMEOUT_MS,
+  );
+
+  it(
+    "compiles a complete direct component module declaration",
+    async () => {
+      await writeComponent("Element.svelte", BUTTON);
+      const components = await analyzeWorkspace();
+      await expectCompiles(
+        `${renderCoreDeclarations(components, workspace, workspace)}\n${renderComponentDefaultExport(components[0]!)}`,
       );
     },
     COMPILER_TIMEOUT_MS,

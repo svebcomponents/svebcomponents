@@ -78,10 +78,11 @@ import { CustomElement } from "@svebcomponents/ssr-react";
 
 ## Async Components
 
-React's `renderToString` cannot await, so a component that renders
-asynchronously — one that awaits while rendering, or whose `index.ssr.ts`
-exports an async `SsrPrepare` hook — **cannot be server-rendered by the
-default `CustomElement`**.
+React's `renderToString` cannot await, so an asynchronous component **cannot be
+server-rendered by the default `CustomElement`**. A component is asynchronous if
+it awaits while rendering, or if its `<entry>.ssr.ts` preparation hook returns a
+promise — see
+[What makes a component asynchronous](https://svebcomponents.dev/core-concepts/ssr/#what-makes-a-component-asynchronous).
 
 Rather than failing the page, such an element is emitted without server-rendered
 shadow content and rendered in the browser only, with a one-time console

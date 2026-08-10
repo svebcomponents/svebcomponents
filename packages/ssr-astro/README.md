@@ -55,10 +55,11 @@ svebcomponents integration applies there.
 ## Async Components
 
 Astro frontmatter is an async module scope, so the wrapper simply awaits the
-element renderer. A component that awaits while rendering, or that has an
-async `SsrPrepare` hook, works through the same wrapper as a synchronous one —
-no sync/async split as in the Svelte integration, and no degradation as in
-React's.
+element renderer. An asynchronous component — one that awaits while rendering,
+or whose `<entry>.ssr.ts` preparation hook returns a promise (see
+[What makes a component asynchronous](https://svebcomponents.dev/core-concepts/ssr/#what-makes-a-component-asynchronous))
+— works through the same wrapper as a synchronous one: no sync/async split as in
+the Svelte integration, and no degradation as in React's.
 
 Being a non-Svelte host, an Astro app does need to opt into Svelte's async SSR
 mode explicitly:

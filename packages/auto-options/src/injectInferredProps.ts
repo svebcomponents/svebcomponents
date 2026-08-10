@@ -1,6 +1,6 @@
 import type MagicString from "magic-string";
-import type { InferredSvelteOptionProps } from "./types";
-import type { SvelteOptions } from "./extractSvelteOptionsProps";
+import type { InferredSvelteOptionProps } from "./types.js";
+import type { SvelteOptions } from "./extractSvelteOptionsProps.js";
 
 /**
  * The identifiers the hydration wrapper and host component are imported as.

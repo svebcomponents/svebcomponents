@@ -53,25 +53,15 @@ attribute from a string to a number.
 
 ## Component Entrypoint
 
-The package entrypoint just re-exports the Svelte component:
-
-```ts
-import ExampleComponent from "./ExampleComponent.svelte";
-
-export default ExampleComponent;
-```
-
-Declaring the tag in `<svelte:options>` registers the custom element.
+The output basename in `package.json` identifies the same-basename Svelte
+component. Declaring the tag in `<svelte:options>` registers the custom element.
 `@svebcomponents/build` guards that registration, so importing the component
 is safe even if it (or a bundle containing it) is evaluated more than once.
 
 :::note
-For a tag that can't be a literal in `<svelte:options>` (e.g. computed at
-build time), fall back to `@svebcomponents/utils`'s `defineElement` in the
-entrypoint instead: `defineElement("example-component", ExampleComponent)`.
-It's the same guarded registration under the hood — no-ops when there is no
-constructor (the server compile), no `customElements` registry (SSR before
-the DOM shim installs), or the tag is already registered.
+The tag must be a literal. Svebcomponents reads it from your source to generate
+the manifest, the element types and the SSR renderer's self-registration — see
+[Static tags only](/core-concepts/build/#static-tags-only).
 :::
 
 ## Package Exports
@@ -82,18 +72,19 @@ The `exports` field of your component's `package.json` tells consumers where the
 {
   "exports": {
     ".": {
-      "types": "./dist/client/index.d.ts",
-      "svelte": "./dist/client-svelte/index.js",
-      "default": "./dist/client/index.js"
+      "types": "./dist/client/ExampleComponent.d.ts",
+      "svelte": "./dist/client-svelte/ExampleComponent.js",
+      "default": "./dist/client/ExampleComponent.js"
     }
   }
 }
 ```
 
 This declaration also doubles as build configuration. The `svebcomponents`
-CLI maps `dist/client/index.js` back to `src/index.ts` and builds that
+CLI maps `dist/client/ExampleComponent.js` back to
+`src/ExampleComponent.svelte` and builds that
 entrypoint. It also creates a lighter Svelte-aware build at
-`dist/client-svelte/index.js`, which Svelte tooling can select through the
+`dist/client-svelte/ExampleComponent.js`, which Svelte tooling can select through the
 `svelte` condition.
 
 From the component package, run:

@@ -7,7 +7,7 @@ interface Props {
   enabled?: boolean;
 }
 
-// Strongly coupled to the component implementation @Component.svelte
+// Strongly coupled to the component implementation @index.svelte
 const checkRenderResult = async (component: Element, props: Props) => {
   // Svelte built web components wait a microtask before rendering
   await new Promise((resolve) => setTimeout(resolve, 0));
