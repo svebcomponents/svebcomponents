@@ -1,6 +1,6 @@
 {
   "name": "@svebcomponents/ssr-astro",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Server-render Svelte-built custom elements inside an Astro application.",
   "license": "MIT",
   "homepage": "https://svebcomponents.dev/packages/ssr-astro/",

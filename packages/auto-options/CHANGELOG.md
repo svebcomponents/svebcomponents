@@ -1,5 +1,60 @@
 # @svebcomponents/auto-options
 
+## 0.3.0
+
+### Minor Changes
+
+- a4e45b7: Extract the component analysis into a reusable `analyzeComponent(code, id)`,
+  available as `@svebcomponents/auto-options/analyze`. The rollup transform now
+  consumes it rather than walking the AST itself, so prop inference and any
+  metadata consumer can never disagree about what a component exposes.
+
+  The analyzer additionally derives the component's documented surface: the
+  custom element tag (previously only the string shorthand of `customElement`
+  was captured, not the object form), prop JSDoc descriptions, declared
+  TypeScript type text and defaults, `<slot>` elements, events dispatched via
+  `$host().dispatchEvent(new CustomEvent<T>("name"))` including the explicit
+  detail type, and CSS custom properties the component reads but does not define.
+
+  `@component` JSDoc tags (`@slot`, `@event`, `@cssprop`) add descriptions and
+  can declare members the scan cannot see; they never override inferred
+  structure.
+
+### Patch Changes
+
+- 86e6596: Fix the emitted declarations' relative imports so they resolve under
+  `moduleResolution: "node16"` and `"nodenext"`.
+
+  Four modules imported their types from `"./types"` without the `.js` extension.
+  The imports are type-only, so the compiled JavaScript was unaffected — but the
+  extensionless specifier survived into the emitted `.d.ts`, where it is invalid
+  under Node's ESM resolution. A consumer type-checking with `node16` and
+  `skipLibCheck: false` saw "Cannot find module './types'".
+
+  This mainly affected `@svebcomponents/auto-options/analyze`, whose declarations
+  reach `metadata.d.ts`. The repository did not catch it because its own tsconfig
+  resolves modules as a bundler would, where extensionless relative imports are
+  legal.
+
+- 86e6596: Declare `license`, `description` and `homepage`, and ship the license text in
+  the published tarball.
+
+  Every package was published without a `license` field and without a license
+  file of its own. npm only includes `LICENSE*` from the package directory, so the
+  repository's MIT license never reached consumers and automated license scanners
+  had nothing to read. Each package now carries its own copy of `LICENSE.md`
+  alongside `"license": "MIT"`.
+
+  `description` is what npm shows on the package page and in search results, and
+  `homepage` now points at each package's reference page on the documentation
+  site.
+
+- Updated dependencies [e7267f8]
+- Updated dependencies [86e6596]
+- Updated dependencies [86e6596]
+- Updated dependencies [86e6596]
+  - @svebcomponents/utils@0.3.0
+
 ## 0.2.1
 
 ### Patch Changes

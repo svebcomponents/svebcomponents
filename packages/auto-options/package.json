@@ -1,6 +1,6 @@
 {
   "name": "@svebcomponents/auto-options",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Derive Svelte custom element options — attribute names, converters and reflection — from a component's TypeScript props.",
   "license": "MIT",
   "homepage": "https://svebcomponents.dev/packages/auto-options/",

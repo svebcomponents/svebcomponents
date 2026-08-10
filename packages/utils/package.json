@@ -1,6 +1,6 @@
 {
   "name": "@svebcomponents/utils",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Custom element helpers shared by the svebcomponents packages: tag-name conversion, validation and safe registration.",
   "license": "MIT",
   "homepage": "https://svebcomponents.dev/packages/utils/",

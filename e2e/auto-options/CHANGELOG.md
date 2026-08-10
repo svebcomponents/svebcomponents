@@ -1,5 +1,15 @@
 # @svebcomponents/e2e.auto-options
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies [e7267f8]
+- Updated dependencies [86e6596]
+- Updated dependencies [86e6596]
+- Updated dependencies [86e6596]
+  - @svebcomponents/utils@0.3.0
+
 ## 0.0.3
 
 ### Patch Changes
