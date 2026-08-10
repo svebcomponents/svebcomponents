@@ -72,11 +72,11 @@ export default defineConfig({
         {
           label: "Server rendering",
           items: [
-            { label: "Overview", slug: "core-concepts/ssr" },
-            { label: "Hydration", slug: "core-concepts/hydration" },
+            { label: "Overview", slug: "server-rendering" },
+            { label: "Hydration", slug: "server-rendering/hydration" },
             {
               label: "Other frameworks",
-              slug: "core-concepts/ssr/framework-integrations",
+              slug: "server-rendering/other-frameworks",
               badge: experimental,
             },
           ],
@@ -85,10 +85,10 @@ export default defineConfig({
           label: "Guides",
           collapsed: true,
           items: [
-            { label: "How the build works", slug: "core-concepts/build" },
+            { label: "How the build works", slug: "guides/build" },
             {
               label: "How attribute inference works",
-              slug: "core-concepts/auto-options",
+              slug: "guides/attribute-inference",
             },
             {
               label: "Typing elements in React & Vue",

@@ -28,14 +28,14 @@ svebcomponents is the toolchain for that second job.
 ### Attributes come from your types
 
 Svelte needs prop metadata to turn an HTML attribute string into a typed prop.
-[Auto-options](/core-concepts/auto-options/) reads the types you already wrote
+[Auto-options](/guides/attribute-inference/) reads the types you already wrote
 and generates it, so `value: number` is all you write to make `value="42"`
 arrive as `42`.
 
 ### Your package.json is the build config
 
 SvelteKit packages Svelte components, not custom elements.
-[The build](/core-concepts/build/) infers entrypoints from your `exports`
+[The build](/guides/build/) infers entrypoints from your `exports`
 field, so declaring where the output goes is the same act as configuring the
 build.
 
@@ -59,7 +59,7 @@ generated element attaches a shadow root on upgrade, which per spec clears any
 declarative shadow root the server delivered, and then mounts from scratch.
 
 svebcomponents renders the shadow root on the server as declarative shadow DOM
-and [adopts it in place](/core-concepts/hydration/) in the browser: the nodes
+and [adopts it in place](/server-rendering/hydration/) in the browser: the nodes
 survive, styles are reused, and the component is reactive afterwards. It is on
 by default for every SSR-enabled component.
 

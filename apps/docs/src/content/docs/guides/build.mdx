@@ -5,7 +5,7 @@ description: How svebcomponents turns Svelte components into distributable custo
 
 `@svebcomponents/build` provides the pipeline around a Svelte custom element
 package. It compiles Svelte for the browser, runs
-[auto-options](/core-concepts/auto-options/), emits TypeScript declarations,
+[auto-options](/guides/attribute-inference/), emits TypeScript declarations,
 and describes every element it built.
 
 This page covers how it decides what to build. For the practical side — which
@@ -73,7 +73,7 @@ the browser bundle, and values it sets are serialized for the client to adopt.
 
 See the
 [`SsrPrepare` signature](/packages/build/#server-preparation) and
-[what makes a component asynchronous](/core-concepts/ssr/#what-makes-a-component-asynchronous).
+[what makes a component asynchronous](/server-rendering/#what-makes-a-component-asynchronous).
 
 ## Element types & manifest
 

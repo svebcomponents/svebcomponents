@@ -36,12 +36,12 @@ expected to change.
 - **React 19+** — no bundler requirement; works anywhere React does. React 18
   and earlier stringify props passed to custom elements and do not attach
   listeners for custom event names. Asynchronous components need the
-  [RSC entry point](/core-concepts/ssr/framework-integrations/#synchronous-by-default-with-an-rsc-opt-in).
+  [RSC entry point](/server-rendering/other-frameworks/#synchronous-by-default-with-an-rsc-opt-in).
 - **Astro 5+** — no client-side counterpart; the element hydrates itself.
 
 Every non-Svelte host must also opt into Svelte's async SSR mode explicitly
 before rendering an asynchronous component; see
-[async rendering outside Svelte](/core-concepts/ssr/#async-rendering-outside-svelte).
+[async rendering outside Svelte](/server-rendering/#async-rendering-outside-svelte).
 
 ## Server rendering requires Svelte
 

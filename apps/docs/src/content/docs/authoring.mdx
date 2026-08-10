@@ -10,7 +10,7 @@ boundary.
 
 Everything on this page is read at build time to produce your element's
 TypeScript types and its
-[custom elements manifest](/core-concepts/build/#element-types--manifest).
+[custom elements manifest](/guides/build/#element-types--manifest).
 
 ## Props
 
@@ -42,7 +42,7 @@ matching Svelte attribute converter, and every prop reflects back to its
 attribute by default. JSDoc comments on the prop become descriptions in the
 manifest and the generated types.
 
-See [how attribute inference works](/core-concepts/auto-options/) for the full
+See [how attribute inference works](/guides/attribute-inference/) for the full
 list of recognised types and how to override any of them.
 
 :::caution[Consumers on Svelte: pass expressions]
@@ -99,7 +99,7 @@ runs.
 
 `createEventDispatcher` still works, but its events are not forwarded through
 the hydration host — see
-[hydration limitations](/core-concepts/hydration/#limitations).
+[hydration limitations](/server-rendering/hydration/#limitations).
 
 ## Slots
 
@@ -125,7 +125,7 @@ Consumers fill them with light DOM children, as with any web component:
 A component that declares `<slot>` elements renders correctly on the server but
 falls back to a client-side re-render on upgrade instead of adopting the
 server-rendered DOM. This is a Svelte 5 compilation detail expected to lift with
-Svelte 6 — see [hydration limitations](/core-concepts/hydration/#slots).
+Svelte 6 — see [hydration limitations](/server-rendering/hydration/#slots).
 :::
 
 ## Styling
@@ -201,4 +201,4 @@ hydration. Use a plain string literal or the object form.
 
 - [Publishing your package](/publishing/) — exports, the manifest, and what
   consumers receive.
-- [Server rendering](/core-concepts/ssr/) — opt a component into SSR.
+- [Server rendering](/server-rendering/) — opt a component into SSR.

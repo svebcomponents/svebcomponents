@@ -139,7 +139,7 @@ export const hydratable = <T extends CustomElementConstructor>(
             console.info(
               `[svebcomponents] <${this.tagName.toLowerCase()}> declares slots and was mounted instead of hydrated. ` +
                 "Slot hydration is expected to become possible with Svelte 6; until then, slotted components re-render on upgrade. " +
-                "See https://svebcomponents.dev/core-concepts/hydration/#limitations",
+                "See https://svebcomponents.dev/server-rendering/hydration/#limitations",
             );
           }
           // non-hydratable SSR content: clear it so svelte's mount path

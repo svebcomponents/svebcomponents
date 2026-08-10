@@ -94,7 +94,7 @@ chunks things.
 
 :::note
 If the component's tag could not be read at build time (see
-[static tags only](/core-concepts/build/#static-tags-only)), the generated
+[static tags only](/guides/build/#static-tags-only)), the generated
 renderer does not self-register, and the app registers it by hand:
 
 ```ts
@@ -148,7 +148,7 @@ server-render it. There are exactly two ways onto the async path:
    script, or anywhere Svelte's `experimental.async` allows one.
 2. **Its preparation hook returns a promise** — the adjacent
    `<entry>.ssr.ts` module described in
-   [server preparation](/core-concepts/build/#server-preparation) module,
+   [server preparation](/guides/build/#server-preparation) module,
    whose default-exported `SsrPrepare` function may return a promise.
 
 Everything else renders synchronously, including a hook that returns nothing.
@@ -208,13 +208,13 @@ and rewrites them to a wrapper component. The wrapper:
 
 On the client, the wrapper renders the original custom element tag so the
 browser can upgrade it normally. When the element upgrades, the
-server-rendered shadow DOM is [hydrated](/core-concepts/hydration/): adopted
+server-rendered shadow DOM is [hydrated](/server-rendering/hydration/): adopted
 in place rather than wiped and re-rendered.
 
 The examples above use Svelte. Nothing about the element is Svelte-specific;
 only the host application's wiring is. For Vue, and for building an
 integration against another framework, see
-[Framework Integrations](/core-concepts/ssr/framework-integrations/).
+[Framework Integrations](/server-rendering/other-frameworks/).
 
 For runtime APIs, direct package usage, transform details, and the complete
 list of limitations, see the

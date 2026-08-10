@@ -59,14 +59,14 @@ custom element in any SFC:
 This integration depends only on Lit's `ElementRenderer` contract, so it
 server-renders any custom element with a registered renderer — Lit elements
 included. See
-[Any custom element](https://svebcomponents.dev/core-concepts/ssr/#any-custom-element-not-just-svelte-built-ones).
+[Any custom element](https://svebcomponents.dev/server-rendering/#any-custom-element-not-just-svelte-built-ones).
 
 ## Async Components
 
 Unlike the Svelte integration, there is no sync/async wrapper split. Vue's
 `renderToString` fully awaits an async `setup()` and emits its output in order,
 so an
-[asynchronous component](https://svebcomponents.dev/core-concepts/ssr/#what-makes-a-component-asynchronous)
+[asynchronous component](https://svebcomponents.dev/server-rendering/#what-makes-a-component-asynchronous)
 renders through the same wrapper a synchronous one does.
 
 Like any non-Svelte host, a Vue app must opt into Svelte's async SSR mode

@@ -29,7 +29,7 @@ including hosts that are not Vite-based.
 This integration depends only on Lit's `ElementRenderer` contract, so it
 server-renders any custom element with a registered renderer — Lit elements
 included. See
-[Any custom element](https://svebcomponents.dev/core-concepts/ssr/#any-custom-element-not-just-svelte-built-ones).
+[Any custom element](https://svebcomponents.dev/server-rendering/#any-custom-element-not-just-svelte-built-ones).
 
 ## Installation
 
@@ -70,7 +70,7 @@ import { CustomElement } from "@svebcomponents/ssr-react";
 ## Async Components
 
 React's `renderToString` cannot await, so an
-[asynchronous component](https://svebcomponents.dev/core-concepts/ssr/#what-makes-a-component-asynchronous)
+[asynchronous component](https://svebcomponents.dev/server-rendering/#what-makes-a-component-asynchronous)
 **cannot be server-rendered by the default `CustomElement`**.
 
 Rather than failing the page, such an element is emitted without server-rendered

@@ -31,7 +31,7 @@ Each custom element is its own entrypoint, named after its source file:
 A same-basename `.ts` or `.js` file is built as an ordinary module instead, so
 one package can ship components and plain helpers side by side.
 
-See [how the build works](/core-concepts/build/) for the complete inference
+See [how the build works](/guides/build/) for the complete inference
 rules.
 
 ## Ship the manifest
@@ -120,7 +120,7 @@ Add a second export whose key is the component's export key followed by `/ssr`:
 
 The browser export defines the custom element; the SSR export provides the
 renderer a server application registers. See
-[server rendering](/core-concepts/ssr/).
+[server rendering](/server-rendering/).
 
 :::note
 The filename you declare in the `/ssr` export becomes the generated renderer's

@@ -114,7 +114,7 @@ import "@svebcomponents/ssr/enable-async";
 
 If the host is a Svelte app, compile it with
 `compilerOptions.experimental.async` and use the async wrapper. See
-[async rendering outside Svelte](/core-concepts/ssr/#async-rendering-outside-svelte).
+[async rendering outside Svelte](/server-rendering/#async-rendering-outside-svelte).
 
 ### AsyncRendererError: `<my-element>` renders asynchronously…
 
@@ -126,7 +126,7 @@ returned a promise.
 Render it from an await-capable host with `renderCustomElement`, or let the
 host degrade to client-only rendering. React's default `CustomElement` does the
 latter automatically; see
-[the RSC opt-in](/core-concepts/ssr/framework-integrations/#synchronous-by-default-with-an-rsc-opt-in).
+[the RSC opt-in](/server-rendering/other-frameworks/#synchronous-by-default-with-an-rsc-opt-in).
 
 ### Custom element `my-element` not found
 
@@ -165,7 +165,7 @@ Import the browser entrypoint before registering the renderer for it.
 A development-mode notice, not an error. Components that declare `<slot>`
 elements currently fall back to a client-side mount rather than adopting the
 server-rendered DOM. They render correctly; they just re-render on upgrade.
-See [hydration limitations](/core-concepts/hydration/#slots).
+See [hydration limitations](/server-rendering/hydration/#slots).
 
 ### Svelte logs a hydration mismatch and re-renders
 
@@ -176,7 +176,7 @@ still works.
 The usual cause is the server and browser rendering different content: a
 timestamp, a random value, or data that changed between the two. Move
 non-deterministic work into an
-[`<entry>.ssr.ts` preparation hook](/core-concepts/build/#server-preparation)
+[`<entry>.ssr.ts` preparation hook](/guides/build/#server-preparation)
 so the value is serialized and reused rather than recomputed.
 
 ## Nothing above matches

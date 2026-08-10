@@ -5,7 +5,7 @@ description: When package export inference is not enough, configure svebcomponen
 
 Package exports are the recommended configuration, and cover most packages.
 Reach for a config file when you need source paths or output directories that
-the [inference rules](/core-concepts/build/#zero-config-builds) cannot express —
+the [inference rules](/guides/build/#zero-config-builds) cannot express —
 for example a subpath export pattern, or sources that do not live in `src`.
 
 Create `svebcomponents.config.ts` in the package root:
@@ -60,7 +60,7 @@ and `generate: "server"` still take precedence.
 
 If that configuration enables `compilerOptions.experimental.async`, the browser
 and SSR outputs are async-compiled, and host apps consuming those renderers need
-an [async-capable integration](/core-concepts/ssr/#what-makes-a-component-asynchronous).
+an [async-capable integration](/server-rendering/#what-makes-a-component-asynchronous).
 
 ## Opting out of hydration
 
@@ -73,7 +73,7 @@ export default defineConfig({ hydratable: false });
 
 Or for a single component, by declaring your own `extend` in
 `<svelte:options customElement={{ ... }}>` — auto-options never injects over one
-you wrote. See [hydration](/core-concepts/hydration/#opting-out).
+you wrote. See [hydration](/server-rendering/hydration/#opting-out).
 
 ## When configuration is missing
 

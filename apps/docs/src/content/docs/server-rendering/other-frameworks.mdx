@@ -6,14 +6,14 @@ description: Server-rendering svebcomponents custom elements in Svelte, Vue, Rea
 :::caution[Experimental]
 The Vue, React and Astro integrations are experimental and their APIs may
 change. The Svelte integration, covered in the
-[SSR overview](/core-concepts/ssr/), is beta.
+[SSR overview](/server-rendering/), is beta.
 :::
 
 **The custom element itself is framework-agnostic.** The same built artifact
 drops into a Svelte, Vue, React or plain HTML page and behaves identically.
 Nothing on this page changes the component.
 
-What differs is one server-side detail. [Server rendering](/core-concepts/ssr/)
+What differs is one server-side detail. [Server rendering](/server-rendering/)
 has two halves: producing the element's shadow DOM, which the component's
 `ElementRenderer` does identically everywhere, and getting that markup into the
 host framework's output, which every framework spells differently. A host has
@@ -22,7 +22,7 @@ resulting markup has to be shaped so the framework hydrates around the element
 rather than re-creating it.
 
 An integration supplies only that second half. In the browser none of it is
-involved: the element upgrades and [hydrates](/core-concepts/hydration/)
+involved: the element upgrades and [hydrates](/server-rendering/hydration/)
 itself, exactly as on a page with no framework.
 
 ## What Every Integration Does
@@ -43,12 +43,12 @@ any script runs, which is what makes declarative shadow DOM work at all.
 In the browser the integration renders the same element _without_ the
 template, because by then the parser has already consumed it. The host
 framework hydrates against the post-parse child list, so both sides agree, and
-the element itself [hydrates](/core-concepts/hydration/) its shadow root
+the element itself [hydrates](/server-rendering/hydration/) its shadow root
 in place.
 
 ## Svelte
 
-See the [SSR guide](/core-concepts/ssr/) for the full walkthrough. In short, a
+See the [SSR guide](/server-rendering/) for the full walkthrough. In short, a
 Vite plugin rewrites custom element tags in `.svelte` templates to a wrapper
 component:
 
@@ -102,9 +102,9 @@ Then write custom elements in any single-file component:
 Vue's `renderToString` fully awaits an async `setup()` and emits its output in
 order, so one wrapper handles both synchronous and asynchronous element
 renderers. An
-[asynchronous component](/core-concepts/ssr/#what-makes-a-component-asynchronous)
+[asynchronous component](/server-rendering/#what-makes-a-component-asynchronous)
 needs nothing extra here beyond the
-[`enable-async` opt-in](/core-concepts/ssr/#async-rendering-outside-svelte)
+[`enable-async` opt-in](/server-rendering/#async-rendering-outside-svelte)
 every non-Svelte host needs.
 
 ### Why a Vite plugin rather than a compiler transform
@@ -154,7 +154,7 @@ import { CustomElement } from "@svebcomponents/ssr-react";
 ### Synchronous by default, with an RSC opt-in
 
 React's `renderToString` cannot await, so an
-[asynchronous component](/core-concepts/ssr/#what-makes-a-component-asynchronous)
+[asynchronous component](/server-rendering/#what-makes-a-component-asynchronous)
 cannot be server-rendered by the default `CustomElement`.
 
 Rather than failing the page, such an element is emitted without
@@ -174,9 +174,9 @@ import { CustomElement } from "@svebcomponents/ssr-react/rsc";
 An RSC async function component runs to completion before any markup is
 emitted, so it can simply `await` the renderer — no cache, no `use()`, no
 Suspense boundary required, and it accepts
-[asynchronous components](/core-concepts/ssr/#what-makes-a-component-asynchronous)
+[asynchronous components](/server-rendering/#what-makes-a-component-asynchronous)
 in either form (given the
-[`enable-async` opt-in](/core-concepts/ssr/#async-rendering-outside-svelte)
+[`enable-async` opt-in](/server-rendering/#async-rendering-outside-svelte)
 every non-Svelte host needs for that).
 
 It only helps where the element is rendered from a Server Component, though:
@@ -220,9 +220,9 @@ applies there instead.
 
 Astro frontmatter is an async module scope, so the wrapper awaits the element
 renderer directly —
-[asynchronous components](/core-concepts/ssr/#what-makes-a-component-asynchronous)
+[asynchronous components](/server-rendering/#what-makes-a-component-asynchronous)
 need nothing extra beyond the
-[`enable-async` opt-in](/core-concepts/ssr/#async-rendering-outside-svelte)
+[`enable-async` opt-in](/server-rendering/#async-rendering-outside-svelte)
 every non-Svelte host needs.
 
 ## Other Frameworks
@@ -250,7 +250,7 @@ element themselves.
 
 Since the pipeline only depends on Lit's `ElementRenderer` contract, an
 integration written this way renders [any custom element with a registered
-renderer](/core-concepts/ssr/#any-custom-element-not-just-svelte-built-ones),
+renderer](/server-rendering/#any-custom-element-not-just-svelte-built-ones),
 not only svebcomponents ones.
 
 ## Requirements

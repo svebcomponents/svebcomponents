@@ -62,7 +62,7 @@ svebcomponents integration applies there.
 
 Astro frontmatter is an async module scope, so the wrapper awaits the element
 renderer directly. An
-[asynchronous component](https://svebcomponents.dev/core-concepts/ssr/#what-makes-a-component-asynchronous)
+[asynchronous component](https://svebcomponents.dev/server-rendering/#what-makes-a-component-asynchronous)
 works through the same wrapper as a synchronous one: no sync/async split as in
 the Svelte integration, and no degradation as in React's.
 
@@ -78,7 +78,7 @@ import "@svebcomponents/ssr/enable-async";
 This integration depends only on Lit's `ElementRenderer` contract, so it
 server-renders any custom element with a registered renderer — Lit elements
 included. See
-[Any custom element](https://svebcomponents.dev/core-concepts/ssr/#any-custom-element-not-just-svelte-built-ones).
+[Any custom element](https://svebcomponents.dev/server-rendering/#any-custom-element-not-just-svelte-built-ones).
 
 ## Requirements
 
