@@ -1,0 +1,150 @@
+---
+title: Publishing your package
+description: Exports, the custom elements manifest, and what consumers receive when they install your components.
+---
+
+import { FileTree } from "@astrojs/starlight/components";
+
+Your `package.json` does double duty: it configures the build and it describes
+the result to consumers. This page covers what to put in it before you publish.
+
+## One export per component
+
+Each custom element is its own entrypoint, named after its source file:
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./dist/client/FavoriteNumber.d.ts",
+      "default": "./dist/client/FavoriteNumber.js"
+    },
+    "./color-picker": {
+      "types": "./dist/client/ColorPicker.d.ts",
+      "default": "./dist/client/ColorPicker.js"
+    }
+  }
+}
+```
+
+`./dist/client/ColorPicker.js` resolves back to `src/ColorPicker.svelte`.
+A same-basename `.ts` or `.js` file is built as an ordinary module instead, so
+one package can ship components and plain helpers side by side.
+
+See [how the build works](/core-concepts/build/) for the complete inference
+rules.
+
+## Ship the manifest
+
+Every build emits `custom-elements.json`, a
+[custom elements manifest](https://github.com/webcomponents/custom-elements-manifest)
+that editors read for HTML completions. Expose it, and include it in the
+published files — the build prints a hint if you forget:
+
+```json
+{
+  "customElements": "custom-elements.json",
+  "files": ["dist", "custom-elements.json"]
+}
+```
+
+## Declare `svelte` if your consumers need it
+
+If your package declares `svelte` as a required dependency of its consumers —
+a `dependency`, or a `peerDependency` not marked optional — svebcomponents
+registers your elements with Svelte's template types automatically, and your
+Svelte consumers need no setup at all:
+
+```json
+{
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  }
+}
+```
+
+This is gated rather than unconditional because the augmentation imports from
+`svelte/elements`. A package whose standalone build bundles Svelte can be
+consumed by an application with no `svelte` installed, and for them that import
+fails to resolve under `skipLibCheck: false`.
+
+React and Vue consumers write one augmentation themselves — see
+[typing elements in React & Vue](/guides/framework-types/).
+
+## Optional: a lighter build for Svelte consumers
+
+The `default` build bundles the Svelte runtime so it works in applications that
+do not use Svelte. Adding a `svelte` condition asks for a second build that
+leaves `svelte` and `svelte/*` imports external, so Svelte-aware tooling can
+share the host application's runtime:
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./dist/client/FavoriteNumber.d.ts",
+      "svelte": "./dist/client-svelte/FavoriteNumber.js",
+      "default": "./dist/client/FavoriteNumber.js"
+    }
+  }
+}
+```
+
+:::caution[Version coupling]
+The Svelte-aware build relies on Svelte runtime internals. Those are versioned
+with Svelte and its compiler but are not a semver-stable public API: a patch or
+minor compiler release can change the runtime contract in ways that break
+previously compiled output. Only use this optimization when the component
+package and the consuming application are built with the same Svelte version,
+and keep the standalone `default` export as the fallback for everyone else.
+:::
+
+## Optional: server-renderable output
+
+Add a second export whose key is the component's export key followed by `/ssr`:
+
+```json
+{
+  "exports": {
+    "./color-picker": {
+      "types": "./dist/client/ColorPicker.d.ts",
+      "default": "./dist/client/ColorPicker.js"
+    },
+    "./color-picker/ssr": {
+      "types": "./dist/server/ColorPicker.ssr.d.ts",
+      "default": "./dist/server/ColorPicker.ssr.js"
+    }
+  }
+}
+```
+
+The browser export defines the custom element; the SSR export provides the
+renderer a server application registers. See
+[server rendering](/core-concepts/ssr/).
+
+:::note
+The filename you declare in the `/ssr` export becomes the generated renderer's
+filename. When several components share one server output directory, give each
+one a distinct name (`ColorPicker.ssr.js`, `Button.ssr.js`) so the generated
+entries do not overwrite each other.
+:::
+
+## What consumers receive
+
+<FileTree>
+
+- dist
+  - client
+    - **FavoriteNumber.js** standalone build, bundles Svelte
+    - FavoriteNumber.d.ts element, attribute and event types
+  - client-svelte
+    - FavoriteNumber.js shares the host's Svelte runtime (`svelte` condition)
+  - server
+    - FavoriteNumber.ssr.js element renderer (`/ssr` export)
+- **custom-elements.json** manifest for editors and tooling
+
+</FileTree>
+
+Importing the entrypoint defines the element. Svelte's generated
+`customElements.define()` call is made idempotent at build time, so importing
+the component — or a bundle containing it — more than once never throws.

@@ -1,14 +1,14 @@
 @media (min-width: 50rem) {
   [data-has-hero] .hero {
     grid-template-columns: minmax(0, 1fr);
-    gap: 2rem;
-    padding-block: clamp(2rem, 6vh, 4rem);
+    gap: 1.5rem;
+    padding-block: clamp(1.5rem, 4vh, 3rem);
   }
 
   [data-has-hero] .hero > img,
   [data-has-hero] .hero > .hero-html {
     order: 0;
-    width: min(55%, 18rem);
+    width: min(40%, 11rem);
   }
 
   [data-has-hero] .hero .stack {
@@ -24,7 +24,24 @@
   }
 }
 
+[data-has-hero] .hero > img,
+[data-has-hero] .hero > .hero-html {
+  width: min(50%, 9rem);
+}
+
 [data-has-hero] .hero h1 {
   font-size: clamp(2rem, 8vw, var(--sl-text-6xl));
-  white-space: nowrap;
+  text-wrap: balance;
+}
+
+/* The splash page opens on a summary paragraph before the feature cards. */
+[data-has-hero] .sl-markdown-content > p:first-of-type {
+  font-size: var(--sl-text-lg);
+  text-wrap: pretty;
+}
+
+/* Inline code in headings renders at the heading's full size by default, which
+   dominates the surrounding words and wraps badly. */
+.sl-markdown-content :is(h1, h2, h3, h4) code {
+  font-size: 0.82em;
 }

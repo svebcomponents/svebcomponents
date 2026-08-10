@@ -1,31 +1,29 @@
 ---
 title: Framework Integrations
-description: Server-rendering Svebcomponents custom elements in Svelte, Vue, React, Astro and other host frameworks.
+description: Server-rendering svebcomponents custom elements in Svelte, Vue, React, Astro and other host frameworks.
 ---
 
-:::caution[Beta status]
-The Svelte integration is ready for real-world evaluation and early production
-adoption. The Vue, React and Astro integrations are experimental and their
-APIs may change.
+:::caution[Experimental]
+The Vue, React and Astro integrations are experimental and their APIs may
+change. The Svelte integration, covered in the
+[SSR overview](/core-concepts/ssr/), is beta.
 :::
 
-**The custom element itself is framework-agnostic.** It is a web component:
-the same built artifact drops into a Svelte app, a Vue app, a React app, or a
-plain HTML page, and behaves identically in all of them. Nothing on this page
-changes the component.
+**The custom element itself is framework-agnostic.** The same built artifact
+drops into a Svelte, Vue, React or plain HTML page and behaves identically.
+Nothing on this page changes the component.
 
 What differs is one server-side detail. [Server rendering](/core-concepts/ssr/)
-has two halves — producing the element's shadow DOM, which the component's
-`ElementRenderer` does identically everywhere, and getting that markup into
-the host framework's output, which every framework spells differently. A host
-framework has to be told that `<my-component>` is something it should ask a
-renderer about, and the resulting markup has to be shaped so the framework
-hydrates around the element rather than re-creating it.
+has two halves: producing the element's shadow DOM, which the component's
+`ElementRenderer` does identically everywhere, and getting that markup into the
+host framework's output, which every framework spells differently. A host has
+to be told that `<my-component>` is something to ask a renderer about, and the
+resulting markup has to be shaped so the framework hydrates around the element
+rather than re-creating it.
 
-An integration supplies only that second half. In the browser, none of this is
-involved at all: the element upgrades and
-[hydrates](/core-concepts/hydration/) itself, exactly as it would on a page
-with no framework.
+An integration supplies only that second half. In the browser none of it is
+involved: the element upgrades and [hydrates](/core-concepts/hydration/)
+itself, exactly as on a page with no framework.
 
 ## What Every Integration Does
 
@@ -253,11 +251,12 @@ element themselves.
 Since the pipeline only depends on Lit's `ElementRenderer` contract, an
 integration written this way renders [any custom element with a registered
 renderer](/core-concepts/ssr/#any-custom-element-not-just-svelte-built-ones),
-not only Svebcomponents ones.
+not only svebcomponents ones.
 
 ## Requirements
 
 `@svebcomponents/ssr` calls Svelte's server renderer, so `svelte` must be
 installed as a server-side dependency of the host application even when it
-contains no Svelte components of its own. A component package's server bundle
-ships its own Svelte runtime, but the renderer entry point does not.
+contains no Svelte components of its own. See
+[Compatibility](/reference/compatibility/) for every host's version
+requirements.

@@ -1,11 +1,8 @@
----
-title: Internal Config Packages
-description: Shared linting, formatting, TypeScript, and Vitest configuration packages used inside the monorepo.
----
+# Internal config packages
 
 The `configs/*` workspace packages are private monorepo infrastructure. They keep package-level tooling consistent without copying the same config into every package.
 
-They are not part of the public Svebcomponents API.
+They are not part of the public svebcomponents API.
 
 ## `@svebcomponents/eslint-config`
 
@@ -76,10 +73,7 @@ test/server/*.test.ts
 These two are mostly used by the `e2e/*` packages to keep integration tests consistent.
 
 The node config is for `packages/*`, whose tests run in node against `src`. It
-exists to exclude build output (`dist/**`, `.svelte-kit/**`) from test
-discovery. Every package compiles its tests alongside its sources, and
-vitest's defaults do not exclude build directories — so a package that has
-been built would otherwise run each suite twice, once from `src` and once from
-the compiled copy. That is not merely wasteful: the compiled copy is whatever
-the last build produced, so it can pass while the source it was built from is
-failing.
+excludes build output (`dist/**`, `.svelte-kit/**`) from test discovery:
+packages compile their tests alongside their sources, and vitest's defaults
+would otherwise run each suite twice, once from `src` and once from a stale
+compiled copy that can pass while the source is failing.

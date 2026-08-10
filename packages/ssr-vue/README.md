@@ -16,9 +16,15 @@ alongside the rest of the toolchain.
 - `@svebcomponents/ssr-vue`: the wrapper component and a Vue plugin that
   registers it.
 
+## Installation
+
+```bash
+pnpm add -D @svebcomponents/ssr-vue
+```
+
 ## App-author Flow
 
-Install the Vite plugin ahead of `@vitejs/plugin-vue`:
+Add the Vite plugin ahead of `@vitejs/plugin-vue`:
 
 ```ts
 import vue from "@vitejs/plugin-vue";
@@ -48,37 +54,23 @@ custom element in any SFC:
 </template>
 ```
 
-## Any Custom Element, Not Just Svelte-built Ones
+## Any custom element, not just Svelte-built ones
 
-This integration depends only on Lit's `ElementRenderer` contract, so it will
-server-render any custom element that has a renderer registered — including
-Lit elements:
-
-```ts
-import { LitElementRenderer } from "@lit-labs/ssr/lib/lit-element-renderer.js";
-import { ElementRendererRegistry } from "@svebcomponents/ssr";
-
-ElementRendererRegistry.use(LitElementRenderer);
-```
-
-`use()` registers a renderer that selects its own elements through Lit's
-static `matchesClass` hook, so that one line covers every LitElement in the
-app. `e2e/ssr-vue` renders a plain Lit element through this package to keep
-that honest.
+This integration depends only on Lit's `ElementRenderer` contract, so it
+server-renders any custom element with a registered renderer — Lit elements
+included. See
+[Any custom element](https://svebcomponents.dev/core-concepts/ssr/#any-custom-element-not-just-svelte-built-ones).
 
 ## Async Components
 
 Unlike the Svelte integration, there is no sync/async wrapper split. Vue's
 `renderToString` fully awaits an async `setup()` and emits its output in order,
-so an asynchronous component renders through the same wrapper a synchronous one
-does. A component is asynchronous if it awaits while rendering, or if its
-`<entry>.ssr.ts` preparation hook returns a promise — see
-[What makes a component asynchronous](https://svebcomponents.dev/core-concepts/ssr/#what-makes-a-component-asynchronous).
+so an
+[asynchronous component](https://svebcomponents.dev/core-concepts/ssr/#what-makes-a-component-asynchronous)
+renders through the same wrapper a synchronous one does.
 
-There is one catch, and it applies to any non-Svelte host. Svelte gates async
-SSR behind a module-global flag that is normally flipped by a Svelte app
-compiled with `compilerOptions.experimental.async`. A Vue app has no such
-app, so it must opt in explicitly on the server:
+Like any non-Svelte host, a Vue app must opt into Svelte's async SSR mode
+explicitly on the server:
 
 ```ts
 import "@svebcomponents/ssr/enable-async";
@@ -89,10 +81,9 @@ component throws `await_invalid`.
 
 ## Requirements
 
-`@svebcomponents/ssr` calls Svelte's server renderer, so `svelte` must be
-installed as a server-side dependency of the Vue app even though no Svelte
-components appear in it. The component package's own server bundle ships its
-Svelte runtime, but the renderer entry point does not.
+`svelte` must be installed as a server-side dependency of the Vue app, even
+though no Svelte components appear in it — see
+[Compatibility](https://svebcomponents.dev/reference/compatibility/).
 
 ## How It Works
 

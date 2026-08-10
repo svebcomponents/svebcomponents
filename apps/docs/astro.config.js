@@ -1,18 +1,57 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
+import { remarkStripLeadingH1 } from "./src/plugins/remarkStripLeadingH1.js";
+
+const experimental = { text: "Experimental", variant: "caution" };
+
 // https://astro.build/config
 export default defineConfig({
   site: "https://svebcomponents.dev",
+  markdown: {
+    remarkPlugins: [remarkStripLeadingH1],
+  },
   integrations: [
     starlight({
       title: "svebcomponents",
+      description:
+        "Build Svelte components into web components that package themselves, describe themselves to other people's editors, and server-render with real hydration.",
       customCss: ["./src/styles/custom.css"],
+      routeMiddleware: "./src/starlightRouteData.ts",
       logo: {
         light: "/src/assets/svebcomponents_logo.svg",
         dark: "/src/assets/svebcomponents_logo.svg",
         replacesTitle: false,
       },
+      head: [
+        {
+          tag: "meta",
+          attrs: {
+            property: "og:image",
+            content: "https://svebcomponents.dev/og.png",
+          },
+        },
+        {
+          tag: "meta",
+          attrs: { property: "og:image:width", content: "1200" },
+        },
+        {
+          tag: "meta",
+          attrs: { property: "og:image:height", content: "630" },
+        },
+        {
+          tag: "meta",
+          attrs: {
+            name: "twitter:image",
+            content: "https://svebcomponents.dev/og.png",
+          },
+        },
+      ],
+      editLink: {
+        baseUrl:
+          "https://github.com/svebcomponents/svebcomponents/edit/main/apps/docs/",
+      },
+      lastUpdated: true,
       social: [
         {
           icon: "github",
@@ -22,36 +61,51 @@ export default defineConfig({
       ],
       sidebar: [
         {
-          label: "Documentation",
+          label: "Start here",
           items: [
-            { label: "Introduction", slug: "introduction" },
+            { label: "What is svebcomponents?", slug: "introduction" },
             { label: "Getting Started", slug: "getting-started" },
+            { label: "Authoring components", slug: "authoring" },
+            { label: "Publishing your package", slug: "publishing" },
+          ],
+        },
+        {
+          label: "Server rendering",
+          items: [
+            { label: "Overview", slug: "core-concepts/ssr" },
+            { label: "Hydration", slug: "core-concepts/hydration" },
             {
-              label: "Core Concepts",
-              items: [
-                { label: "Build", slug: "core-concepts/build" },
-                {
-                  label: "Auto-options",
-                  slug: "core-concepts/auto-options",
-                },
-                {
-                  label: "SSR",
-                  items: [
-                    { label: "Overview", slug: "core-concepts/ssr" },
-                    {
-                      label: "Framework Integrations",
-                      slug: "core-concepts/ssr/framework-integrations",
-                    },
-                  ],
-                },
-                { label: "Hydration", slug: "core-concepts/hydration" },
-              ],
+              label: "Other frameworks",
+              slug: "core-concepts/ssr/framework-integrations",
+              badge: experimental,
             },
           ],
         },
         {
-          label: "Packages",
+          label: "Guides",
+          collapsed: true,
           items: [
+            { label: "How the build works", slug: "core-concepts/build" },
+            {
+              label: "How attribute inference works",
+              slug: "core-concepts/auto-options",
+            },
+            {
+              label: "Typing elements in React & Vue",
+              slug: "guides/framework-types",
+            },
+            {
+              label: "Manual configuration",
+              slug: "guides/manual-configuration",
+            },
+          ],
+        },
+        {
+          label: "Reference",
+          collapsed: true,
+          items: [
+            { label: "Compatibility", slug: "reference/compatibility" },
+            { label: "Troubleshooting", slug: "reference/troubleshooting" },
             { label: "@svebcomponents/build", slug: "packages/build" },
             {
               label: "@svebcomponents/auto-options",
@@ -60,38 +114,39 @@ export default defineConfig({
             { label: "@svebcomponents/ssr", slug: "packages/ssr" },
             {
               label: "SSR integrations",
+              collapsed: true,
               items: [
-                { label: "Vue", slug: "packages/ssr-vue" },
-                { label: "React", slug: "packages/ssr-react" },
-                { label: "Astro", slug: "packages/ssr-astro" },
+                {
+                  label: "@svebcomponents/ssr-vue",
+                  slug: "packages/ssr-vue",
+                  badge: experimental,
+                },
+                {
+                  label: "@svebcomponents/ssr-react",
+                  slug: "packages/ssr-react",
+                  badge: experimental,
+                },
+                {
+                  label: "@svebcomponents/ssr-astro",
+                  slug: "packages/ssr-astro",
+                  badge: experimental,
+                },
               ],
             },
             { label: "@svebcomponents/utils", slug: "packages/utils" },
-            {
-              label: "@svebcomponents internals",
-              slug: "maintainers/config-packages",
-            },
           ],
         },
         {
-          label: "Release Notes",
+          label: "Changelog",
+          collapsed: true,
           items: [
-            {
-              label: "@svebcomponents/build",
-              slug: "migration/build",
-            },
+            { label: "@svebcomponents/build", slug: "changelog/build" },
             {
               label: "@svebcomponents/auto-options",
-              slug: "migration/auto-options",
+              slug: "changelog/auto-options",
             },
-            {
-              label: "@svebcomponents/ssr",
-              slug: "migration/ssr",
-            },
-            {
-              label: "@svebcomponents/utils",
-              slug: "migration/utils",
-            },
+            { label: "@svebcomponents/ssr", slug: "changelog/ssr" },
+            { label: "@svebcomponents/utils", slug: "changelog/utils" },
           ],
         },
       ],

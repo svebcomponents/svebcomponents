@@ -1,16 +1,100 @@
 ---
 title: svebcomponents
-description: Build, package, and server-render Svelte custom elements.
+description: Build Svelte components into web components that package themselves, describe themselves to other people's editors, and server-render with real hydration.
+template: splash
 hero:
-  tagline: web components with svelte
+  tagline: "Everything after <code>customElement: true</code>."
   image:
     file: ../../assets/svebcomponents_logo.svg
   actions:
     - text: Get Started
       link: /getting-started/
       icon: right-arrow
-    - text: View on GitHub
+    - text: What is this?
+      link: /introduction/
+      variant: minimal
+    - text: GitHub
       link: https://github.com/svebcomponents/svebcomponents
       icon: external
       variant: minimal
 ---
+
+import { Card, CardGrid } from "@astrojs/starlight/components";
+
+Svelte compiles a component to a custom element today. svebcomponents is the
+toolchain for everything that comes next: packaging it, typing it for the people
+who use it, and rendering it on the server.
+
+<CardGrid>
+  <Card title="No boilerplate options" icon="pencil">
+    Your `$props()` TypeScript types become attribute names, converters and
+    reflection settings. Write `increments: number`, and `increments="5"`
+    arrives as a number.
+  </Card>
+  <Card title="package.json is the build config" icon="setting">
+    Declare where the built files go in `exports`, then run `svebcomponents`. No
+    bundler config, no entry list.
+  </Card>
+  <Card title="Typed for your consumers" icon="approve-check">
+    A custom elements manifest plus `.d.ts`, so editors autocomplete your tags
+    and `querySelector` comes back typed — in Svelte, React, Vue or plain HTML.
+  </Card>
+  <Card title="Server-rendered, and hydrated" icon="rocket">
+    Declarative shadow DOM on the server; the browser adopts that DOM in place
+    instead of throwing it away. Svelte's own custom elements can't do this.
+  </Card>
+</CardGrid>
+
+## A component, end to end
+
+```svelte title="src/FavoriteNumber.svelte"
+<svelte:options customElement="favorite-number" />
+
+<script lang="ts">
+  let { value }: { value: number } = $props();
+</script>
+
+<p>My favorite number is {value}</p>
+```
+
+```json title="package.json"
+{
+  "exports": {
+    ".": {
+      "types": "./dist/client/FavoriteNumber.d.ts",
+      "default": "./dist/client/FavoriteNumber.js"
+    }
+  },
+  "scripts": { "build": "svebcomponents" }
+}
+```
+
+That is the whole setup. `svebcomponents` compiles the component, infers that
+`value` is a `Number` attribute, emits declarations and a custom elements
+manifest, and makes registration idempotent. Consumers write:
+
+```html
+<favorite-number value="42"></favorite-number>
+```
+
+## What you get over `customElement: true`
+
+|                             | Svelte `customElement: true`                        | With svebcomponents                              |
+| --------------------------- | --------------------------------------------------- | ------------------------------------------------ |
+| Attribute types, reflection | hand-written `<svelte:options customElement={...}>` | inferred from your `$props()` types              |
+| Packaging                   | assemble your own pipeline                          | `package.json` exports _are_ the config          |
+| Types for consumers         | none                                                | `.d.ts` plus a custom elements manifest          |
+| Server rendering            | none                                                | declarative shadow DOM via Lit's ElementRenderer |
+| Hydration                   | shadow root wiped, component re-mounted             | server DOM adopted in place                      |
+| Evaluated twice             | `customElements.define` throws                      | idempotent                                       |
+
+<CardGrid>
+  <Card title="Start building" icon="rocket">
+    The [Getting Started guide](/getting-started/) walks through the template
+    repo, your first component, and a SvelteKit app that consumes it.
+  </Card>
+  <Card title="Or read why it exists" icon="open-book">
+    [What is svebcomponents?](/introduction/) covers the problems it solves and
+    where it fits next to Lit and plain Svelte custom elements.
+  </Card>
+</CardGrid>

@@ -3,20 +3,20 @@ title: SSR
 description: How server rendering works for Svelte-built custom elements.
 ---
 
-:::caution[Beta status]
-Svebcomponents SSR is ready for real-world evaluation and early production
-adoption, but its APIs and generated output may still change before 1.0.
-Attribute values/names and tag names are validated and escaped through Svelte's
-SSR serializer and covered by XSS regression tests, but the package has not had
-an independent security audit. Shadow-root content rendered via `{@html}`
-relies on the renderer's escaping, so applications that handle untrusted
-content should assess that boundary carefully.
+:::caution[Beta]
+SSR is ready for real-world evaluation and early production adoption, but its
+APIs and generated output may still change before 1.0. Attribute values, names
+and tag names are validated and escaped through Svelte's SSR serializer and
+covered by XSS regression tests, but the package has not had an independent
+security audit. Shadow-root content rendered via `{@html}` relies on the
+renderer's escaping, so applications handling untrusted content should assess
+that boundary carefully.
 :::
 
 Browsers know how to instantiate custom elements. A server renderer usually
 sees an unknown HTML tag and has no component implementation to invoke.
 
-Svebcomponents bridges that gap with a server-specific renderer for each
+svebcomponents bridges that gap with a server-specific renderer for each
 custom element. The design follows Lit's `ElementRenderer` model and serializes
 the component's shadow root using declarative shadow DOM.
 
@@ -47,18 +47,18 @@ entrypoint is generated as an `ElementRenderer` subclass that knows how to
 render the Svelte component on the server.
 
 The optional `svelte` conditions create renderer and browser builds that share
-the consuming application's Svelte runtime. They carry the same
-version-compatibility limitation described in
-[Svelte Conditional Exports](/core-concepts/build/#svelte-conditional-exports).
+the consuming application's Svelte runtime, with the
+[version-compatibility tradeoff](/publishing/#optional-a-lighter-build-for-svelte-consumers)
+that carries.
 
-See [Build](/core-concepts/build/) for how matching `/ssr` exports enable this
-output.
+See [Publishing your package](/publishing/#optional-server-renderable-output)
+for how matching `/ssr` exports enable this output.
 
 ## App-author Flow
 
 The consuming application needs two pieces of setup.
 
-First, add the Svebcomponents transform before the Svelte plugin:
+First, add the svebcomponents transform before the Svelte plugin:
 
 ```ts
 import { sveltekit } from "@sveltejs/kit/vite";
@@ -93,9 +93,9 @@ is guaranteed to install first regardless of import order or how a bundler
 chunks things.
 
 :::note
-If a component's tag name couldn't be determined at build time (e.g. it's
-computed dynamically rather than a plain string literal), the generated
-renderer falls back to requiring manual registration:
+If the component's tag could not be read at build time — see
+[static tags only](/core-concepts/build/#static-tags-only) — the generated
+renderer does not self-register, and the app registers it by hand:
 
 ```ts
 import { ElementRendererRegistry } from "@svebcomponents/ssr";
@@ -126,7 +126,7 @@ That single line therefore covers every Lit element in the app. An explicit
 `ElementRendererRegistry.set()` registration still wins, so one specific
 element can be given a different renderer.
 
-The reverse direction works too: the renderers Svebcomponents generates
+The reverse direction works too: the renderers svebcomponents generates
 implement `matchesClass`, so they can be handed straight to `@lit-labs/ssr`'s
 own `render()`:
 
@@ -139,20 +139,17 @@ render(html`<my-component title="Hello"></my-component>`, {
 });
 ```
 
-Both directions are covered by end-to-end tests in the repository.
-
 ## What Makes a Component Asynchronous
 
 Whether an element renders synchronously decides which host integrations can
-server-render it, so it is worth being precise about what puts a component on
-the async path. There are exactly two ways:
+server-render it. There are exactly two ways onto the async path:
 
 1. **The component awaits while rendering** — an `await` in its instance
    script, or anywhere Svelte's `experimental.async` allows one.
 2. **Its preparation hook returns a promise** — the adjacent
    `<entry>.ssr.ts` module described in
-   [Server preparation](/core-concepts/build/#optional-ssr-output), whose
-   default-exported `SsrPrepare` function may return a promise.
+   [server preparation](/core-concepts/build/#server-preparation) module,
+   whose default-exported `SsrPrepare` function may return a promise.
 
 Everything else renders synchronously, including a hook that returns nothing.
 A hook that bails out early — because the host already supplied the value it

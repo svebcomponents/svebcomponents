@@ -1,18 +1,14 @@
 ---
-title: Auto-options
-description: How Svebcomponents connects Svelte props to custom element attributes.
+title: How attribute inference works
+description: How svebcomponents connects Svelte props to custom element attributes.
 ---
 
 HTML attributes are strings. Svelte props can be strings, numbers, booleans,
-arrays, or objects. Custom element prop metadata is what connects those two
-worlds.
-
-`@svebcomponents/auto-options` generates that metadata from the TypeScript
+arrays or objects. Custom element prop metadata is what connects those two
+worlds, and `@svebcomponents/auto-options` generates it from the TypeScript
 types you already write in `$props()`.
 
-## Props Are the Source of Truth
-
-In Svelte 5, props usually live in `$props()`:
+## Props are the source of truth
 
 ```svelte
 <script lang="ts">
@@ -26,7 +22,7 @@ In Svelte 5, props usually live in `$props()`:
 </script>
 ```
 
-Before the Svelte compiler runs, `auto-options` reads this declaration and
+Before the Svelte compiler runs, `auto-options` reads that declaration and
 generates the equivalent custom element options:
 
 ```svelte
@@ -41,75 +37,39 @@ generates the equivalent custom element options:
 />
 ```
 
-When you build with `@svebcomponents/build`, this transform is already part of
-the pipeline.
+With that metadata in place, Svelte converts incoming attributes to the
+corresponding prop types, so `value="42"` arrives as the number `42`. When you
+build with `@svebcomponents/build`, the transform is already in the pipeline.
 
-## Declaring the Tag
+## What it infers
 
-Write the custom element's tag with Svelte's own string-shorthand syntax:
+| Svelte prop type           | Custom element type                    |
+| -------------------------- | -------------------------------------- |
+| `string`                   | `"String"`                             |
+| `number`                   | `"Number"`                             |
+| `boolean`                  | `"Boolean"`                            |
+| string/number/bool literal | `"String"`, `"Number"`, or `"Boolean"` |
+| `SomeType[]`, `Array<T>`   | `"Array"`                              |
+| object literals, `Record`  | `"Object"`                             |
+| interface references       | `"Object"`                             |
+
+Props with no type information are still declared, but default to `"String"`,
+because that is what an HTML attribute is. Attribute names are kebab-cased from
+the prop name, so `favoriteNumber` becomes `favorite-number`.
+
+## Declaring the tag
+
+The string shorthand is expanded into the object form with the inferred `props`
+merged in, so one line gives you both the tag and the metadata:
 
 ```svelte
 <svelte:options customElement="favorite-number" />
 ```
 
-`auto-options` expands this into the object form shown above, merging in the
-inferred `props` — you get the tag declaration and the prop metadata from a
-single line. The object form (`customElement={{ tag: "favorite-number" }}`)
-works identically; use it directly when you also need `shadow` or a manual
-`extend`.
+## Overriding what it infers
 
-## Attribute Names
-
-JavaScript prop names remain camel-cased while their HTML attributes are
-kebab-cased:
-
-| Prop name        | Attribute name    |
-| ---------------- | ----------------- |
-| `value`          | `value`           |
-| `favoriteNumber` | `favorite-number` |
-| `isFeatured`     | `is-featured`     |
-
-This lets component code use normal JavaScript naming while consumers get
-HTML-shaped markup.
-
-## Attribute Conversion
-
-With generated metadata, Svelte can convert incoming attributes to the
-corresponding prop types:
-
-```html
-<favorite-number value="42" featured="true"></favorite-number>
-```
-
-Here, `value` can become a number and `featured` can become a boolean instead
-of both remaining strings.
-
-## Svelte Consumers and Non-string Values
-
-There is one interop detail worth keeping close at hand.
-
-When a Svelte app consumes a custom element, pass non-string values as
-JavaScript expressions:
-
-```svelte
-<favorite-number value={42}></favorite-number>
-```
-
-This passes the number `42`.
-
-```svelte
-<favorite-number value="42"></favorite-number>
-```
-
-Under certain conditions, Svelte assigns this value directly to the
-JavaScript property. In that case the value is the string `"42"` and the
-custom element's attribute converter is bypassed.
-
-## Manual Overrides
-
-Inference should remove boilerplate without removing control. You can provide
-custom element prop options manually when you need a different attribute
-name, type, or reflection behavior:
+Anything you write by hand wins. Provide a different attribute name, type or
+reflection behaviour for one prop, several props, or the entire `props` object:
 
 ```svelte
 <svelte:options
@@ -121,9 +81,8 @@ name, type, or reflection behavior:
 />
 ```
 
-`auto-options` preserves fields you wrote manually and fills in missing props
-and fields where it can.
+`auto-options` preserves the fields you wrote and fills in the rest where it
+can — including props you did not mention.
 
-For supported prop shapes, inferred types, standalone plugin setup, and
-current limitations, see the
-[`@svebcomponents/auto-options` reference](/packages/auto-options/).
+For supported prop shapes, standalone plugin setup and current limitations, see
+the [`@svebcomponents/auto-options` reference](/packages/auto-options/).

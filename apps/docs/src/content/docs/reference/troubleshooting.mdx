@@ -1,0 +1,186 @@
+---
+title: Troubleshooting
+description: What svebcomponents' build errors, warnings and runtime messages mean, and how to resolve them.
+---
+
+## Build errors
+
+### could not find a source for `./dist/client/X.js`
+
+The export points at an output path with no matching source. The build maps
+`dist/client` to `src` and looks for exactly one of `src/X.svelte`,
+`src/X.ts` or `src/X.js`.
+
+Check that the basename in the export matches the source filename exactly,
+including case. If your layout cannot be expressed this way, use
+[manual configuration](/guides/manual-configuration/).
+
+### multiple sources match `./dist/client/X.js`
+
+Both `src/X.svelte` and `src/X.ts` (or `.js`) exist, so the build cannot tell
+whether the entry is a component or an ordinary module. Rename one of them, or
+name the entrypoints explicitly with
+[manual configuration](/guides/manual-configuration/).
+
+### could not find expected ESM ssr export
+
+An export key ending in `/ssr` exists, but has no `default` or `import`
+condition pointing at a file. Every SSR export needs one:
+
+```json
+{
+  "./ssr": {
+    "types": "./dist/server/ssr.d.ts",
+    "default": "./dist/server/ssr.js"
+  }
+}
+```
+
+### no valid configuration found
+
+Neither `svebcomponents.config.ts` nor any `exports` entry pointing into
+`./dist/client/` was found. Add the exports described in
+[Publishing your package](/publishing/), or a config file.
+
+### custom-elements.json is not exposed to consumers
+
+A hint, not an error — the manifest was written but consumers cannot find it.
+Add both fields:
+
+```json
+{
+  "customElements": "custom-elements.json",
+  "files": ["dist", "custom-elements.json"]
+}
+```
+
+## Build warnings
+
+### A dynamically-interpolated `customElement` string tag is not supported
+
+### The bare `customElement` boolean shorthand is not supported
+
+auto-options needs a statically readable tag. When it cannot read one it leaves
+`<svelte:options>` untouched entirely, so the component gets **no inferred prop
+metadata and no hydration wrapper** — attributes stay strings.
+
+Use a plain string literal, or the object form:
+
+```svelte
+<svelte:options customElement="my-element" />
+<!-- or -->
+<svelte:options customElement={{ tag: "my-element" }} />
+```
+
+### cannot infer a single attribute type for a union mixing […]
+
+A prop typed as a union of different primitive kinds (`string | number`) has no
+single attribute converter, so it falls back to `"String"`. Narrow the type, or
+set it explicitly:
+
+```svelte
+<svelte:options
+  customElement={{ props: { value: { type: "Number" } } }}
+/>
+```
+
+Unions that resolve to one kind (`string | null`, `"a" | "b"`) infer fine.
+
+### could not resolve prop types since they were not of expected shape
+
+The type annotation on `$props()` is not an object type, an interface, or a
+type alias for one — or it references a type imported from another module.
+auto-options only inspects declarations in the same component instance script.
+Move the type into the component, or write the props metadata by hand.
+
+### skipping _file_ in the custom elements manifest — it could not be parsed
+
+The component could not be parsed by the analyzer. The build still succeeds;
+the element is just absent from the manifest and its generated types.
+
+## Runtime errors
+
+### `await_invalid`
+
+Svelte's own error, raised when a component performs asynchronous work during a
+synchronous server render.
+
+If the host is not a Svelte app, it has to opt into Svelte's async SSR mode
+explicitly on the server:
+
+```ts
+import "@svebcomponents/ssr/enable-async";
+```
+
+If the host is a Svelte app, compile it with
+`compilerOptions.experimental.async` and use the async wrapper. See
+[async rendering outside Svelte](/core-concepts/ssr/#async-rendering-outside-svelte).
+
+### AsyncRendererError: `<my-element>` renders asynchronously…
+
+The element was rendered through a synchronous path — `renderCustomElementSync`,
+or a host integration that cannot await — but turned out to need awaiting,
+either because it awaits while rendering or because its `<entry>.ssr.ts` hook
+returned a promise.
+
+Render it from an await-capable host with `renderCustomElement`, or let the
+host degrade to client-only rendering. React's default `CustomElement` does the
+latter automatically; see
+[the RSC opt-in](/core-concepts/ssr/framework-integrations/#synchronous-by-default-with-an-rsc-opt-in).
+
+### Custom element `my-element` not found
+
+The browser entrypoint was never imported on the server, so the element was
+never defined. Import the component package before rendering templates that use
+it.
+
+### Custom element renderer for `my-element` not found
+
+The element is defined but no renderer is registered. Import the package's
+`/ssr` entry once, for example from `hooks.server.ts`:
+
+```ts
+import "my-component-package/ssr";
+```
+
+If the component's tag could not be read at build time, the generated renderer
+does not self-register and you must register it by hand:
+
+```ts
+import { ElementRendererRegistry } from "@svebcomponents/ssr";
+import MyComponentRenderer from "my-component-package/ssr";
+
+ElementRendererRegistry.set("my-component", MyComponentRenderer);
+```
+
+### Could not access custom element constructor for tag: `my-element`
+
+`ElementRendererRegistry.set()` was called with a tag that is not yet defined.
+Import the browser entrypoint before registering the renderer for it.
+
+## Browser messages
+
+### `<my-element>` declares slots and was mounted instead of hydrated
+
+A development-mode notice, not an error. Components that declare `<slot>`
+elements currently fall back to a client-side mount rather than adopting the
+server-rendered DOM. They render correctly; they just re-render on upgrade.
+See [hydration limitations](/core-concepts/hydration/#slots).
+
+### Svelte logs a hydration mismatch and re-renders
+
+The server markup did not structurally match what the client expected. Svelte's
+own recovery clears the shadow root and mounts from scratch, so the component
+still works.
+
+The usual cause is the server and browser rendering different content — a
+timestamp, a random value, or data that changed between the two. Move
+non-deterministic work into an
+[`<entry>.ssr.ts` preparation hook](/core-concepts/build/#server-preparation)
+so the value is serialized and reused rather than recomputed.
+
+## Nothing above matches
+
+Open an issue at
+[svebcomponents/svebcomponents](https://github.com/svebcomponents/svebcomponents/issues)
+with the message and a minimal reproduction.

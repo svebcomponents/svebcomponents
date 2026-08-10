@@ -1,3 +1,10 @@
 [build]
 command = "pnpm --filter @svebcomponents/docs build"
 publish = "apps/docs/dist"
+
+# The changelogs used to live under /migration/*.
+[[redirects]]
+from = "/migration/*"
+to = "/changelog/:splat"
+status = 301
+force = true

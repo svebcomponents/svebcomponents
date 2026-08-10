@@ -1,0 +1,82 @@
+---
+title: Manual configuration
+description: When package export inference is not enough, configure svebcomponents explicitly.
+---
+
+Package exports are the recommended configuration, and cover most packages.
+Reach for a config file when you need source paths or output directories that
+the [inference rules](/core-concepts/build/#zero-config-builds) cannot express —
+for example a subpath export pattern, or sources that do not live in `src`.
+
+Create `svebcomponents.config.ts` in the package root:
+
+```ts
+import { defineConfig } from "@svebcomponents/build";
+
+export default defineConfig({
+  entry: "src/ExampleComponent.svelte",
+  outDir: "dist/client",
+  svelteOutDir: "dist/client-svelte",
+  ssr: true,
+  ssrOutDir: "dist/server",
+  ssrSvelteOutDir: "dist/server-svelte",
+});
+```
+
+`defineConfig` returns an array of tsdown options, and a config file replaces
+export inference for the whole package. A package with several components
+therefore exports one `defineConfig` call per component, flattened:
+
+```ts
+export default [
+  ...defineConfig({ entry: "src/FavoriteNumber.svelte" }),
+  ...defineConfig({
+    entry: "src/ColorPicker.svelte",
+    ssrEntryFileName: "ColorPicker.ssr",
+  }),
+];
+```
+
+## Options
+
+| Option             | Default                         | Description                                                                                    |
+| ------------------ | ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `entry`            | `"src/ExampleComponent.svelte"` | Entry file for the component.                                                                  |
+| `outDir`           | `"dist/client"`                 | Output directory for the standalone browser build.                                             |
+| `svelteOutDir`     | `undefined`                     | Output directory for the Svelte-aware browser build. Setting it enables that build.            |
+| `ssr`              | `true`                          | Whether to generate the SSR build.                                                             |
+| `ssrOutDir`        | `"dist/server"`                 | Output directory for the standalone SSR build.                                                 |
+| `ssrSvelteOutDir`  | `undefined`                     | Output directory for the Svelte-aware SSR build. Setting it enables that build.                |
+| `ssrEntryFileName` | `"ssr"`                         | Basename of the generated renderer entry. Must be unique per component within one `ssrOutDir`. |
+| `hydratable`       | `true`                          | Whether the element hydrates server-rendered shadow DOM. Requires `ssr`.                       |
+| `svelteConfig`     | loaded from the project         | Overrides the `preprocess`, `extensions` and `compilerOptions` picked up automatically.        |
+
+## Svelte configuration
+
+svebcomponents loads your Svelte configuration from `vite.config.*` or
+`svelte.config.*` and passes `preprocess`, `extensions` and `compilerOptions`
+into the generated builds. svebcomponents-owned options such as `customElement`
+and `generate: "server"` still take precedence.
+
+If that configuration enables `compilerOptions.experimental.async`, the browser
+and SSR outputs are async-compiled, and host apps consuming those renderers need
+an [async-capable integration](/core-concepts/ssr/#what-makes-a-component-asynchronous).
+
+## Opting out of hydration
+
+Hydration is on by default for every SSR-enabled component. Turn it off for a
+whole package:
+
+```ts
+export default defineConfig({ hydratable: false });
+```
+
+Or for a single component, by declaring your own `extend` in
+`<svelte:options customElement={{ ... }}>` — auto-options never injects over one
+you wrote. See [hydration](/core-concepts/hydration/#opting-out).
+
+## When configuration is missing
+
+If the CLI can neither load `svebcomponents.config.ts` nor infer any component
+exports from `package.json`, it falls back to `defineConfig({})`, which builds
+`src/ExampleComponent.svelte` into `dist/client` and `dist/server`.

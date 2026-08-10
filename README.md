@@ -1,45 +1,53 @@
-# Svebcomponents
+# svebcomponents
 
-## What is `Svebcomponents`?
+**Everything after `customElement: true`.**
 
-Building a one-off web component with Svelte is as easy as setting `customElement: true` in your Svelte config.
+Svelte can compile a component to a custom element today. svebcomponents is the
+toolchain for everything that comes next: packaging it, typing it for the people
+who use it, and rendering it on the server.
 
-However, once you get into building a library of components boilerplate and configuration quickly add up and the developer experience is not as good as it could be.
-`Svebcomponents` is a collection of tools that aim to smoothen the rough edges of building web components with Svelte.
+|                             | Svelte `customElement: true`                        | With svebcomponents                              |
+| --------------------------- | --------------------------------------------------- | ------------------------------------------------ |
+| Attribute types, reflection | hand-written `<svelte:options customElement={...}>` | inferred from your `$props()` types              |
+| Packaging                   | assemble your own pipeline                          | `package.json` exports _are_ the config          |
+| Types for consumers         | none                                                | `.d.ts` plus a custom elements manifest          |
+| Server rendering            | none                                                | declarative shadow DOM via Lit's ElementRenderer |
+| Hydration                   | shadow root wiped, component re-mounted             | server DOM adopted in place                      |
+| Evaluated twice             | `customElements.define` throws                      | idempotent                                       |
 
 > [!NOTE]
-> Svebcomponents is currently in beta. Its build, auto-options, SSR, and
-> hydration workflows are ready for real-world evaluation and early production
-> adoption. APIs may still change before 1.0; breaking changes are documented
-> in release notes and migration guides.
+> svebcomponents is in beta. The build, auto-options, SSR and hydration
+> workflows are ready for real-world evaluation and early production adoption;
+> the Vue, React and Astro integrations are experimental. APIs may still change
+> before 1.0, and breaking changes are documented in the changelogs.
 
 ## Documentation
 
-Read the documentation at [svebcomponents.dev](https://svebcomponents.dev/).
-The [Getting Started guide](https://svebcomponents.dev/getting-started/) walks
-through building and consuming your first component package.
+Read the docs at [svebcomponents.dev](https://svebcomponents.dev/).
 
-If your consumers use Svelte, see the
-[Svelte conditional exports guide](https://svebcomponents.dev/core-concepts/build/#svelte-conditional-exports)
-to learn how they can share the host application's Svelte runtime, including
-the version-compatibility tradeoff.
+- [What is svebcomponents?](https://svebcomponents.dev/introduction/) — the
+  problems it solves and where it fits.
+- [Getting Started](https://svebcomponents.dev/getting-started/) — build and
+  consume your first component package.
+- [Authoring components](https://svebcomponents.dev/authoring/) — props,
+  events, slots and styling.
+- [Compatibility](https://svebcomponents.dev/reference/compatibility/) —
+  supported Svelte, Node and host framework versions.
 
 ## Packages
 
-- [`@svebcomponents/build`]
-  - Provides the `svebcomponents` CLI tool for building web components (based on tsdown ⚡).
-  - By default, it offers a zero-configuration build experience.
-  - Emits a custom elements manifest and TypeScript declarations for the elements you ship, so Svelte, Vue and React templates know your tags and their props.
-  - For advanced configuration, create a `svebcomponents.config.ts` file in your project root and import `defineConfig` from `@svebcomponents/build` to define a custom tsdown configuration.
-- [`@svebcomponents/auto-options`]
-  - automatically generate type converter & attribute settings from your props leveraging the typescript AST
-- [`@svebcomponents/ssr`]
-  - lets `@svebcomponents/build` produce a server-renderable build (via tsdown) alongside the browser one
-  - render web components that provide an `ElementRenderer` in SvelteKit (or other vite based SSR frameworks)
-  - the pipeline depends only on Lit's `ElementRenderer` contract, so it renders any custom element with a registered renderer — Lit elements included
-- [`@svebcomponents/ssr-vue`] (experimental)
-  - the same server rendering, for custom elements used inside a Vue app
-- [`@svebcomponents/ssr-react`] (experimental)
-  - the same server rendering, for custom elements used inside a React app
-- [`@svebcomponents/ssr-astro`] (experimental)
-  - the same server rendering, for custom elements used inside an Astro app
+| Package                                                                             | Status       | What it does                                                                                     |
+| ----------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------ |
+| [`@svebcomponents/build`](https://svebcomponents.dev/packages/build/)               | Beta         | The `svebcomponents` CLI. Zero-config builds, TypeScript declarations, custom elements manifest. |
+| [`@svebcomponents/auto-options`](https://svebcomponents.dev/packages/auto-options/) | Beta         | Infers custom element prop metadata from your TypeScript props.                                  |
+| [`@svebcomponents/ssr`](https://svebcomponents.dev/packages/ssr/)                   | Beta         | Server-renderable builds, and rendering custom elements in SvelteKit and other Vite SSR apps.    |
+| [`@svebcomponents/ssr-vue`](https://svebcomponents.dev/packages/ssr-vue/)           | Experimental | The same server rendering, inside a Vue app.                                                     |
+| [`@svebcomponents/ssr-react`](https://svebcomponents.dev/packages/ssr-react/)       | Experimental | The same server rendering, inside a React app.                                                   |
+| [`@svebcomponents/ssr-astro`](https://svebcomponents.dev/packages/ssr-astro/)       | Experimental | The same server rendering, inside an Astro app.                                                  |
+
+The SSR pipeline depends only on Lit's `ElementRenderer` contract, so it renders
+any custom element with a registered renderer — Lit elements included.
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md).

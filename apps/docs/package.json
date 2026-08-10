@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "generate:og": "node ./scripts/generate-og.mjs",
     "check": "astro check",
     "lint": "pnpm /^lint:.*/",
     "lint:eslint": "eslint .",
