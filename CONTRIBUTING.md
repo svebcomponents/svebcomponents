@@ -46,3 +46,13 @@ pnpm changeset
 ```
 
 Follow the prompts to select the affected package(s) and describe the change; commit the generated file in `.changeset/` along with your change.
+
+## Repository layout
+
+- `packages/*` — the published svebcomponents packages.
+- `apps/docs` — the documentation site (Astro + Starlight), deployed to
+  [svebcomponents.dev](https://svebcomponents.dev/).
+- `e2e/*` — end-to-end fixtures that build real component packages and render
+  them through each host integration.
+- `configs/*` — private, shared lint/format/TypeScript/vitest presets. See
+  [internal config packages](./docs/internal-config-packages.md).

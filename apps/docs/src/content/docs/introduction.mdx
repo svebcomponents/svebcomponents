@@ -1,46 +1,87 @@
 ---
-title: Introduction
-description: Why Svebcomponents exists and which parts of the Svelte custom element workflow it improves.
+title: What is svebcomponents?
+description: The problems svebcomponents solves for Svelte custom element libraries, and where it fits next to plain Svelte and Lit.
 ---
 
-:::note[Beta status]
-Svebcomponents is currently in beta. Its build, auto-options, SSR, and hydration
-workflows are ready for real-world evaluation and early production adoption.
-APIs may still change before 1.0; breaking changes are documented in release
-notes and migration guides.
+Svelte already allows compiling to custom elements today: set
+`customElement: true` and you have a working web component.
+
+That is enough for one component. A library is a different job. You write prop
+metadata by hand for every attribute, assemble a build pipeline SvelteKit does
+not provide, ship no types to your consumers, and give up server rendering
+entirely — because a Svelte custom element wipes its shadow root the moment it
+upgrades.
+
+svebcomponents is the toolchain for that second job.
+
+## What you get over `customElement: true`
+
+|                             | Svelte `customElement: true`                        | With svebcomponents                              |
+| --------------------------- | --------------------------------------------------- | ------------------------------------------------ |
+| Attribute types, reflection | hand-written `<svelte:options customElement={...}>` | inferred from your `$props()` types              |
+| Packaging                   | assemble your own pipeline                          | `package.json` exports _are_ the config          |
+| Types for consumers         | none                                                | `.d.ts` plus a custom elements manifest          |
+| Server rendering            | none                                                | declarative shadow DOM via Lit's ElementRenderer |
+| Hydration                   | shadow root wiped, component re-mounted             | server DOM adopted in place                      |
+| Evaluated twice             | `customElements.define` throws                      | idempotent                                       |
+
+### Attributes come from your types
+
+Svelte needs prop metadata to turn an HTML attribute string into a typed prop.
+[Auto-options](/guides/attribute-inference/) reads the types you already wrote
+and generates it, so `value: number` is all you write to make `value="42"`
+arrive as `42`.
+
+### Your package.json is the build config
+
+SvelteKit packages Svelte components, not custom elements.
+[The build](/guides/build/) infers entrypoints from your `exports`
+field, so declaring where the output goes is the same act as configuring the
+build.
+
+### Consumers get types and a manifest
+
+Every build emits TypeScript declarations and a
+[custom elements manifest](https://github.com/webcomponents/custom-elements-manifest),
+so editors autocomplete your tags and `querySelector` returns a typed element:
+
+```ts
+import "my-components";
+
+const el = document.querySelector("simple-component");
+el?.count; // number | undefined
+```
+
+### Server rendering that survives hydration
+
+This is the part plain Svelte custom elements cannot do at all. Svelte's
+generated element attaches a shadow root on upgrade, which per spec clears any
+declarative shadow root the server delivered, and then mounts from scratch.
+
+svebcomponents renders the shadow root on the server as declarative shadow DOM
+and [adopts it in place](/server-rendering/hydration/) in the browser: the nodes
+survive, styles are reused, and the component is reactive afterwards. It is on
+by default for every SSR-enabled component.
+
+## Is this for you?
+
+svebcomponents is a good fit if you write Svelte and want to ship components
+that non-Svelte applications can use — a design system consumed by several
+frameworks, embeddable widgets, or anything that outlives one app's stack.
+
+If your consumers are all Svelte applications, plain Svelte components are
+simpler and faster; you do not need custom elements. If you have no Svelte in
+your stack at all, [Lit](https://lit.dev) is the more direct choice —
+svebcomponents' value is that it lets you keep writing Svelte.
+
+:::note[Beta]
+svebcomponents is in beta: ready for real-world evaluation and early production
+adoption. APIs may still change before 1.0, and breaking changes are documented
+in the changelogs.
 :::
-
-Web components are one of the best encapsulation tools the web platform has to
-offer, but authoring custom elements in JavaScript still comes with plenty of
-warts.
-
-Instead of the declarative approach used by modern frameworks, where you
-describe **what you want**, the platform APIs often require you to enumerate
-**how to get there**.
-
-Svelte's template language offers a more ergonomic way to build web
-components by compiling Svelte components into custom elements. Even so, the
-Svelte custom element workflow has a few rough edges:
-
-- **Boilerplate-heavy:** Svelte requires `<svelte:options>` configuration to
-  connect attributes and component props.
-- **Awkward build setup:** SvelteKit does not provide a packaging workflow for
-  custom element libraries, leaving authors to assemble their own build
-  pipeline.
-- **No built-in SSR path:** Declarative shadow DOM makes server-rendered web
-  components possible, but few frameworks provide support for it.
 
 :::note
 Watch [Theo Steiner's "Ultimate Guide to Building Web Components with Svelte"](https://www.youtube.com/watch?v=lDWfdfTH3e8)
-for a look under the hood of the Svelte compiler, a deeper exploration of
-current limitations, and a preview of how Svebcomponents approaches them.
+for a look under the hood of the Svelte compiler and how svebcomponents
+approaches its limitations.
 :::
-
-Svebcomponents tackles those three problems:
-
-- [Auto-options](/core-concepts/auto-options/) infers custom element prop
-  configuration from TypeScript.
-- [Build](/core-concepts/build/) makes package configuration as simple as
-  defining exports in `package.json`.
-- [SSR](/core-concepts/ssr/) provides support for building and
-  consuming server-renderable custom elements.

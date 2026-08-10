@@ -1,0 +1,88 @@
+---
+title: How attribute inference works
+description: How svebcomponents connects Svelte props to custom element attributes.
+---
+
+HTML attributes are strings. Svelte props can be strings, numbers, booleans,
+arrays or objects. Custom element prop metadata is what connects those two
+worlds, and `@svebcomponents/auto-options` generates it from the TypeScript
+types you already write in `$props()`.
+
+## Props are the source of truth
+
+```svelte
+<script lang="ts">
+  interface Props {
+    label: string;
+    value: number;
+    featured: boolean;
+  }
+
+  let { label, value, featured }: Props = $props();
+</script>
+```
+
+Before the Svelte compiler runs, `auto-options` reads that declaration and
+generates the equivalent custom element options:
+
+```svelte
+<svelte:options
+  customElement={{
+    props: {
+      label: { attribute: "label", reflect: true, type: "String" },
+      value: { attribute: "value", reflect: true, type: "Number" },
+      featured: { attribute: "featured", reflect: true, type: "Boolean" },
+    },
+  }}
+/>
+```
+
+With that metadata in place, Svelte converts incoming attributes to the
+corresponding prop types, so `value="42"` arrives as the number `42`. When you
+build with `@svebcomponents/build`, the transform is already in the pipeline.
+
+## What it infers
+
+| Svelte prop type           | Custom element type                    |
+| -------------------------- | -------------------------------------- |
+| `string`                   | `"String"`                             |
+| `number`                   | `"Number"`                             |
+| `boolean`                  | `"Boolean"`                            |
+| string/number/bool literal | `"String"`, `"Number"`, or `"Boolean"` |
+| `SomeType[]`, `Array<T>`   | `"Array"`                              |
+| object literals, `Record`  | `"Object"`                             |
+| interface references       | `"Object"`                             |
+
+Props with no type information are still declared, but default to `"String"`,
+because that is what an HTML attribute is. Attribute names are kebab-cased from
+the prop name, so `favoriteNumber` becomes `favorite-number`.
+
+## Declaring the tag
+
+The string shorthand is expanded into the object form with the inferred `props`
+merged in, so one line gives you both the tag and the metadata:
+
+```svelte
+<svelte:options customElement="favorite-number" />
+```
+
+## Overriding what it infers
+
+Anything you write by hand wins. Provide a different attribute name, type or
+reflection behaviour for one prop, several props, or the entire `props` object:
+
+```svelte
+<svelte:options
+  customElement={{
+    props: {
+      value: { type: "Number", attribute: "data-value", reflect: false },
+    },
+  }}
+/>
+```
+
+`auto-options` preserves the fields you wrote and fills in the rest where it
+can — including props you did not mention.
+
+For supported prop shapes, standalone plugin setup and current limitations, see
+the [`@svebcomponents/auto-options` reference](/packages/auto-options/).

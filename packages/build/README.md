@@ -1,6 +1,6 @@
-Build Svelte custom element packages with the `svebcomponents` CLI.
+Build Svelte custom element packages with the `svebcomponents` command.
 
-This package wraps `tsdown` with the defaults Svebcomponents needs:
+This package wraps `tsdown` with the defaults svebcomponents needs:
 
 - Svelte files are compiled as custom elements for the browser build.
 - `@svebcomponents/auto-options` runs before Svelte, so component props can be inferred into `<svelte:options customElement={...} />`.
@@ -15,7 +15,8 @@ This package wraps `tsdown` with the defaults Svebcomponents needs:
 pnpm add -D @svebcomponents/build
 ```
 
-Add a build script:
+Installing it puts a `svebcomponents` executable on your `PATH`. Wire it to a
+build script:
 
 ```json
 {
@@ -27,7 +28,8 @@ Add a build script:
 
 ## Zero-config Builds
 
-For the common case, describe your component entrypoints in `package.json` exports and run `svebcomponents`.
+For the common case, describe your component entrypoints in `package.json`
+exports:
 
 ```json
 {
@@ -46,7 +48,13 @@ For the common case, describe your component entrypoints in `package.json` expor
 }
 ```
 
-The CLI looks for exports whose `default` or `import` condition points at
+Then run the command:
+
+```bash
+svebcomponents
+```
+
+It looks for exports whose `default` or `import` condition points at
 `./dist/client/*`, maps each output basename into `src`, and classifies the
 matching source by extension:
 
@@ -174,9 +182,23 @@ Set `svelteOutDir` and `ssrSvelteOutDir` to also emit Svelte-aware builds that e
 
 Set `ssr: false` to emit only the browser custom element build.
 
-Svebcomponents loads the package's Svelte configuration from `vite.config.*` or
+A config file replaces export inference for the whole package, so a package
+with several components exports one `defineConfig` call per component,
+flattened:
+
+```ts
+export default [
+  ...defineConfig({ entry: "src/FavoriteNumber.svelte" }),
+  ...defineConfig({
+    entry: "src/ColorPicker.svelte",
+    ssrEntryFileName: "ColorPicker.ssr",
+  }),
+];
+```
+
+svebcomponents loads the package's Svelte configuration from `vite.config.*` or
 `svelte.config.*` and passes `preprocess`, `extensions`, and `compilerOptions`
-to the generated browser and SSR builds. Svebcomponents-owned compiler options
+to the generated browser and SSR builds. svebcomponents-owned compiler options
 such as `customElement` and `generate: "server"` still take precedence.
 
 If the loaded Svelte config enables `compilerOptions.experimental.async`, the
@@ -185,14 +207,17 @@ those SSR renderers must use an async-capable host integration.
 
 ## Options
 
-| Option            | Default                         | Description                                                       |
-| ----------------- | ------------------------------- | ----------------------------------------------------------------- |
-| `entry`           | `"src/ExampleComponent.svelte"` | Entry file for the Svelte custom element package.                 |
-| `outDir`          | `"dist/client"`                 | Output directory for the standalone browser custom element build. |
-| `svelteOutDir`    | `undefined`                     | Output directory for the Svelte-aware browser build.              |
-| `ssr`             | `true`                          | Whether to generate the SSR build.                                |
-| `ssrOutDir`       | `"dist/server"`                 | Output directory for the standalone SSR build.                    |
-| `ssrSvelteOutDir` | `undefined`                     | Output directory for the Svelte-aware SSR build.                  |
+| Option             | Default                         | Description                                                                                                  |
+| ------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `entry`            | `"src/ExampleComponent.svelte"` | Entry file for the Svelte custom element package.                                                            |
+| `outDir`           | `"dist/client"`                 | Output directory for the standalone browser custom element build.                                            |
+| `svelteOutDir`     | `undefined`                     | Output directory for the Svelte-aware browser build.                                                         |
+| `ssr`              | `true`                          | Whether to generate the SSR build.                                                                           |
+| `ssrOutDir`        | `"dist/server"`                 | Output directory for the standalone SSR build.                                                               |
+| `ssrSvelteOutDir`  | `undefined`                     | Output directory for the Svelte-aware SSR build.                                                             |
+| `ssrEntryFileName` | `"ssr"`                         | Basename of the generated renderer entry. Must be unique per component within one `ssrOutDir`.               |
+| `hydratable`       | `true`                          | Whether the compiled element hydrates server-rendered shadow DOM instead of re-rendering it. Requires `ssr`. |
+| `svelteConfig`     | loaded from the project         | Overrides the `preprocess`, `extensions` and `compilerOptions` picked up from `vite`/`svelte` config.        |
 
 ## Build Pipeline
 

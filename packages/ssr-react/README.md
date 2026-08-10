@@ -2,12 +2,12 @@ Server-side rendering support for Svelte-built custom elements inside React apps
 
 This is the React counterpart to `@svebcomponents/ssr`'s Svelte integration.
 The element renderers, the DOM shim, the renderer registry and the client-side
-hydration machinery are all shared — this package only supplies the two pieces
+hydration machinery are all shared; this package only supplies the two pieces
 that are host-framework specific: routing custom element tags to a wrapper, and
 emitting declarative shadow DOM around them.
 
-This package is experimental. Its API may change before it is released
-alongside the rest of the toolchain.
+This package is in beta: ready for real-world evaluation and early production
+adoption, with an API that may still change before 1.0.
 
 **The default `CustomElement` is synchronous rendering only.** See "Async
 Components" below for the RSC opt-in.
@@ -21,30 +21,21 @@ Components" below for the RSC opt-in.
   Components, which server-renders asynchronous elements instead of degrading.
 
 Unlike the Svelte and Vue integrations, there is no bundler plugin. The JSX
-runtime swap is a compiler setting, so this works anywhere React does —
+runtime swap is a compiler setting, so this works anywhere React does,
 including hosts that are not Vite-based.
 
-## Any Custom Element, Not Just Svelte-built Ones
+## Any custom element, not just Svelte-built ones
 
-This integration depends only on Lit's `ElementRenderer` contract, so it will
-server-render any custom element that has a renderer registered — including
-Lit elements:
+This integration depends only on Lit's `ElementRenderer` contract, so it
+server-renders any custom element with a registered renderer — Lit elements
+included. See
+[Any custom element](https://svebcomponents.dev/server-rendering/#any-custom-element-not-just-svelte-built-ones).
 
-```ts
-import { LitElementRenderer } from "@lit-labs/ssr/lib/lit-element-renderer.js";
-import { ElementRendererRegistry } from "@svebcomponents/ssr";
+## Installation
 
-ElementRendererRegistry.use(LitElementRenderer);
+```bash
+pnpm add -D @svebcomponents/ssr-react
 ```
-
-`use()` registers a renderer that selects its own elements through Lit's
-static `matchesClass` hook, so that one line covers every LitElement in the
-app. `e2e/ssr-react` renders a plain Lit element through this package to keep
-that honest.
-
-This is the piece `@lit-labs/ssr-react` does not expose: it hardcodes
-`elementRenderers: [LitElementRenderer]`, so it can only ever render Lit
-elements, and anything else silently renders without shadow content.
 
 ## App-author Flow
 
@@ -78,11 +69,9 @@ import { CustomElement } from "@svebcomponents/ssr-react";
 
 ## Async Components
 
-React's `renderToString` cannot await, so an asynchronous component **cannot be
-server-rendered by the default `CustomElement`**. A component is asynchronous if
-it awaits while rendering, or if its `<entry>.ssr.ts` preparation hook returns a
-promise — see
-[What makes a component asynchronous](https://svebcomponents.dev/core-concepts/ssr/#what-makes-a-component-asynchronous).
+React's `renderToString` cannot await, so an
+[asynchronous component](https://svebcomponents.dev/server-rendering/#what-makes-a-component-asynchronous)
+**cannot be server-rendered by the default `CustomElement`**.
 
 Rather than failing the page, such an element is emitted without server-rendered
 shadow content and rendered in the browser only, with a one-time console
@@ -100,22 +89,18 @@ import { CustomElement } from "@svebcomponents/ssr-react/rsc";
 ```
 
 An RSC async function component runs to completion before any markup is
-emitted, so it can `await` the renderer directly — no cache, no `use()`, no
+emitted, so it can `await` the renderer directly: no cache, no `use()`, no
 Suspense boundary. That only works for elements rendered from a Server
 Component, though: an async function component cannot be imported into a
 Client Component (`"use client"`), so an element rendered from client-side
-React — on an RSC framework or not — has no async path and keeps the default's
+React, on an RSC framework or not, has no async path and keeps the default's
 degrade-to-client-only behavior.
-
-Note that the Vue integration has no such limitation at all: `renderToString`
-there awaits async `setup()` and emits in order.
 
 ## Requirements
 
-`@svebcomponents/ssr` calls Svelte's server renderer, so `svelte` must be
-installed as a server-side dependency of the React app even though no Svelte
-components appear in it. The component package's own server bundle ships its
-Svelte runtime, but the renderer entry point does not.
+`svelte` must be installed as a server-side dependency of the React app, even
+though no Svelte components appear in it; see
+[Compatibility](https://svebcomponents.dev/reference/compatibility/).
 
 ## How It Works
 
@@ -147,7 +132,6 @@ list, so the two trees agree.
 
 ## Current Limitations
 
-- Experimental; the API may change.
 - Synchronous element renderers only when server-rendering (see above).
 - Custom element tags are detected structurally (a dash, minus the HTML spec's
   reserved SVG/MathML names).

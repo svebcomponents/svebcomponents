@@ -1,0 +1,122 @@
+---
+title: Typing elements in React & Vue
+description: Register your custom elements with a host framework's template types.
+---
+
+Every build exports four types per element. For a `<simple-component>`
+declared by the `.` export:
+
+| Type                           | What it describes                                                             |
+| ------------------------------ | ----------------------------------------------------------------------------- |
+| `SimpleComponentElement`       | The DOM element: every prop as a property, plus a narrowed `addEventListener` |
+| `SimpleComponentAttributes`    | What may be set in markup — each attribute also accepting its string form     |
+| `SimpleComponentEventHandlers` | `onchange`-style handler props for dispatched events                          |
+| `SimpleComponentEventMap`      | Event name to `CustomEvent<Detail>`, for `addEventListener`                   |
+
+The element is registered in `HTMLElementTagNameMap`, so
+`document.querySelector("simple-component")` is typed with no setup at all.
+
+Getting the same in a framework's templates takes one augmentation, which you
+write once in your own project. svebcomponents deliberately does not generate
+these: they name types from frameworks it neither depends on nor tests against,
+and those conventions change between major versions.
+
+:::note
+Put the augmentation in a `.d.ts` — or any module — that your `tsconfig.json`
+includes. It applies project-wide.
+:::
+
+## Svelte
+
+If the package declares `svelte` as a required dependency of its consumers,
+this is already done for you — see
+[Publishing your package](/publishing/#declare-svelte-if-your-consumers-need-it).
+Write the augmentation yourself only when it does not:
+
+```ts
+import type { HTMLAttributes } from "svelte/elements";
+import type {
+  SimpleComponentElement,
+  SimpleComponentAttributes,
+  SimpleComponentEventHandlers,
+} from "my-components";
+
+declare module "svelte/elements" {
+  interface SvelteHTMLElements {
+    "simple-component": HTMLAttributes<SimpleComponentElement> &
+      SimpleComponentAttributes &
+      SimpleComponentEventHandlers;
+  }
+}
+```
+
+Either way, `count={"nope"}` and unknown attributes become errors, and
+attributes also accept their string form (`count="3"`) since that is what
+markup produces.
+
+:::caution
+`SvelteHTMLElements` ends with a catch-all index signature, so a tag that was
+never registered is silently accepted with any attributes. Typo protection only
+applies to elements you have declared.
+:::
+
+## React
+
+Requires React 19 or later. Earlier versions stringify every prop passed to a
+custom element and do not attach listeners for custom event names, so these
+signatures would not describe their behaviour.
+
+```ts
+import type { DetailedHTMLProps, HTMLAttributes } from "react";
+import type {
+  SimpleComponentElement,
+  SimpleComponentAttributes,
+  SimpleComponentEventHandlers,
+} from "my-components";
+
+declare module "react" {
+  namespace JSX {
+    interface IntrinsicElements {
+      "simple-component": DetailedHTMLProps<
+        HTMLAttributes<SimpleComponentElement>,
+        SimpleComponentElement
+      > &
+        SimpleComponentAttributes &
+        SimpleComponentEventHandlers;
+    }
+  }
+}
+```
+
+## Vue
+
+Vue's template checker reads `$props` and `$emit`, so the entry must be a
+component-like type rather than a bag of props:
+
+```ts
+import type { HTMLAttributes, PublicProps } from "vue";
+import type {
+  SimpleComponentElement,
+  SimpleComponentAttributes,
+  SimpleComponentEventMap,
+} from "my-components";
+
+type DefineCustomElement<
+  ElementType extends HTMLElement,
+  Events extends Record<string, Event>,
+  Attributes,
+> = new () => ElementType & {
+  $props: HTMLAttributes & Partial<Attributes> & PublicProps;
+  $emit: <K extends keyof Events>(event: K, payload: Events[K]) => void;
+};
+
+declare module "vue" {
+  interface GlobalComponents {
+    "simple-component": DefineCustomElement<
+      SimpleComponentElement,
+      SimpleComponentEventMap,
+      SimpleComponentAttributes
+    >;
+  }
+}
+```

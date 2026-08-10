@@ -1,0 +1,204 @@
+---
+title: Authoring components
+description: Props, events, slots and styling in a Svelte component that ships as a custom element.
+---
+
+A svebcomponent is a normal Svelte 5 component. What changes is that its public
+surface (props, events, slots, CSS custom properties) is also the public
+surface of an HTML element. This page covers how each one crosses that
+boundary.
+
+Everything on this page is read at build time to produce your element's
+TypeScript types and its
+[custom elements manifest](/guides/build/#element-types--manifest).
+
+## Props
+
+Declare props with `$props()` and type them. The type is what makes an
+attribute arrive as something other than a string:
+
+```svelte
+<script lang="ts">
+  interface Props {
+    /** How many items to show at once. */
+    pageSize: number;
+    featured?: boolean;
+  }
+
+  let { pageSize, featured = false }: Props = $props();
+</script>
+```
+
+Prop names stay camelCase in JavaScript; their attributes are kebab-cased:
+
+| Prop             | Attribute         |
+| ---------------- | ----------------- |
+| `value`          | `value`           |
+| `favoriteNumber` | `favorite-number` |
+| `isFeatured`     | `is-featured`     |
+
+`string`, `number`, `boolean`, arrays and object types are each mapped to the
+matching Svelte attribute converter, and every prop reflects back to its
+attribute by default. JSDoc comments on the prop become descriptions in the
+manifest and the generated types.
+
+See [how attribute inference works](/guides/attribute-inference/) for the full
+list of recognised types and how to override any of them.
+
+:::caution[Consumers on Svelte: pass expressions]
+Svelte 5 assigns attribute values directly to JavaScript properties under
+certain conditions, which bypasses the attribute converter. From a Svelte
+template write `page-size={20}`, not `page-size="20"`.
+See [sveltejs/svelte#12624](https://github.com/sveltejs/svelte/issues/12624).
+:::
+
+### Properties that are not attributes
+
+An attribute can only ever be a string. A prop typed as a function, a snippet,
+or another non-serialisable value is exposed as a property on the element and
+left out of the attribute list entirely, because there is no string form for a
+consumer to write in markup.
+
+## Events
+
+Dispatch events from the host element with
+[`$host()`](https://svelte.dev/docs/svelte/$host). This is the pattern
+svebcomponents endorses, and the only one it can describe:
+
+```svelte
+<script lang="ts">
+  interface ChangeDetail {
+    value: string;
+  }
+
+  const emit = (value: string) =>
+    $host().dispatchEvent(
+      new CustomEvent<ChangeDetail>("change", { detail: { value } }),
+    );
+</script>
+```
+
+The explicit type argument on `CustomEvent` is what types `detail`. It is read
+verbatim from your source, with no type checker involved, so inferring it from
+the `detail` value instead still records the event, but its detail becomes
+`unknown`.
+
+Each event joins a typed event map, so consumers get narrowing for free:
+
+```ts
+el.addEventListener("change", (event) => event.detail.value);
+```
+
+:::note[Callback props are not events]
+A prop like `onPick` appears on the element interface, where
+`element.onPick = fn` genuinely works, but never among the attributes. In a
+template `onPick={fn}` is event-handler syntax rather than a property
+assignment, so listing it as an attribute would type-check a handler that never
+runs.
+:::
+
+`createEventDispatcher` still works, but its events are not forwarded through
+the hydration host — see
+[hydration limitations](/server-rendering/hydration/#limitations).
+
+## Slots
+
+Statically named `<slot>` elements are collected automatically:
+
+```svelte
+<div class="card">
+  <slot name="header"></slot>
+  <slot></slot>
+</div>
+```
+
+Consumers fill them with light DOM children, as with any web component:
+
+```html
+<my-card>
+  <h2 slot="header">Title</h2>
+  <p>Body</p>
+</my-card>
+```
+
+:::caution[Slots disable hydration today]
+A component that declares `<slot>` elements renders correctly on the server but
+falls back to a client-side re-render on upgrade instead of adopting the
+server-rendered DOM. This is a Svelte 5 compilation detail expected to lift with
+Svelte 6 — see [hydration limitations](/server-rendering/hydration/#slots).
+:::
+
+## Styling
+
+Component styles are scoped by the shadow root, so nothing leaks in or out.
+Style the element itself with `:host`, and give consumers explicit hooks rather
+than expecting them to reach inside:
+
+```svelte
+<style>
+  :host {
+    display: inline-block;
+    border-radius: var(--card-radius, 4px);
+  }
+
+  .title {
+    color: var(--card-title-color, currentColor);
+  }
+</style>
+```
+
+A CSS custom property the component _reads_ without defining is treated as part
+of its public API and collected into the manifest: those are the ones a
+consumer is expected to supply. The `var()` fallback becomes the documented
+default.
+
+For consumers who need to reach a specific inner node, add `part` attributes;
+`::part()` works as it does on any custom element.
+
+## Documenting what the scan cannot see
+
+The component comment supplies descriptions, and can declare a member the build
+could not find on its own:
+
+```svelte
+<!-- @component
+A fancy button.
+
+@slot - The button label.
+@event change - Fired when the selection changes.
+@cssprop --fancy-radius - Corner radius.
+-->
+```
+
+Documentation is additive: it adds descriptions, or declares a member the scan
+missed. It never overrides inferred structure.
+
+## Declaring the tag
+
+Every component declares its own tag with Svelte's string shorthand:
+
+```svelte
+<svelte:options customElement="favorite-number" />
+```
+
+The object form works identically and is what you want when you also need
+`shadow` or your own `extend`:
+
+```svelte
+<svelte:options customElement={{ tag: "favorite-number" }} />
+```
+
+:::caution[The tag must be a literal]
+svebcomponents reads the tag from your source at build time to write the
+manifest, the element types and the SSR renderer's self-registration. A
+dynamically interpolated tag (`customElement="{x}"`) or the bare
+`customElement` boolean shorthand cannot be read. auto-options warns and leaves
+`<svelte:options>` untouched, which also means no inferred props and no
+hydration. Use a plain string literal or the object form.
+:::
+
+## Next
+
+- [Publishing your package](/publishing/) — exports, the manifest, and what
+  consumers receive.
+- [Server rendering](/server-rendering/) — opt a component into SSR.

@@ -2,12 +2,18 @@ Server-side rendering support for custom elements inside Astro apps.
 
 This is the Astro counterpart to `@svebcomponents/ssr`'s Svelte integration.
 The element renderers, the DOM shim, the renderer registry and the client-side
-hydration machinery are all shared — this package only supplies what is
+hydration machinery are all shared; this package only supplies what is
 specific to Astro: finding custom element tags in `.astro` templates, and
 emitting declarative shadow DOM around them.
 
-This package is experimental. Its API may change before it is released
-alongside the rest of the toolchain.
+This package is in beta: ready for real-world evaluation and early production
+adoption, with an API that may still change before 1.0.
+
+## Installation
+
+```bash
+pnpm add -D @svebcomponents/ssr-astro
+```
 
 ## Setup
 
@@ -37,7 +43,7 @@ import "my-component-package/ssr";
 </my-component>
 ```
 
-## The Simplest Client Story of the Three
+## No client-side counterpart
 
 Astro ships no client-side JavaScript for these elements, so there is no
 client-side counterpart to this integration and nothing to register in the
@@ -54,39 +60,31 @@ svebcomponents integration applies there.
 
 ## Async Components
 
-Astro frontmatter is an async module scope, so the wrapper simply awaits the
-element renderer. An asynchronous component — one that awaits while rendering,
-or whose `<entry>.ssr.ts` preparation hook returns a promise (see
-[What makes a component asynchronous](https://svebcomponents.dev/core-concepts/ssr/#what-makes-a-component-asynchronous))
-— works through the same wrapper as a synchronous one: no sync/async split as in
+Astro frontmatter is an async module scope, so the wrapper awaits the element
+renderer directly. An
+[asynchronous component](https://svebcomponents.dev/server-rendering/#what-makes-a-component-asynchronous)
+works through the same wrapper as a synchronous one: no sync/async split as in
 the Svelte integration, and no degradation as in React's.
 
-Being a non-Svelte host, an Astro app does need to opt into Svelte's async SSR
-mode explicitly:
+Like any non-Svelte host, an Astro app must opt into Svelte's async SSR mode
+explicitly on the server:
 
 ```ts
 import "@svebcomponents/ssr/enable-async";
 ```
 
-## Any Custom Element, Not Just Svelte-built Ones
+## Any custom element, not just Svelte-built ones
 
-This integration depends only on Lit's `ElementRenderer` contract, so it will
-server-render any custom element that has a renderer registered — including
-Lit elements:
-
-```ts
-import { LitElementRenderer } from "@lit-labs/ssr/lib/lit-element-renderer.js";
-import { ElementRendererRegistry } from "@svebcomponents/ssr";
-
-ElementRendererRegistry.use(LitElementRenderer);
-```
+This integration depends only on Lit's `ElementRenderer` contract, so it
+server-renders any custom element with a registered renderer — Lit elements
+included. See
+[Any custom element](https://svebcomponents.dev/server-rendering/#any-custom-element-not-just-svelte-built-ones).
 
 ## Requirements
 
-`@svebcomponents/ssr` calls Svelte's server renderer, so `svelte` must be
-installed as a server-side dependency of the Astro app even though no Svelte
-components appear in it. The component package's own server bundle ships its
-Svelte runtime, but the renderer entry point does not.
+`svelte` must be installed as a server-side dependency of the Astro app, even
+though no Svelte components appear in it; see
+[Compatibility](https://svebcomponents.dev/reference/compatibility/).
 
 ## How It Works
 
@@ -100,8 +98,7 @@ component, which renders:
 </my-component>
 ```
 
-Two implementation details are worth knowing, because both are easy to get
-wrong:
+Two implementation details are easy to get wrong:
 
 **The rewrite happens in Vite's `load` hook, not `transform`.** Astro compiles
 `.astro` to JavaScript in its own `transform`, and its plugin is `enforce:
@@ -129,7 +126,6 @@ than a renderer registration.
 
 ## Current Limitations
 
-- Experimental; the API may change.
 - Only `.astro` templates are rewritten. Custom elements inside `.mdx` are
   untested.
 - The consuming app must import the browser custom element module and register

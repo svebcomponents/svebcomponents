@@ -1,0 +1,135 @@
+---
+title: How the build works
+description: How svebcomponents turns Svelte components into distributable custom element packages.
+---
+
+`@svebcomponents/build` provides the pipeline around a Svelte custom element
+package. It compiles Svelte for the browser, runs
+[auto-options](/guides/attribute-inference/), emits TypeScript declarations,
+and describes every element it built.
+
+This page covers how it decides what to build. For the practical side — which
+fields to put in `package.json` before you publish — see
+[Publishing your package](/publishing/).
+
+## Component entrypoints
+
+Each custom element is its own entrypoint, and its PascalCase source filename
+matches the JavaScript output basename declared in `package.json`. The
+component declares its own tag:
+
+```svelte
+<svelte:options customElement="favorite-number" />
+```
+
+Consumers import the entrypoint for the side effect of defining
+`<favorite-number>`. Svelte's generated `customElements.define()` call is made
+idempotent at build time, so evaluating the component — or a bundle containing
+it — more than once never throws.
+
+## Zero-config builds
+
+The CLI infers entrypoints from the `exports` field:
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./dist/client/FavoriteNumber.d.ts",
+      "svelte": "./dist/client-svelte/FavoriteNumber.js",
+      "default": "./dist/client/FavoriteNumber.js"
+    }
+  }
+}
+```
+
+The inference follows these rules:
+
+1. The export's `default` or `import` condition must start with
+   `./dist/client/`.
+2. The output path is mapped from `dist/client` to `src`.
+3. A same-basename `.svelte` source is a svebcomponent.
+4. A same-basename `.ts` or `.js` source is an ordinary module and receives a
+   plain tsdown build, without the custom-element, hydration or SSR pipeline.
+5. Exactly one matching source must exist. Ambiguous basenames fail with an
+   error instead of silently choosing one.
+6. Subpath patterns (`"./*"`) are not inferred. Give each entry its own export
+   key, or use [manual configuration](/guides/manual-configuration/).
+
+Here `./dist/client/FavoriteNumber.js` resolves to `src/FavoriteNumber.svelte`.
+Rule 4 is what lets one package ship components and ordinary helpers without
+running the helpers through custom-element compilation.
+
+A `svelte` condition adds a second, lighter build, and a matching `/ssr` export
+adds a server renderer. Both are covered in
+[Publishing your package](/publishing/).
+
+### Server preparation
+
+An SSR-enabled component can acquire its own data on the server by adding an
+adjacent `<entry>.ssr.ts` (or `.js`) module next to the component. It is
+compiled only into the server output, so server-only dependencies never enter
+the browser bundle, and values it sets are serialized for the client to adopt.
+
+See the
+[`SsrPrepare` signature](/packages/build/#server-preparation) and
+[what makes a component asynchronous](/server-rendering/#what-makes-a-component-asynchronous).
+
+## Element types & manifest
+
+Every build describes the elements your package declares, in two forms:
+
+- `custom-elements.json` — a
+  [custom elements manifest](https://github.com/webcomponents/custom-elements-manifest)
+  (schema 2.1.0). Editors read it for HTML completions, and the wider custom
+  elements tooling ecosystem consumes it. It reaches consumers only if
+  `package.json` declares it — see
+  [Ship the manifest](/publishing/#ship-the-manifest).
+- TypeScript declarations at the path the entry's `types` condition points at.
+  Direct `.svelte` entries receive a complete declaration for their custom
+  element constructor as well as their tag, props and events.
+
+Nothing extra is needed for the TypeScript half:
+
+```ts
+// defines <simple-component> and types it
+import "my-components";
+
+const el = document.querySelector("simple-component");
+el?.count; // number | undefined
+```
+
+What ends up in both is decided by what you wrote in the component:
+props become attributes, `$host()` events become a typed event map, `<slot>`
+elements and consumed CSS custom properties become documented members. See
+[Authoring components](/authoring/) for each of them, and
+[typing elements in React & Vue](/guides/framework-types/) for the four
+exported types and how to register them with a host framework.
+
+### Static tags only
+
+Both forms are produced by reading your `.svelte` sources at build time, so an
+element is only describable when its tag is a literal in `<svelte:options>` and
+the component is a direct entry.
+
+Two consequences:
+
+- A dynamically interpolated tag, or the bare `customElement` boolean
+  shorthand, cannot be read. auto-options warns and leaves `<svelte:options>`
+  untouched, which also means no inferred props and no hydration wrapper.
+- A component reached only through a script entry is not described. If
+  `src/index.ts` imports `Button.svelte` and re-exports it, the build treats
+  `src/index.ts` as an ordinary module: no manifest declaration, no element
+  types. Make the component the entry instead.
+
+A tag that is not knowable at build time cannot be typed, cannot be put in
+`HTMLElementTagNameMap`, and cannot be self-registered by the SSR renderer.
+
+## Beyond the inference rules
+
+When export inference cannot express your layout, a
+[`svebcomponents.config.ts`](/guides/manual-configuration/) file replaces it
+and exposes every build option directly.
+
+For installation, the generated outputs and the full pipeline, see the
+[`@svebcomponents/build` reference](/packages/build/).

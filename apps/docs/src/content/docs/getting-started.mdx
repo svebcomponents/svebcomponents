@@ -1,9 +1,20 @@
 ---
 title: Getting Started
-description: Start from the Svebcomponents template and build your first Svelte custom element package.
+description: Start from the svebcomponents template and build your first Svelte custom element package.
 ---
 
-The recommended starting point is the official [template repo](https://github.com/svebcomponents/template):
+import { Tabs, TabItem, FileTree } from "@astrojs/starlight/components";
+
+You need Node 20.19 or later. The examples use pnpm; npm and yarn work the
+same way.
+
+## Scaffold the project
+
+The recommended starting point is the official
+[template repo](https://github.com/svebcomponents/template):
+
+<Tabs syncKey="pkg">
+  <TabItem label="pnpm">
 
 ```bash
 pnpm dlx degit svebcomponents/template my-project
@@ -12,19 +23,48 @@ pnpm install
 pnpm dev
 ```
 
-The template gives you a small pnpm workspace:
+  </TabItem>
+  <TabItem label="npm">
 
-- `components/example-component`: a Svelte custom element package
-- `apps/svelte-kit`: a SvelteKit app that consumes the custom element
-- `configs/*`: shared linting, formatting, and TypeScript config packages
+```bash
+npx degit svebcomponents/template my-project
+cd my-project
+npm install
+npm run dev
+```
 
-## Example Component
+  </TabItem>
+  <TabItem label="yarn">
 
-Take a look at the example component in
-`components/example-component/src/ExampleComponent.svelte`:
+```bash
+yarn dlx degit svebcomponents/template my-project
+cd my-project
+yarn install
+yarn dev
+```
 
-```svelte
-<svelte:options customElement="example-component" />
+  </TabItem>
+</Tabs>
+
+`dev` starts the SvelteKit app that consumes the component, on
+`localhost:5173`.
+
+The template is a small pnpm workspace:
+
+- `components/*` — a Svelte custom element package
+- `apps/svelte-kit` — a SvelteKit app that consumes the custom element
+- `configs/*` — shared linting, formatting, and TypeScript config
+
+The rest of this page walks through what that component package contains, so
+you can also build one from scratch in an existing repo.
+
+## Write the component
+
+A svebcomponent is a Svelte component that declares its own tag. This is the
+whole of `src/FavoriteNumber.svelte`:
+
+```svelte title="src/FavoriteNumber.svelte"
+<svelte:options customElement="favorite-number" />
 
 <script lang="ts">
   let {
@@ -41,87 +81,139 @@ Take a look at the example component in
 </button>
 ```
 
-If you know Svelte 5, there is nothing unfamiliar here. It is a regular Svelte component with typed props & the svelte:options tag for creating a custom element.
+If you know Svelte 5 there is nothing unfamiliar here: typed props, and
+`<svelte:options>` to declare the custom element tag.
+
+The one line that matters is the type annotation:
 
 ```ts
 increments: number;
 ```
 
-The type annotation is enough information for `@svebcomponents/auto-options`
-to generate the prop metadata Svelte needs to convert the `increments`
-attribute from a string to a number.
+That is enough for
+[auto-options](/guides/attribute-inference/) to generate the prop metadata
+Svelte needs to convert the `increments` attribute from a string to a number.
+Without it you would write the `customElement={{ props: … }}` object yourself.
 
-## Component Entrypoint
+## Declare the exports
 
-The output basename in `package.json` identifies the same-basename Svelte
-component. Declaring the tag in `<svelte:options>` registers the custom element.
-`@svebcomponents/build` guards that registration, so importing the component
-is safe even if it (or a bundle containing it) is evaluated more than once.
+The `exports` field of the component's `package.json` tells consumers where the
+custom element lives — and doubles as the build configuration:
 
-:::note
-The tag must be a literal. Svebcomponents reads it from your source to generate
-the manifest, the element types and the SSR renderer's self-registration — see
-[Static tags only](/core-concepts/build/#static-tags-only).
-:::
-
-## Package Exports
-
-The `exports` field of your component's `package.json` tells consumers where the custom element lives:
-
-```json
+```json title="package.json"
 {
   "exports": {
     ".": {
-      "types": "./dist/client/ExampleComponent.d.ts",
-      "svelte": "./dist/client-svelte/ExampleComponent.js",
-      "default": "./dist/client/ExampleComponent.js"
+      "types": "./dist/client/FavoriteNumber.d.ts",
+      "svelte": "./dist/client-svelte/FavoriteNumber.js",
+      "default": "./dist/client/FavoriteNumber.js"
     }
   }
 }
 ```
 
-This declaration also doubles as build configuration. The `svebcomponents`
-CLI maps `dist/client/ExampleComponent.js` back to
-`src/ExampleComponent.svelte` and builds that
-entrypoint. It also creates a lighter Svelte-aware build at
-`dist/client-svelte/ExampleComponent.js`, which Svelte tooling can select through the
-`svelte` condition.
+The `svebcomponents` command maps `dist/client/FavoriteNumber.js` back to the
+same-basename `src/FavoriteNumber.svelte` and builds that entrypoint. The
+`svelte` condition asks for a second, lighter build that Svelte tooling can
+select to share the host application's Svelte runtime.
 
-From the component package, run:
+The component file _is_ the entrypoint. Do not add an `index.ts` that
+re-exports it: the build would treat that as an ordinary module and skip the
+custom-element pipeline entirely.
 
-```bash
+## Build it
+
+`@svebcomponents/build` installs a command called `svebcomponents`, and the
+package's `build` script runs it:
+
+```json title="package.json"
+{
+  "scripts": {
+    "build": "svebcomponents"
+  }
+}
+```
+
+So from the component package:
+
+<Tabs syncKey="pkg">
+  <TabItem label="pnpm">
+
+```bash frame="terminal"
 pnpm build
 ```
 
-See [Build](/core-concepts/build/) for the complete inference rules, multiple
-entrypoints, and manual configuration.
+  </TabItem>
+  <TabItem label="npm">
 
-## Using the Component
+```bash frame="terminal"
+npm run build
+```
 
-You use the generated custom element just like any other web component:
+  </TabItem>
+  <TabItem label="yarn">
+
+```bash frame="terminal"
+yarn build
+```
+
+  </TabItem>
+</Tabs>
+
+<FileTree>
+
+- dist
+  - client
+    - **FavoriteNumber.js** standalone build, bundles Svelte
+    - FavoriteNumber.d.ts element, attribute and event types
+  - client-svelte
+    - FavoriteNumber.js shares the host's Svelte runtime
+- **custom-elements.json** manifest for editors and tooling
+
+</FileTree>
+
+The manifest only reaches consumers if `package.json` points at it, so declare
+it alongside the exports:
+
+```json title="package.json"
+{
+  "customElements": "custom-elements.json",
+  "files": ["dist", "custom-elements.json"]
+}
+```
+
+The build prints a hint if you forget. See
+[Publishing your package](/publishing/#ship-the-manifest).
+
+## Use it
+
+The generated custom element behaves like any other web component:
 
 ```svelte
 <script lang="ts">
-  import "@svebcomponents/example-component";
+  import "my-components";
 </script>
 
-<example-component increments={5}></example-component>
+<favorite-number increments={5}></favorite-number>
 ```
 
-:::caution
-Svelte 5 sets attributes as JavaScript properties under certain conditions.
-Therefore, you should use JavaScript expressions for non-string values when
-consuming custom elements from Svelte.
+The build also emitted TypeScript declarations for the element. If the package
+declares `svelte` as a dependency of its consumers, those are registered with
+Svelte's template types automatically, making unknown attributes and
+`increments={"nope"}` type errors — see
+[Publishing your package](/publishing/#declare-svelte-if-your-consumers-need-it).
 
-In the example above, `increments={5}` passes the number `5`, while writing
-`increments="5"` passes the string `"5"` from Svelte's JavaScript side. This
-bypasses the custom element attribute converter.
+:::caution[Pass non-string values as expressions]
+Svelte 5 sets attributes as JavaScript properties under certain conditions, so
+from a Svelte template use `increments={5}` rather than `increments="5"`. The
+first passes the number; the second passes the string `"5"` straight to the
+property, bypassing the custom element's attribute converter.
 
 See [sveltejs/svelte#12624](https://github.com/sveltejs/svelte/issues/12624).
 :::
 
-## What Next?
+## Next
 
-- Read [Build](/core-concepts/build/) to understand entrypoints and package export inference.
-- Read [Auto-options](/core-concepts/auto-options/) to understand prop and attribute conversion.
-- Read [SSR](/core-concepts/ssr/) when you want to explore server rendering.
+Read [Authoring components](/authoring/) to add events, slots and styling to
+your component. When you are ready to ship it, see
+[Publishing your package](/publishing/).

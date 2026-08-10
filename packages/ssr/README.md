@@ -4,14 +4,19 @@ Browsers know how to instantiate custom elements, but server renderers usually o
 
 The design is modeled after Lit's server-side rendering system: custom elements are rendered by `ElementRenderer` classes, and the server uses declarative shadow DOM to serialize the rendered shadow root.
 
-This package is currently in beta and ready for real-world evaluation and early
-production adoption. Its runtime API and generated output may still change
-before 1.0; breaking changes are documented in release notes and migration
-guides. Attribute values/names and tag names are validated and escaped through
-Svelte's own SSR serializer, and this is covered by XSS regression tests, but
-the package has not had an independent security audit. Shadow-root content
-rendered via `{@html}` relies on the renderer's escaping, so applications that
-handle untrusted content should assess that boundary carefully.
+This package is in beta: ready for real-world evaluation and early production
+adoption, with a runtime API and generated output that may still change before
+1.0. See [Current Limitations](#current-limitations) for the security posture.
+
+## Installation
+
+```bash
+pnpm add -D @svebcomponents/ssr
+```
+
+Component packages built with `@svebcomponents/build` get the SSR build helper
+already; install this directly in the host application that renders the
+elements.
 
 ## What It Provides
 
@@ -42,10 +47,12 @@ Expose it from your component package:
 {
   "exports": {
     ".": {
-      "import": "./dist/client/index.js"
+      "types": "./dist/client/index.d.ts",
+      "default": "./dist/client/index.js"
     },
     "./ssr": {
-      "import": "./dist/server/ssr.js"
+      "types": "./dist/server/ssr.d.ts",
+      "default": "./dist/server/ssr.js"
     }
   }
 }
@@ -59,7 +66,7 @@ runs after host attributes and properties have been applied but before the
 component renders. Values written with `setProperty` are serialized into
 hydratable output for reuse in the browser. Returning a promise puts the
 component on the async path — see
-[What makes a component asynchronous](https://svebcomponents.dev/core-concepts/ssr/#what-makes-a-component-asynchronous).
+[What makes a component asynchronous](https://svebcomponents.dev/server-rendering/#what-makes-a-component-asynchronous).
 
 If the package's Svelte config enables Svelte async rendering, the generated
 `./ssr` renderer can yield async Lit `RenderResult` chunks. Async-capable host
@@ -132,6 +139,16 @@ export default defineConfig({
 The async wrapper can consume both sync and async renderers. The sync wrapper
 can only consume renderers whose shadow output is fully synchronous.
 
+A host that is **not** a Svelte app has no such compilation, so it must flip
+Svelte's async SSR flag itself, once, on the server:
+
+```ts
+import "@svebcomponents/ssr/enable-async";
+```
+
+Without it, `render()` runs synchronously even when awaited and an async
+component throws `await_invalid`.
+
 The app can then render Svelte markup containing the custom element:
 
 ```svelte
@@ -156,7 +173,7 @@ You can register by tag name or by constructor. Lookups walk the element prototy
 
 Any renderer conforming to Lit's `ElementRenderer` contract can be registered — the host integrations drive renderers exclusively through that contract, reading host attributes from `renderer.element.attributes` the same way `@lit-labs/ssr-react` does. A renderer that emulates its element rather than instantiating one simply contributes no host attributes, matching Lit's own behavior.
 
-The reverse direction holds too: the renderers this package generates implement Lit's static `matchesClass` hook, so they can be passed straight to `@lit-labs/ssr`'s `render()` in `elementRenderers`, with no adapter. That is covered by `e2e/lit-ssr`.
+The reverse direction holds too: the renderers this package generates implement Lit's static `matchesClass` hook, so they can be passed straight to `@lit-labs/ssr`'s `render()` in `elementRenderers`, with no adapter.
 
 Renderers receive a fully-formed Lit `RenderInfo`, so a renderer whose shadow content is itself a template — `LitElementRenderer` calls `renderValue(value, renderInfo)` — works unchanged, and custom elements nested inside that content are resolved through the same registry.
 

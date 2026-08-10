@@ -691,7 +691,7 @@ export const warnAboutExposure = async (cwd: string): Promise<void> => {
       `[svebcomponents]: ${MANIFEST_FILE_NAME} is not exposed to consumers.`,
       "Consider adding to package.json:",
       ...missing,
-      "See https://svebcomponents.dev/core-concepts/build/#element-types--manifest",
+      "See https://svebcomponents.dev/guides/build/#element-types--manifest",
     ].join("\n"),
   );
 };

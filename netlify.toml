@@ -1,3 +1,42 @@
 [build]
 command = "pnpm --filter @svebcomponents/docs build"
 publish = "apps/docs/dist"
+
+# Pre-1.0 URL moves. `@svebcomponents/build` 0.3.7 and `@svebcomponents/ssr`
+# 0.4.0 print /core-concepts/* links in their CLI output, so those keep
+# resolving for anyone on a released version.
+[[redirects]]
+from = "/migration/*"
+to = "/changelog/:splat"
+status = 301
+force = true
+
+[[redirects]]
+from = "/core-concepts/ssr/framework-integrations"
+to = "/server-rendering/other-frameworks"
+status = 301
+force = true
+
+[[redirects]]
+from = "/core-concepts/ssr"
+to = "/server-rendering"
+status = 301
+force = true
+
+[[redirects]]
+from = "/core-concepts/hydration"
+to = "/server-rendering/hydration"
+status = 301
+force = true
+
+[[redirects]]
+from = "/core-concepts/build"
+to = "/guides/build"
+status = 301
+force = true
+
+[[redirects]]
+from = "/core-concepts/auto-options"
+to = "/guides/attribute-inference"
+status = 301
+force = true
