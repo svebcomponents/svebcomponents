@@ -47,6 +47,21 @@ export interface DefineConfigOptions {
    * (e.g. "button-ssr") so the generated entries do not overwrite each other.
    */
   ssrEntryFileName?: string;
+  /**
+   * Dependency patterns the browser output should leave external.
+   *
+   * The browser builds inline every bare specifier by default, because that
+   * output is loaded without a module resolver. Use this for the rare
+   * dependency a package genuinely wants the host to provide — another custom
+   * element package it should not duplicate, say.
+   *
+   * Server output is unaffected: it keeps normal externalization, since Node
+   * resolves declared dependencies at runtime.
+   *
+   * Inferred builds read this from the `svebcomponents.neverBundle` field of
+   * `package.json`.
+   */
+  neverBundle?: (string | RegExp)[];
   svelteConfig?: SvelteBuildConfig | undefined;
 }
 
@@ -87,6 +102,7 @@ export const defineConfig = (
   const {
     ssr = true,
     entry = "src/ExampleComponent.svelte",
+    neverBundle = [],
     svelteConfig,
   } = options;
   const outDir = options.outDir ?? "dist/client";
@@ -108,6 +124,7 @@ export const defineConfig = (
       outDir,
       hydratable,
       installsSsrShimGuard: ssr,
+      neverBundle,
       svelteConfig,
     }),
   ];
@@ -120,6 +137,7 @@ export const defineConfig = (
         externalSvelte: true,
         hydratable,
         installsSsrShimGuard: ssr,
+        neverBundle,
         svelteConfig,
       }),
     );

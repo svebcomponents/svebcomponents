@@ -1,9 +1,16 @@
 import type { UserConfig } from "tsdown";
 
+import { createBrowserBundlingRule } from "./browserDeps.js";
+
 interface ModuleConfigOptions {
   entry: string;
   outDir: string;
   externalSvelte?: boolean;
+  /**
+   * Dependency patterns to leave external. See
+   * `DefineConfigOptions["neverBundle"]`.
+   */
+  neverBundle?: (string | RegExp)[];
 }
 
 /** Build an ordinary JavaScript/TypeScript package export. */
@@ -11,6 +18,7 @@ export const createModuleConfig = ({
   entry,
   outDir,
   externalSvelte = false,
+  neverBundle = [],
 }: ModuleConfigOptions): UserConfig => ({
   entry,
   outDir,
@@ -36,5 +44,12 @@ export const createModuleConfig = ({
       inlineConst: { mode: "smart", pass: 3 },
     },
   },
-  ...(externalSvelte ? { deps: { neverBundle: [/^svelte(\/.*)?$/] } } : {}),
+  // These sit in the browser output directory beside the components and are
+  // subject to the same contract: no resolver at load time.
+  deps: {
+    ...(externalSvelte ? { neverBundle: [/^svelte(\/.*)?$/] } : {}),
+    alwaysBundle: createBrowserBundlingRule(
+      externalSvelte ? [/^svelte(\/.*)?$/, ...neverBundle] : neverBundle,
+    ),
+  },
 });

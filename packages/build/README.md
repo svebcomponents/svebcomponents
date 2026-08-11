@@ -12,10 +12,16 @@ This package wraps `tsdown` with the defaults svebcomponents needs:
 ## Installation
 
 ```bash
-pnpm add -D @svebcomponents/build
+pnpm add -D @svebcomponents/build tsdown
 ```
 
-Installing it puts a `svebcomponents` executable on your `PATH`. Wire it to a
+`tsdown` is a peer dependency. Install it explicitly and pin it: package
+managers that auto-install peers otherwise resolve the bottom of the supported
+range, and an older tsdown silently ignores the bundling rules this package
+relies on.
+
+Installing `@svebcomponents/build` puts a `svebcomponents` executable on your
+`PATH`. Wire it to a
 build script:
 
 ```json
@@ -104,6 +110,52 @@ output. Properties set by the hook participate in rich-property serialization,
 so hydratable components receive the prepared value without repeating the work
 in the browser. Return synchronously when no preparation is needed to preserve
 the synchronous SSR path; a returned promise requires an async-capable host.
+
+## What Ends Up In The Browser Bundle
+
+`dist/client` is a final-form browser artifact: it is loaded from a URL, or from
+a bundle that has already resolved everything. There is no module resolver at
+that point, so the browser builds **inline every bare specifier**, regardless of
+whether `package.json` calls it a `dependency` or a `devDependency`.
+
+That classification answers a different question — what a consumer must install
+— and inferring bundling from it produced files no browser could load, silently.
+A specifier that is inlined but cannot be resolved now fails the build instead.
+
+Left external: Node builtins (a browser bundle importing `node:fs` is broken
+either way), relative and absolute paths, and protocol imports.
+
+You are therefore free to declare dependencies for what they actually mean. If
+your published element types name a type from another package, declare it and
+the browser bundle still carries the code:
+
+```json
+{
+  "dependencies": { "my-data-package": "^1.0.0" }
+}
+```
+
+The same goes for `svelte`. Declaring it is what registers your elements with
+Svelte's template types (see
+[Publishing your package](https://svebcomponents.dev/publishing/#declare-svelte-if-your-consumers-need-it)),
+and the standalone build still bundles the runtime it exists to carry.
+
+### Opting out
+
+For the rare dependency the host should provide — another custom element package
+you must not duplicate, say — list it:
+
+```json
+{
+  "svebcomponents": { "neverBundle": ["@acme/design-system"] }
+}
+```
+
+Entries are matched against the whole import specifier, so cover subpaths too if
+the package has them (`["@acme/design-system", "@acme/design-system/**"]`).
+
+Server output is unaffected by any of this: Node resolves declared dependencies
+at runtime, so it keeps ordinary externalization.
 
 ## Svelte Conditional Exports
 
@@ -218,6 +270,7 @@ those SSR renderers must use an async-capable host integration.
 | `ssrEntryFileName` | `"ssr"`                         | Basename of the generated renderer entry. Must be unique per component within one `ssrOutDir`.               |
 | `hydratable`       | `true`                          | Whether the compiled element hydrates server-rendered shadow DOM instead of re-rendering it. Requires `ssr`. |
 | `svelteConfig`     | loaded from the project         | Overrides the `preprocess`, `extensions` and `compilerOptions` picked up from `vite`/`svelte` config.        |
+| `neverBundle`      | `[]`                            | Dependency patterns the browser output should leave external instead of inlining.                            |
 
 ## Build Pipeline
 

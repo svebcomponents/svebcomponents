@@ -68,6 +68,13 @@ This is gated rather than unconditional because the augmentation imports from
 consumed by an application with no `svelte` installed, and for them that import
 fails to resolve under `skipLibCheck: false`.
 
+Declaring it costs you nothing in the bundle — the browser output
+[inlines every bare specifier](/guides/build/#what-ends-up-in-the-browser-bundle),
+so `dist/client` still carries the Svelte runtime. What it does mean is that
+your consumers must install Svelte, so leave it undeclared if you want the
+package usable from a plain HTML page or a non-Svelte app, and write the
+augmentation in the consuming application instead.
+
 React and Vue consumers write one augmentation themselves — see
 [typing elements in React & Vue](/guides/framework-types/).
 

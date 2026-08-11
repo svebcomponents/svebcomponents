@@ -168,6 +168,20 @@ const manualMultipleComponentsConfig = [
  * `JSON.stringify` drops the plugin objects (their hooks are functions), so
  * plugin pipelines have to be asserted explicitly via their names.
  */
+const expectSameModuleConfig = (
+  actual: UserConfig | undefined,
+  expected: UserConfig,
+) => {
+  // `deps.alwaysBundle` is a freshly built closure on both sides, so compare
+  // the serializable shape (JSON drops functions) and the rule's behaviour.
+  expect(JSON.stringify(actual)).toEqual(JSON.stringify(expected));
+  const rule = (actual?.deps as { alwaysBundle?: unknown } | undefined)
+    ?.alwaysBundle as ((id: string) => boolean) | undefined;
+  expect(typeof rule).toBe("function");
+  expect(rule!("some-package")).toBe(true);
+  expect(rule!("node:fs")).toBe(false);
+};
+
 const pluginNames = (options: UserConfig): string[] => {
   const plugins = options.plugins;
   expect(Array.isArray(plugins)).toBe(true);
@@ -258,13 +272,15 @@ describe("infer components", () => {
     const inferred = inferComponents(mixedPackageJson);
     expect(inferred).toHaveLength(3);
     expect(pluginNames(inferred[0]!)).toEqual(clientPipeline);
-    expect(inferred[1]).toEqual(
+    expectSameModuleConfig(
+      inferred[1],
       createModuleConfig({
         entry: "src/helpers.ts",
         outDir: "dist/client",
       }),
     );
-    expect(inferred[2]).toEqual(
+    expectSameModuleConfig(
+      inferred[2],
       createModuleConfig({
         entry: "src/helpers.ts",
         outDir: "dist/client-svelte",
@@ -276,7 +292,8 @@ describe("infer components", () => {
   it("classifies a same-basename JavaScript source as an ordinary module", () => {
     mockSources("./src/index.js");
     const [config] = inferComponents(packageJson);
-    expect(config).toEqual(
+    expectSameModuleConfig(
+      config,
       createModuleConfig({ entry: "src/index.js", outDir: "dist/client" }),
     );
     expect(config?.dts).toBe(false);
@@ -295,9 +312,12 @@ describe("infer components", () => {
   });
   it("does not treat a paired SSR export as component configuration for an ordinary module", () => {
     mockSources("./src/index.ts");
-    expect(inferComponents(ssrPackageJson)).toEqual([
+    const inferred = inferComponents(ssrPackageJson);
+    expect(inferred).toHaveLength(1);
+    expectSameModuleConfig(
+      inferred[0],
       createModuleConfig({ entry: "src/index.ts", outDir: "dist/client" }),
-    ]);
+    );
   });
   it("generates the SSR entry filename from the declared ssr export", async () => {
     mockComponentEntriesOnly();
@@ -325,6 +345,48 @@ describe("infer components", () => {
     const inferredComponents = inferComponents({ exports: {} });
     expect(inferredComponents).toStrictEqual([]);
   });
+  it("reads svebcomponents.neverBundle from package.json into the browser builds", () => {
+    mockComponentEntriesOnly();
+    const inferred = inferComponents({
+      ...svelteConditionPackageJson,
+      svebcomponents: { neverBundle: ["host-provided"] },
+    });
+
+    const browserBuilds = inferred.filter((config) =>
+      String(config.outDir).startsWith("dist/client"),
+    );
+    expect(browserBuilds.length).toBeGreaterThan(0);
+    for (const build of browserBuilds) {
+      const rule = (build.deps as { alwaysBundle?: unknown } | undefined)
+        ?.alwaysBundle as (id: string) => boolean;
+      expect(rule("host-provided")).toBe(false);
+      expect(rule("everything-else")).toBe(true);
+    }
+  });
+
+  it("ignores a malformed svebcomponents.neverBundle rather than failing the build", () => {
+    mockComponentEntriesOnly();
+    for (const svebcomponents of [
+      null,
+      "host-provided",
+      { neverBundle: "host-provided" },
+      { neverBundle: [1, "host-provided"] },
+    ]) {
+      const inferred = inferComponents({
+        ...svelteConditionPackageJson,
+        svebcomponents,
+      });
+      const client = inferred.find((config) => config.outDir === "dist/client");
+      const rule = (client?.deps as { alwaysBundle?: unknown } | undefined)
+        ?.alwaysBundle as (id: string) => boolean;
+      // only the well-formed string entry is honoured; the rest are ignored
+      const optedOut = Array.isArray(
+        (svebcomponents as { neverBundle?: unknown })?.neverBundle,
+      );
+      expect(rule("host-provided")).toBe(!optedOut);
+    }
+  });
+
   it("emits posix (forward slash) paths for outDir and entry", () => {
     // `exports` paths are always posix and the inferred values flow into
     // generated import specifiers, so they must never contain backslashes,

@@ -5,6 +5,8 @@ interface Props {
   title: string;
   count?: number;
   enabled?: boolean;
+  /** `kebabize(title)` from the declared `@svebcomponents/utils` dependency */
+  slug: string;
 }
 
 // Strongly coupled to the component implementation @index.svelte
@@ -28,13 +30,20 @@ const checkRenderResult = async (component: Element, props: Props) => {
   const enabled = shadowRoot.querySelector("#enabled");
   assert(enabled);
   expect(enabled.textContent).toBe(`Enabled: boolean-${props.enabled}`);
+
+  // rendered by code inlined from a declared dependency, so this fails at
+  // runtime if the bundle ever ships it as a bare specifier instead
+  const slug = shadowRoot.querySelector("#slug");
+  assert(slug);
+  expect(slug.textContent).toBe(props.slug);
 };
 
 test("web component renders correctly in the browser", async () => {
   const props = {
-    title: "Browser Test",
+    title: "BrowserTest",
     count: 42,
     enabled: true,
+    slug: "browser-test",
   };
   document.body.innerHTML = `<simple-component title="${props.title}" count="${props.count}" ${props.enabled ? "enabled" : ""}></simple-component>`;
 
@@ -47,9 +56,10 @@ test("web component renders correctly in the browser", async () => {
 
 test("web component updates on attribute change", async () => {
   const props = {
-    title: "Browser Test",
+    title: "BrowserTest",
     count: 42,
     enabled: true,
+    slug: "browser-test",
   };
   document.body.innerHTML = `<simple-component title="${props.title}" count="${props.count}" ${props.enabled ? "enabled" : ""}></simple-component>`;
 
@@ -61,9 +71,10 @@ test("web component updates on attribute change", async () => {
 
   // Update the component's attributes
   const updatedProps = {
-    title: "Updated Title",
+    title: "UpdatedTitle",
     count: 100,
     enabled: false,
+    slug: "updated-title",
   };
   component.setAttribute("title", updatedProps.title);
   component.setAttribute("count", updatedProps.count.toString());
