@@ -149,6 +149,48 @@ the package has them (`["@acme/design-system", "@acme/design-system/**"]`).
 Server output is unaffected by any of this: Node resolves declared dependencies
 at runtime, so it keeps ordinary externalization.
 
+## Svelte Template Types
+
+Every build writes the `svelte/elements` augmentation that teaches Svelte
+templates about your elements — unknown attributes and `increments={"nope"}`
+become errors — to a file beside the entry's declarations:
+
+```
+dist/client/ExampleComponent.svelte-types.d.ts
+```
+
+It lives in its own file because loading it requires svelte: it augments
+`svelte/elements`, and a consumer without svelte installed cannot resolve that.
+
+**If your package requires svelte of its consumers** (a `dependency`, or a
+`peerDependency` not marked optional) the entry's declarations reference it, and
+your Svelte consumers need no setup.
+
+**Otherwise** — including every package meant to work in non-Svelte
+applications — expose it so Svelte consumers can opt in. The build prints the
+wiring if you have not:
+
+```json
+{
+  "exports": {
+    "./svelte": { "types": "./dist/client/ExampleComponent.svelte-types.d.ts" }
+  }
+}
+```
+
+They then add one line, in a `.d.ts` so it never reaches runtime:
+
+```ts
+// app.d.ts
+import "my-components/svelte";
+```
+
+Wanting Svelte template types therefore never obliges you to declare svelte, and
+never obliges your consumers to install it.
+
+React and Vue consumers write their own augmentation from the exported types —
+see [typing elements in React & Vue](https://svebcomponents.dev/guides/framework-types/).
+
 ## Svelte Conditional Exports
 
 The `svelte` condition provides a lighter build for consumers that already use
