@@ -630,6 +630,9 @@ importers:
       rollup-plugin-svelte:
         specifier: 'catalog:'
         version: 7.2.3(rollup@4.62.2)(svelte@5.56.8(@typescript-eslint/types@8.65.0))
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.22.14(@volar/typescript@2.4.28)(publint@0.3.22)(typescript@5.9.3)
       unconfig:
         specifier: 'catalog:'
         version: 7.5.0
@@ -658,9 +661,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.8(@typescript-eslint/types@8.65.0)
-      tsdown:
-        specifier: 'catalog:'
-        version: 0.22.14(@volar/typescript@2.4.28)(publint@0.3.22)(typescript@5.9.3)
       typescript:
         specifier: 'catalog:'
         version: 5.9.3

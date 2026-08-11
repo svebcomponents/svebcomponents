@@ -50,20 +50,17 @@
     "publint": "catalog:",
     "rolldown": "catalog:",
     "svelte": "catalog:",
-    "tsdown": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
   },
-  "peerDependencies": {
-    "tsdown": ">=0.22.0"
-  },
   "dependencies": {
-    "@sveltejs/load-config": "catalog:",
     "@svebcomponents/auto-options": "workspace:*",
     "@svebcomponents/ssr": "workspace:*",
+    "@sveltejs/load-config": "catalog:",
     "magic-string": "catalog:",
     "rollup-plugin-svelte": "catalog:",
+    "tsdown": "catalog:",
     "unconfig": "catalog:"
   },
   "publishConfig": {

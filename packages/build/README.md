@@ -12,16 +12,10 @@ This package wraps `tsdown` with the defaults svebcomponents needs:
 ## Installation
 
 ```bash
-pnpm add -D @svebcomponents/build tsdown
+pnpm add -D @svebcomponents/build
 ```
 
-`tsdown` is a peer dependency. Install it explicitly and pin it: package
-managers that auto-install peers otherwise resolve the bottom of the supported
-range, and an older tsdown silently ignores the bundling rules this package
-relies on.
-
-Installing `@svebcomponents/build` puts a `svebcomponents` executable on your
-`PATH`. Wire it to a
+Installing it puts a `svebcomponents` executable on your `PATH`. Wire it to a
 build script:
 
 ```json
@@ -135,10 +129,8 @@ the browser bundle still carries the code:
 }
 ```
 
-The same goes for `svelte`. Declaring it is what registers your elements with
-Svelte's template types (see
-[Publishing your package](https://svebcomponents.dev/publishing/#declare-svelte-if-your-consumers-need-it)),
-and the standalone build still bundles the runtime it exists to carry.
+The same goes for `svelte`: declaring it never costs you the runtime the
+standalone build exists to carry.
 
 ### Opting out
 
