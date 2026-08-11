@@ -17,6 +17,27 @@ type SourceEntry = {
   kind: "component" | "module";
 };
 
+/**
+ * Dependencies the package wants its browser output to leave external,
+ * declared as `{ "svebcomponents": { "neverBundle": ["some-package"] } }`.
+ *
+ * The browser builds inline every bare specifier, since that output is loaded
+ * without a module resolver. This is the opt-out for the rare dependency a
+ * package genuinely wants the host to provide.
+ *
+ * Malformed values are ignored rather than failing the build: a typo in
+ * `package.json` should not stop a component compiling.
+ */
+const readNeverBundle = (packageJson: object): string[] => {
+  const config = (packageJson as { svebcomponents?: unknown }).svebcomponents;
+  if (typeof config !== "object" || config === null) return [];
+  const patterns = (config as { neverBundle?: unknown }).neverBundle;
+  if (!Array.isArray(patterns)) return [];
+  return patterns.filter(
+    (pattern): pattern is string => typeof pattern === "string",
+  );
+};
+
 const resolveSourceEntry = (entryPath: string): SourceEntry => {
   // `entryPath` originates from package.json `exports`, which are always posix
   // ("./dist/client/index.js"). We therefore treat every path here as posix.
@@ -63,6 +84,7 @@ export const inferComponents = (
     return [];
   }
   const exports = packageJson.exports as Record<string, ExportValue>;
+  const neverBundle = readNeverBundle(packageJson);
   return Object.entries(packageJson.exports).flatMap(([key, value]) => {
     if (typeof value !== "object" || value === null) return [];
     const esmPath = value["default"] ?? value["import"];
@@ -80,13 +102,14 @@ export const inferComponents = (
 
     if (source.kind === "module") {
       return [
-        createModuleConfig({ entry, outDir }),
+        createModuleConfig({ entry, outDir, neverBundle }),
         ...(typeof sveltePath === "string"
           ? [
               createModuleConfig({
                 entry,
                 outDir: path.posix.normalize(path.posix.dirname(sveltePath)),
                 externalSvelte: true,
+                neverBundle,
               }),
             ]
           : []),
@@ -96,6 +119,7 @@ export const inferComponents = (
     const config: DefineConfigOptions = {
       entry,
       outDir,
+      neverBundle,
       svelteConfig,
     };
     if (typeof sveltePath === "string") {

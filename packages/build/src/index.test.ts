@@ -13,6 +13,17 @@ import fs from "node:fs";
 vi.mock("node:fs");
 const mockExistsSync = fs.existsSync as MockedFunction<typeof fs.existsSync>;
 
+/** Whether a build inlines the given specifier rather than externalizing it. */
+const inlines = (
+  config: UserConfig | undefined,
+  specifier: string,
+): boolean => {
+  const rule = (config?.deps as { alwaysBundle?: unknown } | undefined)
+    ?.alwaysBundle;
+  expect(typeof rule).toBe("function");
+  return (rule as (id: string) => boolean)(specifier);
+};
+
 describe("defineConfig", () => {
   beforeEach(() => {
     mockExistsSync.mockReset();
@@ -89,7 +100,7 @@ describe("defineConfig", () => {
     expect(config[1]).toHaveProperty("outDir", "dist/server");
   });
 
-  test("bundles both ssr hydration imports into the client build when hydratable", () => {
+  test("inlines both ssr hydration imports into the client build", () => {
     // The HydrationHost otherwise stays external and resolves to raw .svelte
     // at runtime, forcing every consuming app to add the component to
     // ssr.noExternal; `hydratable` otherwise leaks out as a bare specifier a
@@ -97,21 +108,48 @@ describe("defineConfig", () => {
     // @svebcomponents/ssr as the optional peer dependency it is meant to be
     // gets peer dependencies externalized by default.
     const config = defineConfig({ hydratable: true });
-    const [alwaysBundle] = config[0]?.deps?.alwaysBundle as [RegExp];
 
     expect(config[0]).toHaveProperty("outDir", "dist/client");
     for (const injected of [
       "@svebcomponents/ssr/hydration",
       "@svebcomponents/ssr/hydration-host",
     ]) {
-      expect(alwaysBundle.test(injected)).toBe(true);
+      expect(inlines(config[0], injected)).toBe(true);
     }
   });
 
-  test("does not force-bundle the hydration imports for a non-hydratable client build", () => {
-    const config = defineConfig({ hydratable: false });
+  test("inlines every bare specifier in both browser builds", () => {
+    // the browser output is loaded without a module resolver, so what
+    // package.json classifies as a dependency has no bearing on what belongs
+    // in the file
+    const config = defineConfig({ svelteOutDir: "dist/client-svelte" });
 
-    expect(config[0]).not.toHaveProperty("deps.alwaysBundle");
+    for (const browserBuild of [config[0], config[1]]) {
+      expect(inlines(browserBuild, "some-declared-dependency")).toBe(true);
+      expect(inlines(browserBuild, "@scope/pkg/deep/path")).toBe(true);
+      expect(inlines(browserBuild, "node:fs")).toBe(false);
+    }
+  });
+
+  test("inlines svelte into the standalone build but not the Svelte-aware one", () => {
+    const config = defineConfig({ svelteOutDir: "dist/client-svelte" });
+
+    expect(inlines(config[0], "svelte")).toBe(true);
+    expect(inlines(config[0], "svelte/internal/client")).toBe(true);
+    expect(inlines(config[1], "svelte")).toBe(false);
+    expect(config[1]).toHaveProperty("deps.neverBundle", [/^svelte(\/.*)?$/]);
+  });
+
+  test("honours a neverBundle opt-out in both browser builds", () => {
+    const config = defineConfig({
+      svelteOutDir: "dist/client-svelte",
+      neverBundle: ["host-provided"],
+    });
+
+    for (const browserBuild of [config[0], config[1]]) {
+      expect(inlines(browserBuild, "host-provided")).toBe(false);
+      expect(inlines(browserBuild, "everything-else")).toBe(true);
+    }
   });
 
   test("returns all configs by default (ssr and hydratable default to true)", () => {

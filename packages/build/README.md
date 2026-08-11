@@ -105,6 +105,92 @@ so hydratable components receive the prepared value without repeating the work
 in the browser. Return synchronously when no preparation is needed to preserve
 the synchronous SSR path; a returned promise requires an async-capable host.
 
+## What Ends Up In The Browser Bundle
+
+`dist/client` is a final-form browser artifact: it is loaded from a URL, or from
+a bundle that has already resolved everything. There is no module resolver at
+that point, so the browser builds **inline every bare specifier**, regardless of
+whether `package.json` calls it a `dependency` or a `devDependency`.
+
+That classification answers a different question — what a consumer must install
+— and inferring bundling from it produced files no browser could load, silently.
+A specifier that is inlined but cannot be resolved now fails the build instead.
+
+Left external: Node builtins (a browser bundle importing `node:fs` is broken
+either way), relative and absolute paths, and protocol imports.
+
+You are therefore free to declare dependencies for what they actually mean. If
+your published element types name a type from another package, declare it and
+the browser bundle still carries the code:
+
+```json
+{
+  "dependencies": { "my-data-package": "^1.0.0" }
+}
+```
+
+The same goes for `svelte`: declaring it never costs you the runtime the
+standalone build exists to carry.
+
+### Opting out
+
+For the rare dependency the host should provide — another custom element package
+you must not duplicate, say — list it:
+
+```json
+{
+  "svebcomponents": { "neverBundle": ["@acme/design-system"] }
+}
+```
+
+Entries are matched against the whole import specifier, so cover subpaths too if
+the package has them (`["@acme/design-system", "@acme/design-system/**"]`).
+
+Server output is unaffected by any of this: Node resolves declared dependencies
+at runtime, so it keeps ordinary externalization.
+
+## Svelte Template Types
+
+Every build writes the `svelte/elements` augmentation that teaches Svelte
+templates about your elements — unknown attributes and `increments={"nope"}`
+become errors — to a file beside the entry's declarations:
+
+```
+dist/client/ExampleComponent.svelte-types.d.ts
+```
+
+It lives in its own file because loading it requires svelte: it augments
+`svelte/elements`, and a consumer without svelte installed cannot resolve that.
+
+**If your package requires svelte of its consumers** (a `dependency`, or a
+`peerDependency` not marked optional) the entry's declarations reference it, and
+your Svelte consumers need no setup.
+
+**Otherwise** — including every package meant to work in non-Svelte
+applications — expose it so Svelte consumers can opt in. The build prints the
+wiring if you have not:
+
+```json
+{
+  "exports": {
+    "./svelte": { "types": "./dist/client/ExampleComponent.svelte-types.d.ts" }
+  }
+}
+```
+
+They then add one line, in a `.d.ts` so it never reaches runtime:
+
+```ts
+// app.d.ts
+import "my-components/svelte";
+```
+
+Wanting Svelte template types therefore never obliges you to declare svelte, and
+never obliges your consumers to install it.
+
+React and Vue consumers write their own augmentation from the exported types —
+see [typing elements in React & Vue](https://svebcomponents.dev/guides/framework-types/).
+
 ## Svelte Conditional Exports
 
 The `svelte` condition provides a lighter build for consumers that already use
@@ -218,6 +304,7 @@ those SSR renderers must use an async-capable host integration.
 | `ssrEntryFileName` | `"ssr"`                         | Basename of the generated renderer entry. Must be unique per component within one `ssrOutDir`.               |
 | `hydratable`       | `true`                          | Whether the compiled element hydrates server-rendered shadow DOM instead of re-rendering it. Requires `ssr`. |
 | `svelteConfig`     | loaded from the project         | Overrides the `preprocess`, `extensions` and `compilerOptions` picked up from `vite`/`svelte` config.        |
+| `neverBundle`      | `[]`                            | Dependency patterns the browser output should leave external instead of inlining.                            |
 
 ## Build Pipeline
 

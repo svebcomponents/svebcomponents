@@ -10,6 +10,7 @@ import {
   findComponentSources,
 } from "./manifest.js";
 import {
+  emitElementTypes,
   renderComponentDefaultExport,
   renderCoreDeclarations,
   renderSvelteAugmentation,
@@ -616,7 +617,22 @@ describe("requiresSvelte", () => {
 
 describe("renderSvelteAugmentation", () => {
   const render = async () =>
-    renderSvelteAugmentation(await analyzeWorkspace(), workspace, workspace);
+    renderSvelteAugmentation(
+      await analyzeWorkspace(),
+      workspace,
+      workspace,
+      "./elements.js",
+    );
+
+  it("imports the element interfaces from the sibling declaration", async () => {
+    // it is its own file now, so the types it augments with have to come from
+    // somewhere — this is what lets it be loaded without the main
+    // declarations pulling in `svelte/elements` for every consumer
+    await writeComponent("Element.svelte", BUTTON);
+    expect(await render()).toContain(
+      'import type { MyButtonElement } from "./elements.js";',
+    );
+  });
 
   it("composes HTMLAttributes so class and id keep working", async () => {
     await writeComponent("Element.svelte", BUTTON);
@@ -655,10 +671,23 @@ describe("renderSvelteAugmentation", () => {
       const file = path.join(scratch, "elements.ts");
       await fs.writeFile(
         file,
-        `${renderCoreDeclarations(components, scratch, workspace)}\n${renderSvelteAugmentation(components, scratch, workspace)}`,
+        renderCoreDeclarations(components, scratch, workspace),
         "utf8",
       );
-      const program = ts.createProgram([file], {
+      // the augmentation is a separate file that imports from the declarations
+      // beside it, so type-check it exactly as a consumer would load it
+      const svelteTypesFile = path.join(scratch, "elements.svelte-types.ts");
+      await fs.writeFile(
+        svelteTypesFile,
+        renderSvelteAugmentation(
+          components,
+          scratch,
+          workspace,
+          "./elements.js",
+        ),
+        "utf8",
+      );
+      const program = ts.createProgram([file, svelteTypesFile], {
         strict: true,
         noEmit: true,
         target: ts.ScriptTarget.ES2022,
@@ -679,4 +708,73 @@ describe("renderSvelteAugmentation", () => {
     },
     COMPILER_TIMEOUT_MS,
   );
+});
+
+describe("emitElementTypes: where the Svelte template types go", () => {
+  const setUp = async (packageJson: Record<string, unknown>) => {
+    await writeComponent("Element.svelte", BUTTON);
+    await fs.writeFile(
+      path.join(workspace, "package.json"),
+      JSON.stringify({
+        name: "fixture",
+        exports: {
+          ".": {
+            types: "./dist/client/Element.d.ts",
+            default: "./dist/client/Element.js",
+          },
+        },
+        ...packageJson,
+      }),
+      "utf8",
+    );
+    await emitElementTypes(workspace, [
+      { entry: "src/Element.svelte", outDir: "dist/client" },
+    ]);
+    return {
+      declaration: await fs.readFile(
+        path.join(workspace, "dist/client/Element.d.ts"),
+        "utf8",
+      ),
+      svelteTypes: await fs
+        .readFile(
+          path.join(workspace, "dist/client/Element.svelte-types.d.ts"),
+          "utf8",
+        )
+        .catch(() => undefined),
+    };
+  };
+
+  it("writes them to their own file even when the package does not require svelte", async () => {
+    // wanting Svelte template types must not force every consumer of the
+    // package to install svelte
+    const { declaration, svelteTypes } = await setUp({});
+
+    expect(svelteTypes).toContain('declare module "svelte/elements"');
+    expect(declaration).not.toContain("svelte-types");
+    expect(declaration).not.toContain("svelte/elements");
+  });
+
+  it("references them from the declarations when the package does require svelte", async () => {
+    const { declaration, svelteTypes } = await setUp({
+      peerDependencies: { svelte: "^5.0.0" },
+    });
+
+    expect(svelteTypes).toContain('declare module "svelte/elements"');
+    expect(declaration).toContain(
+      '/// <reference path="./Element.svelte-types.d.ts" />',
+    );
+  });
+
+  it("puts the reference before any declaration", async () => {
+    // TypeScript only honours a triple-slash directive that precedes every
+    // declaration in the file, and silently ignores one that follows them —
+    // so the types would exist, be referenced, and still do nothing
+    const { declaration } = await setUp({
+      peerDependencies: { svelte: "^5.0.0" },
+    });
+
+    expect(declaration.split("\n")[0]).toBe(
+      '/// <reference path="./Element.svelte-types.d.ts" />',
+    );
+  });
 });

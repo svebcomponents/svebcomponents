@@ -48,25 +48,48 @@ published files. The build prints a hint if you forget:
 }
 ```
 
-## Declare `svelte` if your consumers need it
+## Ship the Svelte template types
 
-If your package declares `svelte` as a required dependency of its consumers
-(a `dependency`, or a `peerDependency` not marked optional), svebcomponents
-registers your elements with Svelte's template types automatically, and your
-Svelte consumers need no setup at all:
+Every build writes the `svelte/elements` augmentation — the thing that makes
+unknown attributes and `increments={"nope"}` errors in a Svelte template — to a
+file beside the entry's declarations:
+
+```
+dist/client/FavoriteNumber.svelte-types.d.ts
+```
+
+It is a separate file because loading it requires svelte: it augments
+`svelte/elements`, which a consumer without svelte cannot resolve.
+
+Expose it, and Svelte consumers opt in with one line:
 
 ```json
 {
-  "peerDependencies": {
-    "svelte": "^5.0.0"
+  "exports": {
+    "./svelte": { "types": "./dist/client/FavoriteNumber.svelte-types.d.ts" }
   }
 }
 ```
 
-This is gated rather than unconditional because the augmentation imports from
-`svelte/elements`. A package whose standalone build bundles Svelte can be
-consumed by an application with no `svelte` installed, and for them that import
-fails to resolve under `skipLibCheck: false`.
+```ts
+// the consumer's app.d.ts — a .d.ts, so it never reaches runtime
+import "my-components/svelte";
+```
+
+The build prints this wiring if you have not added it.
+
+:::note[Packages that already require svelte]
+If your package declares `svelte` as a required dependency of its consumers (a
+`dependency`, or a `peerDependency` not marked optional), the entry's
+declarations reference the file for you and your Svelte consumers need no setup
+at all.
+
+Declare it only if you genuinely want every consumer to install Svelte. You do
+not need to for template types, and you never had to for the bundle — the
+browser output
+[inlines every bare specifier](/guides/build/#what-ends-up-in-the-browser-bundle)
+either way.
+:::
 
 React and Vue consumers write one augmentation themselves — see
 [typing elements in React & Vue](/guides/framework-types/).
@@ -137,6 +160,7 @@ entries do not overwrite each other.
   - client
     - **FavoriteNumber.js** standalone build, bundles Svelte
     - FavoriteNumber.d.ts element, attribute and event types
+    - FavoriteNumber.svelte-types.d.ts Svelte template types (`./svelte` export)
   - client-svelte
     - FavoriteNumber.js shares the host's Svelte runtime (`svelte` condition)
   - server

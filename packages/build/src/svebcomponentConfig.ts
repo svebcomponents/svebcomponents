@@ -2,6 +2,7 @@ import svelte from "rollup-plugin-svelte";
 import autoOptions from "@svebcomponents/auto-options";
 import { UserConfig } from "tsdown";
 
+import { createBrowserBundlingRule } from "./browserDeps.js";
 import { pluginDedupe } from "./pluginDedupe.js";
 import { pluginGuardCustomElementDefine } from "./pluginGuardCustomElementDefine.js";
 import {
@@ -38,6 +39,11 @@ interface SvebcomponentsOptions {
    * it.
    */
   installsSsrShimGuard?: boolean;
+  /**
+   * Dependency patterns to leave external. See
+   * `DefineConfigOptions["neverBundle"]`.
+   */
+  neverBundle?: (string | RegExp)[];
   svelteConfig?: SvelteBuildConfig | undefined;
 }
 
@@ -52,6 +58,7 @@ export const createTsdownConfig = (
     externalSvelte = false,
     hydratable = false,
     installsSsrShimGuard = false,
+    neverBundle = [],
     svelteConfig,
   } = options;
   return {
@@ -120,41 +127,26 @@ export const createTsdownConfig = (
           },
         }
       : {}),
-    ...(externalSvelte || hydratable
-      ? {
-          deps: {
-            ...(externalSvelte ? { neverBundle: [/^svelte(\/.*)?$/] } : {}),
-            ...(hydratable
-              ? {
-                  alwaysBundle: [/@svebcomponents\/ssr\/hydration/],
-                }
-              : {}),
-          },
-        }
-      : {}),
-    // A hydratable component's client build imports two things from
-    // `@svebcomponents/ssr` (see auto-options' injected imports): the
-    // `hydratable` wrapper from "@svebcomponents/ssr/hydration", and the
-    // HydrationHost from "@svebcomponents/ssr/hydration-host". Both must be
-    // bundled — the regex below is a substring test, so it covers both
-    // subpaths.
-    //
-    // The host ships as raw `.svelte`, so leaving it external forces the
-    // runtime import to resolve to an uncompiled `.svelte` — which a consuming
-    // app's SSR can only load if it adds every such component to
-    // `ssr.noExternal`. Bundling it here is safe: it is compiled by this same
-    // (component author's) toolchain, exactly like the server-side host (see
-    // `createHydrationHostTsdownConfig`), so hydration markers still match by
-    // construction and consumers need no `noExternal` entry.
-    //
-    // `hydration` is plain JS, but a component that declares
-    // `@svebcomponents/ssr` as the optional *peer* dependency it is meant to
-    // be gets it externalized by default — leaving a bare specifier in a
-    // bundle that is otherwise self-contained. That breaks the CDN drop-in
-    // outright (browsers cannot resolve bare specifiers without an import
-    // map), and resolving it via an import map would be worse still: the
-    // module imports `svelte`, so it would pull a *second* Svelte runtime in
-    // alongside the one already bundled here.
+    deps: {
+      // The Svelte-aware build is the one output that deliberately does not
+      // carry its dependencies: sharing the host application's Svelte runtime
+      // is its entire purpose.
+      ...(externalSvelte ? { neverBundle: [/^svelte(\/.*)?$/] } : {}),
+      alwaysBundle: createBrowserBundlingRule(
+        externalSvelte ? [/^svelte(\/.*)?$/, ...neverBundle] : neverBundle,
+      ),
+    },
+    // A hydratable component's client build imports the `hydratable` wrapper
+    // and the HydrationHost from `@svebcomponents/ssr` (see auto-options'
+    // injected imports). Both are inlined by the rule above, which matters for
+    // two separate reasons: the host ships as raw `.svelte`, so leaving it
+    // external would force every consuming app to add the component to
+    // `ssr.noExternal`; and a component declaring `@svebcomponents/ssr` as the
+    // optional peer dependency it is meant to be would otherwise leave a bare
+    // specifier in an otherwise self-contained bundle. Inlining is safe — it is
+    // compiled by this same toolchain, exactly like the server-side host (see
+    // `createHydrationHostTsdownConfig`), so hydration markers match by
+    // construction.
     plugins: [
       ...(externalSvelte ? [] : [pluginDedupe(["svelte", "esm-env"])]),
       autoOptions({ hydratable }),
