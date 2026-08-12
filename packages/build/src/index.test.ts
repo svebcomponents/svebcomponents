@@ -51,25 +51,6 @@ describe("defineConfig", () => {
     });
   });
 
-  test("returns Svelte-aware configs when Svelte output directories are provided", () => {
-    const config = defineConfig({
-      svelteOutDir: "dist/client-svelte",
-      ssrSvelteOutDir: "dist/server-svelte",
-    });
-
-    // client, client-svelte, ssr, ssr hydration host,
-    // ssr-svelte, ssr-svelte hydration host
-    expect(config).toHaveLength(6);
-    expect(config[1]).toHaveProperty("outDir", "dist/client-svelte");
-    expect(config[1]).toHaveProperty("deps.neverBundle", [/^svelte(\/.*)?$/]);
-    expect(config[4]).toHaveProperty("outDir", "dist/server-svelte");
-    expect(config[4]).toHaveProperty("deps.neverBundle", [/^svelte(\/.*)?$/]);
-    expect(config[5]).toHaveProperty("outDir", "dist/server-svelte");
-    expect(config[5]).toHaveProperty("entry", {
-      "ssr-hydration-host": expect.stringContaining("HydrationHost.svelte"),
-    });
-  });
-
   test("returns both client and ssr configs when ssr is true", () => {
     const config = defineConfig({ ssr: true });
 
@@ -118,38 +99,31 @@ describe("defineConfig", () => {
     }
   });
 
-  test("inlines every bare specifier in both browser builds", () => {
+  test("inlines every bare specifier in the browser build", () => {
     // the browser output is loaded without a module resolver, so what
     // package.json classifies as a dependency has no bearing on what belongs
     // in the file
-    const config = defineConfig({ svelteOutDir: "dist/client-svelte" });
+    const config = defineConfig();
 
-    for (const browserBuild of [config[0], config[1]]) {
-      expect(inlines(browserBuild, "some-declared-dependency")).toBe(true);
-      expect(inlines(browserBuild, "@scope/pkg/deep/path")).toBe(true);
-      expect(inlines(browserBuild, "node:fs")).toBe(false);
-    }
+    expect(inlines(config[0], "some-declared-dependency")).toBe(true);
+    expect(inlines(config[0], "@scope/pkg/deep/path")).toBe(true);
+    expect(inlines(config[0], "node:fs")).toBe(false);
   });
 
-  test("inlines svelte into the standalone build but not the Svelte-aware one", () => {
-    const config = defineConfig({ svelteOutDir: "dist/client-svelte" });
+  test("inlines Svelte into the standalone browser build", () => {
+    const config = defineConfig();
 
     expect(inlines(config[0], "svelte")).toBe(true);
     expect(inlines(config[0], "svelte/internal/client")).toBe(true);
-    expect(inlines(config[1], "svelte")).toBe(false);
-    expect(config[1]).toHaveProperty("deps.neverBundle", [/^svelte(\/.*)?$/]);
   });
 
-  test("honours a neverBundle opt-out in both browser builds", () => {
+  test("honours a neverBundle opt-out in the browser build", () => {
     const config = defineConfig({
-      svelteOutDir: "dist/client-svelte",
       neverBundle: ["host-provided"],
     });
 
-    for (const browserBuild of [config[0], config[1]]) {
-      expect(inlines(browserBuild, "host-provided")).toBe(false);
-      expect(inlines(browserBuild, "everything-else")).toBe(true);
-    }
+    expect(inlines(config[0], "host-provided")).toBe(false);
+    expect(inlines(config[0], "everything-else")).toBe(true);
   });
 
   test("returns all configs by default (ssr and hydratable default to true)", () => {
@@ -225,16 +199,14 @@ describe("defineConfig", () => {
     // `esm-env` otherwise resolves DEV to a runtime `process.env.NODE_ENV`
     // check, and every `if (DEV)` branch in Svelte's runtime — including the
     // full error and warning message texts — survives into the browser bundle
-    const config = defineConfig({ svelteOutDir: "dist/client-svelte" });
+    const config = defineConfig();
 
-    for (const clientConfig of [config[0], config[1]]) {
-      expect(clientConfig?.inputOptions).toMatchObject({
-        resolve: { conditionNames: ["production"] },
-        // without inlining, DEV lands as a module-level `var` the minifier
-        // will not fold, and the dead branches stay regardless
-        optimization: { inlineConst: { mode: "smart" } },
-      });
-    }
+    expect(config[0]?.inputOptions).toMatchObject({
+      resolve: { conditionNames: ["production"] },
+      // without inlining, DEV lands as a module-level `var` the minifier
+      // will not fold, and the dead branches stay regardless
+      optimization: { inlineConst: { mode: "smart" } },
+    });
   });
 
   test("returns valid tsdownOptions", () => {

@@ -27,12 +27,13 @@ basename back to one source file under `src/`.
   "exports": {
     ".": {
       "types": "./dist/client/ExampleComponent.d.ts",
-      "svelte": "./dist/client-svelte/ExampleComponent.js",
       "default": "./dist/client/ExampleComponent.js"
+    },
+    "./svelte": {
+      "types": "./dist/client/ExampleComponent.svelte-types.d.ts"
     },
     "./ssr": {
       "types": "./dist/server/ssr.d.ts",
-      "svelte": "./dist/server-svelte/ssr.js",
       "default": "./dist/server/ssr.js"
     }
   }
@@ -45,14 +46,16 @@ This export map uses `src/ExampleComponent.svelte`. Run:
 pnpm build
 ```
 
-| Export                              | Output                                                      |
-| ----------------------------------- | ----------------------------------------------------------- |
-| `default` under `dist/client`       | Standalone browser bundle with its Svelte runtime           |
-| `svelte` under `dist/client-svelte` | Browser build that imports the host app's Svelte runtime    |
-| Matching `./ssr` export             | Server renderer for the component                           |
-| `types`                             | Element, event, attribute, prop, handler, and tag-map types |
+| Export                        | Output                                                      |
+| ----------------------------- | ----------------------------------------------------------- |
+| `default` under `dist/client` | Standalone browser bundle with its Svelte runtime           |
+| Matching `./ssr` export       | Server renderer for the component                           |
+| `types`                       | Element, event, attribute, prop, handler, and tag-map types |
 
 svebcomponents also writes `custom-elements.json` and DOM type augmentations.
+The `./svelte` subpath is a type export. Svelte apps import it for template
+types. Browser consumers use the component's `default` entry; SSR integrations
+use the matching `/ssr` entry.
 See [Configure package outputs](https://svebcomponents.dev/publishing/).
 
 ### Entry mapping
@@ -69,12 +72,6 @@ gets a browser module build. Keep one matching source for each basename.
 
 For an export named `./color-picker`, add `./color-picker/ssr` to request its
 server build. An export named `.` pairs with `./ssr`.
-
-### Svelte conditional exports
-
-Add a `svelte` condition when consumers build with the same Svelte version as
-your package. That target leaves `svelte` and `svelte/*` imports external. The
-`default` target includes the runtime and works in hosts without Svelte.
 
 ### Browser dependencies
 
@@ -114,10 +111,8 @@ import { defineConfig } from "@svebcomponents/build";
 export default defineConfig({
   entry: "src/ExampleComponent.svelte",
   outDir: "dist/client",
-  svelteOutDir: "dist/client-svelte",
   ssr: true,
   ssrOutDir: "dist/server",
-  ssrSvelteOutDir: "dist/server-svelte",
 });
 ```
 
@@ -141,10 +136,8 @@ export default [
 | ------------------ | ----------------------------- | ------------------------------------------------------ |
 | `entry`            | `src/ExampleComponent.svelte` | Svelte component source                                |
 | `outDir`           | `dist/client`                 | Standalone browser output                              |
-| `svelteOutDir`     | none                          | Browser output that imports Svelte                     |
 | `ssr`              | `true`                        | Generate a server renderer                             |
 | `ssrOutDir`        | `dist/server`                 | Standalone server output                               |
-| `ssrSvelteOutDir`  | none                          | Server output that imports Svelte                      |
 | `ssrEntryFileName` | `ssr`                         | Generated renderer basename                            |
 | `hydratable`       | `true` when `ssr` is on       | Hydrate the server-rendered shadow root                |
 | `neverBundle`      | `[]`                          | Browser dependencies left external                     |
@@ -165,5 +158,3 @@ matrix, generated file tree, and compiler steps.
 - Each inferred basename must match one `.svelte`, `.ts`, or `.js` source.
 - A package with colliding renderer names must set `ssrEntryFileName` for each
   component.
-- The `svelte` condition requires compatible Svelte compiler and runtime
-  versions.

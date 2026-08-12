@@ -56,10 +56,10 @@ dist/
     └── FavoriteNumber.svelte-types.d.ts
 ```
 
-The `./svelte` export lets Svelte consumers opt into template types without
-installing Svelte in HTML, React, or Vue projects. Read
-[Consumer types](/guides/framework-types/) for the import and the React and Vue
-project declarations.
+The `./svelte` subpath is a type export. Svelte consumers import it to add
+template types. Browser consumers load the component's `default` entry; SSR
+integrations load `/ssr`. Read [Consumer types](/guides/framework-types/) for
+the import and the React and Vue project declarations.
 
 ## Add component entries
 
@@ -84,32 +84,6 @@ Give each public component a browser export. Match the output basename to one
 svebcomponents maps the second export to `src/ColorPicker.svelte`. Read
 [Build pipeline](/guides/build/#entry-discovery) for source mapping and module
 entries.
-
-## Share the host's Svelte runtime
-
-Add a `svelte` condition when Svelte hosts should reuse their installed
-runtime:
-
-```json
-{
-  "exports": {
-    ".": {
-      "types": "./dist/client/FavoriteNumber.d.ts",
-      "svelte": "./dist/client-svelte/FavoriteNumber.js",
-      "default": "./dist/client/FavoriteNumber.js"
-    }
-  }
-}
-```
-
-svebcomponents writes the extra build to `dist/client-svelte`. The host
-toolchain resolves that build's Svelte imports.
-
-:::caution[Match Svelte versions]
-Compiled components call private Svelte runtime APIs. Build the package and
-host application with the same Svelte version when you publish a `svelte`
-condition.
-:::
 
 ## Add server output
 

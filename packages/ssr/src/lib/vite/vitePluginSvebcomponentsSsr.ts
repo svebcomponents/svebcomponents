@@ -31,10 +31,8 @@ interface VitePluginSvebcomponentsSsrOptions {
   /**
    * Additional package names (or patterns) to add to Vite's
    * `ssr.noExternal`, alongside `@svebcomponents/ssr` itself (added
-   * automatically). Use this for your own custom-element package(s) when
-   * they ship a raw-`.svelte` export condition — e.g. an `externalSvelte`
-   * build sharing this app's Svelte runtime — which Node's SSR
-   * externalization can't load directly.
+   * automatically). Use this for dependencies that ship source Vite must
+   * process instead of loading through Node's SSR externalization.
    */
   noExternal?: (string | RegExp)[];
 }

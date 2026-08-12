@@ -5,6 +5,32 @@ description: Build and run your first component package.
 
 You need Node 20.19 or later.
 
+## Start from the template
+
+Clone the [starter template](https://github.com/svebcomponents/template) with
+its Git history:
+
+```bash
+git clone https://github.com/svebcomponents/template.git my-component-library
+```
+
+Copy it without Git history with degit:
+
+```bash
+pnpm dlx degit svebcomponents/template my-component-library
+```
+
+Install its dependencies and start Vite:
+
+```bash
+cd my-component-library
+pnpm install
+pnpm dev
+```
+
+If you used the template, keep working in `my-component-library`. To assemble
+the same package yourself, start the next section from a fresh directory.
+
 ## Create the package
 
 Create a directory with a `src` folder:

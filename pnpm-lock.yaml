@@ -303,43 +303,12 @@ importers:
       '@svebcomponents/vitest-config':
         specifier: workspace:*
         version: link:../../configs/vitest-config
-      '@vitest/browser':
-        specifier: 'catalog:'
-        version: 4.1.10(vite@8.1.5(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.10)
-      playwright:
-        specifier: 'catalog:'
-        version: 1.62.0
-      svelte:
-        specifier: 'catalog:'
-        version: 5.56.8(@typescript-eslint/types@8.65.0)
-      typescript:
-        specifier: 'catalog:'
-        version: 5.9.3
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.10(@types/node@24.13.3)(@vitest/browser-playwright@4.1.10)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0))
-
-  e2e/conditional-export-host:
-    dependencies:
-      '@svebcomponents/utils':
-        specifier: workspace:*
-        version: link:../../packages/utils
-    devDependencies:
-      '@svebcomponents/build':
-        specifier: workspace:*
-        version: link:../../packages/build
-      '@svebcomponents/typescript-config':
-        specifier: workspace:*
-        version: link:../../configs/typescript-config
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
         version: 7.2.0(svelte@5.56.8(@typescript-eslint/types@8.65.0))(vite@8.1.5(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0))
       '@vitest/browser':
         specifier: 'catalog:'
         version: 4.1.10(vite@8.1.5(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.10)
-      '@vitest/browser-playwright':
-        specifier: 'catalog:'
-        version: 4.1.10(playwright@1.62.0)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.10)
       playwright:
         specifier: 'catalog:'
         version: 1.62.0

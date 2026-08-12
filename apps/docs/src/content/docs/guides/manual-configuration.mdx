@@ -14,10 +14,8 @@ import { defineConfig } from "@svebcomponents/build";
 export default defineConfig({
   entry: "components/ExampleComponent.svelte",
   outDir: "dist/client",
-  svelteOutDir: "dist/client-svelte",
   ssr: true,
   ssrOutDir: "dist/server",
-  ssrSvelteOutDir: "dist/server-svelte",
 });
 ```
 
@@ -40,10 +38,8 @@ export default [
 | ------------------ | ------------------------------- | ---------------------------------------------------------------------------------------- |
 | `entry`            | `"src/ExampleComponent.svelte"` | Selects the Svelte component source.                                                     |
 | `outDir`           | `"dist/client"`                 | Writes the standalone browser build.                                                     |
-| `svelteOutDir`     | `undefined`                     | Writes a browser build that leaves Svelte for the host resolver.                         |
 | `ssr`              | `true`                          | Generates server output.                                                                 |
 | `ssrOutDir`        | `"dist/server"`                 | Writes the standalone server build.                                                      |
-| `ssrSvelteOutDir`  | `undefined`                     | Writes server output that leaves Svelte for the host resolver.                           |
 | `ssrEntryFileName` | `"ssr"`                         | Names the generated renderer. Use a unique name for each shared server output directory. |
 | `hydratable`       | `true`                          | Adds hydration support to browser and server builds. Requires `ssr`.                     |
 | `neverBundle`      | `[]`                            | Leaves matching browser dependencies for the host resolver.                              |

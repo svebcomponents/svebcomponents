@@ -15,9 +15,6 @@ import { test, expect } from "vitest";
  * check meaningful: tsdown externalizes peer dependencies by default, so the
  * `hydratable`/HydrationHost imports auto-options injects would otherwise
  * leak out as bare specifiers here.
- *
- * `dist/client-svelte` is deliberately not checked — that variant is compiled
- * into a consuming app's own build, where bare specifiers are the point.
  */
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const clientDist = path.resolve(dir, "../../dist/client");

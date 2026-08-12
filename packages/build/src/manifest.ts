@@ -320,10 +320,9 @@ export type CustomElementsManifest = ReturnType<typeof buildManifest>;
  * the package root. Returns the analyzed components so callers can reuse them
  * (the generated type declarations are built from the same data).
  *
- * Runs once per build rather than as a bundler plugin: several tsdown configs
- * (client, svelte-aware, ssr) are built in parallel for the same component, so
- * emitting from a plugin would analyze each component repeatedly and race to
- * write the same file.
+ * Runs once per build rather than as a bundler plugin: client and server
+ * configs can build the same component in parallel, so emitting from a plugin
+ * would analyze each component repeatedly and race to write the same file.
  */
 export const emitManifest = async (
   cwd: string,

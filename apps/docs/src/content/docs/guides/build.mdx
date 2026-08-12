@@ -41,19 +41,17 @@ The CLI stops when more than one candidate matches. Export patterns such as
 
 ## Build targets
 
-The CLI uses each export condition to select a target:
+The CLI uses runtime exports to select build targets:
 
-| Package export            | Output               | Svelte runtime                     |
-| ------------------------- | -------------------- | ---------------------------------- |
-| Browser `default`         | `dist/client`        | Bundled                            |
-| Browser `svelte`          | `dist/client-svelte` | Host resolves the Svelte runtime   |
-| Matching `/ssr` `default` | `dist/server`        | Bundled in generated server output |
-| Matching `/ssr` `svelte`  | `dist/server-svelte` | Host resolves the Svelte runtime   |
+| Package export            | Output        | Result                            |
+| ------------------------- | ------------- | --------------------------------- |
+| Browser `default`         | `dist/client` | Standalone browser bundle         |
+| Matching `/ssr` `default` | `dist/server` | Generated `ElementRenderer` entry |
 
-svebcomponents creates the standalone build for a browser export. It adds a
-runtime-sharing build for a `svelte` condition. A matching `/ssr` export makes
-svebcomponents compile the component for the server and generate an
-`ElementRenderer` entry.
+A matching `/ssr` export makes svebcomponents compile the component for the
+server and generate its renderer. Svelte apps import the type-only `./svelte`
+subpath for template declarations. Browser consumers load the component's
+`default` entry; SSR integrations load the matching `/ssr` entry.
 
 Read [Configure package outputs](/publishing/) for the export shapes.
 
@@ -68,9 +66,8 @@ The browser pipeline performs these steps for each `.svelte` entry:
    imports do not throw.
 4. tsdown bundles JavaScript and writes declarations.
 
-The standalone browser build bundles bare package imports. The Svelte-aware
-build keeps `svelte` and `svelte/*` for the host resolver. Server builds keep
-normal Node dependency resolution. Read the
+The browser build bundles bare package imports. Server builds keep normal Node
+dependency resolution. Read the
 [`@svebcomponents/build` reference](/packages/build/) for dependency controls.
 
 ## Element types & manifest
