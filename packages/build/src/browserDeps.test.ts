@@ -49,4 +49,17 @@ describe("createBrowserBundlingRule", () => {
     // an exact-name opt-out does not silently cover subpaths
     expect(rule("stays-external/subpath")).toBe(true);
   });
+
+  it("is deterministic for stateful regular expressions", () => {
+    const global = /^@host\//g;
+    const sticky = /@host\//y;
+    const rule = createBrowserBundlingRule([global, sticky]);
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      expect(rule("@host/provided")).toBe(false);
+      expect(rule("other-package")).toBe(true);
+    }
+    expect(global.lastIndex).toBe(0);
+    expect(sticky.lastIndex).toBe(0);
+  });
 });
