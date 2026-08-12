@@ -1,54 +1,27 @@
-Small shared helpers used by the svebcomponents packages.
+`@svebcomponents/utils` contains shared string and tag-name helpers for the
+svebcomponents packages. Most projects receive it as a transitive dependency
+of `@svebcomponents/auto-options` or an SSR integration.
 
-You do not need to install this. It is a transitive dependency of
-`@svebcomponents/auto-options` and `@svebcomponents/ssr`, documented here so
-its behaviour is inspectable. It keeps common string transformations in one
-place so the build-time and runtime packages agree on how prop names and
-attribute names map to each other.
+## API
 
-## Exports
-
-### `kebabize(str)`
-
-Converts camelCase or PascalCase names to kebab-case.
-
-```ts
-import { kebabize } from "@svebcomponents/utils";
-
-kebabize("favoriteNumber"); // "favorite-number"
-kebabize("URLValue"); // "url-value"
-```
-
-Used by `@svebcomponents/auto-options` when generating custom element attribute names from Svelte prop names.
-
-### `isKebabCase(str)`
-
-Checks whether a string is already a simple kebab-case HTML attribute name.
+| Function                                 | Result                                                                                    |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `kebabize("favoriteNumber")`             | `"favorite-number"`                                                                       |
+| `camelizeKebabCase("favorite-number")`   | `"favoriteNumber"`                                                                        |
+| `isKebabCase("favorite-number")`         | `true` for the lowercase attribute-name subset that the SSR prop mapper accepts           |
+| `mayBeCustomElementTagName("my-card")`   | `true` when the string contains a dash                                                    |
+| `isValidCustomElementTagName("my-card")` | `true` for supported HTML custom-element names, excluding names reserved by SVG or MathML |
 
 ```ts
-import { isKebabCase } from "@svebcomponents/utils";
-
-isKebabCase("favorite-number"); // true
-isKebabCase("favoriteNumber"); // false
-isKebabCase("--css-variable"); // false
+import {
+  camelizeKebabCase,
+  isValidCustomElementTagName,
+  kebabize,
+} from "@svebcomponents/utils";
 ```
 
-Used by `@svebcomponents/ssr` when deciding whether an incoming wrapper prop should be treated as an attribute name or a JavaScript property name.
+These helpers form an internal boundary between the build and SSR packages.
+Their behavior follows the needs of those packages and may change before 1.0.
 
-### `camelizeKebabCase(str)`
-
-Converts kebab-case names back to camelCase.
-
-```ts
-import { camelizeKebabCase } from "@svebcomponents/utils";
-
-camelizeKebabCase("favorite-number"); // "favoriteNumber"
-```
-
-Used by `@svebcomponents/ssr` when mapping non-string kebab-case values to component properties during server rendering.
-
-## Registering custom elements
-
-There is no registration helper here. Declare the tag in the component and let
-`@svebcomponents/build` handle it — see
-[Authoring components](https://svebcomponents.dev/authoring/#declaring-the-tag).
+See [Author components](https://svebcomponents.dev/authoring/) for tag and prop
+naming conventions.

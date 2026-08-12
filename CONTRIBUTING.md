@@ -1,25 +1,25 @@
 ## Setup
 
-### 1. install nodejs
+### 1. Install Node.js
 
-To avoid issues based on your environment, you should always use the node version specified in `.nvmrc`.
-If you use `nvm` or `fnm` you can run (`nvm use` or `fnm use` respectively) to install the correct node version.
+Use the Node.js version in `.nvmrc`. Run `nvm use` or `fnm use` if you use one
+of those version managers.
 
-### 2. install & setup corepack
+### 2. Enable Corepack
 
-While you can install `pnpm` what ever way you want, I recommend using `corepack` to ensure you are using the version specified in the `packageManager` of the `package.json`.
+Corepack selects the pnpm version from `package.json`:
 
 ```bash
 npm install --global corepack@latest && corepack enable
 ```
 
-### 3. install dependencies
+### 3. Install dependencies
 
 ```bash
 pnpm install
 ```
 
-### 4. build the entire project
+### 4. Build the project
 
 ```bash
 pnpm build
@@ -45,14 +45,21 @@ If your change affects a published package, describe it with a changeset before 
 pnpm changeset
 ```
 
-Follow the prompts to select the affected package(s) and describe the change; commit the generated file in `.changeset/` along with your change.
+Select the affected packages, describe the change, and commit the generated
+file in `.changeset/`.
+
+## Documentation
+
+Follow the [documentation style guide](./apps/docs/WRITING.md) when you edit the
+site or a package README. It defines page roles, actor names, vocabulary, and
+the docs checks.
 
 ## Repository layout
 
-- `packages/*` — the published svebcomponents packages.
-- `apps/docs` — the documentation site (Astro + Starlight), deployed to
+- `packages/*`: the published svebcomponents packages.
+- `apps/docs`: the documentation site (Astro + Starlight), deployed to
   [svebcomponents.dev](https://svebcomponents.dev/).
-- `e2e/*` — end-to-end fixtures that build real component packages and render
+- `e2e/*`: end-to-end fixtures that build real component packages and render
   them through each host integration.
-- `configs/*` — private, shared lint/format/TypeScript/vitest presets. See
+- `configs/*`: private, shared lint/format/TypeScript/vitest presets. See
   [internal config packages](./docs/internal-config-packages.md).

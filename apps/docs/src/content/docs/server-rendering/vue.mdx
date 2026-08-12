@@ -1,0 +1,94 @@
+---
+title: Vue
+description: Server-render and hydrate svebcomponents custom elements in Vue.
+---
+
+The Vue adapter rewrites custom-element tags in single-file component
+templates. Its wrapper calls the registered renderer on the server and emits
+the same light-DOM child list on the server and in the browser.
+
+:::note[Beta]
+The Vue integration may change before 1.0.
+:::
+
+## Install
+
+```bash
+pnpm add @svebcomponents/ssr @svebcomponents/ssr-vue svelte
+```
+
+## Configure
+
+Add the svebcomponents plugin before Vue's plugin:
+
+```ts
+import vue from "@vitejs/plugin-vue";
+import svebcomponentsVue from "@svebcomponents/ssr-vue/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [svebcomponentsVue(), vue()],
+});
+```
+
+Register the wrapper on the app instance that you create for the server and on
+the one you create for the browser:
+
+```ts
+import { svebcomponents } from "@svebcomponents/ssr-vue";
+
+app.use(svebcomponents());
+```
+
+## Import browser and server entries
+
+Load the element definition from the client entry:
+
+```ts
+// entry-client.ts
+import "my-component-package";
+```
+
+Register the renderer from the server entry:
+
+```ts
+// entry-server.ts
+import "my-component-package/ssr";
+```
+
+## Render
+
+Use the element in a Vue template:
+
+```vue
+<template>
+  <my-component title="Hello" :count="5" />
+</template>
+```
+
+The adapter emits a declarative shadow template on the server. The browser
+turns that template into a shadow root, and the generated custom-element
+extension asks Svelte to hydrate it when the browser entry loads.
+
+## Async components
+
+Vue's server renderer awaits the adapter's setup function. Enable Svelte's
+async server mode once in the server entry when a component awaits:
+
+```ts
+import "@svebcomponents/ssr/enable-async";
+```
+
+The same Vue wrapper handles synchronous and asynchronous renderers. See
+[Async components and server data](/server-rendering/async/) for component
+setup.
+
+## Limits
+
+- The Vite plugin rewrites `<template>` blocks in Vue single-file components.
+- Render functions and JSX must use `CustomElementWrapper` from
+  `@svebcomponents/ssr-vue`.
+- The plugin recognizes dashed tags. Pass `tags` to restrict the set.
+
+See the [`@svebcomponents/ssr-vue` reference](/packages/ssr-vue/) for plugin
+options and wrapper exports.

@@ -1,0 +1,107 @@
+---
+title: React
+description: Server-render and hydrate svebcomponents custom elements in React.
+---
+
+The React adapter routes dashed JSX tags through a `CustomElement` wrapper. On
+the server, the wrapper calls the registered renderer and emits declarative
+shadow DOM. On the client, React renders the host tag; the browser has already
+parsed the shadow template.
+
+:::note[Beta]
+The React integration may change before 1.0.
+:::
+
+## Install
+
+```bash
+pnpm add @svebcomponents/ssr @svebcomponents/ssr-react svelte
+```
+
+## Configure
+
+Point the automatic JSX transform at the adapter:
+
+```jsonc
+// tsconfig.json
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@svebcomponents/ssr-react",
+  },
+}
+```
+
+This setting works in React builds with or without Vite.
+
+## Import browser and server entries
+
+Import the component package from code that runs in the browser:
+
+```ts
+// client entry
+import "my-component-package";
+```
+
+Register its renderer from the server entry:
+
+```ts
+// server entry
+import "my-component-package/ssr";
+```
+
+Keep the `/ssr` import out of client modules.
+
+## Render
+
+Write the element as JSX:
+
+```tsx
+<my-component title="Hello" count={5} />
+```
+
+To keep React's default JSX runtime, use the wrapper component:
+
+```tsx
+import { CustomElement } from "@svebcomponents/ssr-react";
+
+<CustomElement tag="my-component" title="Hello" count={5} />;
+```
+
+## Async components
+
+React's `renderToString` cannot await a custom-element renderer. The default
+wrapper emits the host tag without shadow content for an async element. Svelte
+mounts the component when the element upgrades.
+
+A React Server Component can await the renderer:
+
+```tsx
+import { CustomElement } from "@svebcomponents/ssr-react/rsc";
+
+<CustomElement tag="my-component" title="Hello" count={5} />;
+```
+
+Use the `/rsc` export from Server Components. Client Components and plain React
+SSR use the default wrapper. If the Svelte component awaits during its render,
+load Svelte's async server flag from the server bootstrap:
+
+```ts
+import "@svebcomponents/ssr/enable-async";
+```
+
+An async preparation hook needs the `/rsc` wrapper but does not need this flag.
+
+Read [Async components and server data](/server-rendering/async/) for the
+package-side choices.
+
+## Limits
+
+- The adapter supports React 19.
+- The default wrapper server-renders synchronous element renderers.
+- The async wrapper works in React Server Components.
+- The JSX runtime recognizes custom-element names by their dash.
+
+See the
+[`@svebcomponents/ssr-react` reference](/packages/ssr-react/) for exports and
+fallback behavior.

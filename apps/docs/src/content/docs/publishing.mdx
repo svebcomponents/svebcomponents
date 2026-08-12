@@ -1,16 +1,70 @@
 ---
-title: Publishing your package
-description: Exports, the custom elements manifest, and what consumers receive when they install your components.
+title: Configure package outputs
+description: Declare browser, type, manifest, and server exports for a component package.
 ---
 
-import { FileTree } from "@astrojs/starlight/components";
+svebcomponents reads `package.json` exports to find source entries and select
+build targets. Start with one browser entry:
 
-Your `package.json` does double duty: it configures the build and it describes
-the result to consumers. This page covers what to put in it before you publish.
+```json
+{
+  "name": "my-components",
+  "version": "0.1.0",
+  "type": "module",
+  "files": ["dist", "custom-elements.json"],
+  "customElements": "custom-elements.json",
+  "scripts": {
+    "build": "svebcomponents"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/client/FavoriteNumber.d.ts",
+      "default": "./dist/client/FavoriteNumber.js"
+    },
+    "./svelte": {
+      "types": "./dist/client/FavoriteNumber.svelte-types.d.ts"
+    }
+  },
+  "devDependencies": {
+    "@svebcomponents/build": "^0.6.0",
+    "svelte": "^5.0.0"
+  }
+}
+```
 
-## One export per component
+svebcomponents maps the `default` path to `src/FavoriteNumber.svelte`.
+Consumers import the same entry to register the element. The standalone browser
+output includes the Svelte runtime, so hosts do not need Svelte as a dependency.
 
-Each custom element is its own entrypoint, named after its source file:
+Editors use `customElements` to find the generated manifest. npm uses `files` to
+include the build output and manifest in the published package.
+
+Run the build:
+
+```bash
+pnpm build
+```
+
+svebcomponents produces this core output:
+
+```text
+custom-elements.json
+dist/
+└── client/
+    ├── FavoriteNumber.js
+    ├── FavoriteNumber.d.ts
+    └── FavoriteNumber.svelte-types.d.ts
+```
+
+The `./svelte` export lets Svelte consumers opt into template types without
+installing Svelte in HTML, React, or Vue projects. Read
+[Consumer types](/guides/framework-types/) for the import and the React and Vue
+project declarations.
+
+## Add component entries
+
+Give each public component a browser export. Match the output basename to one
+`.svelte`, `.ts`, or `.js` source in `src`:
 
 ```json
 {
@@ -27,79 +81,14 @@ Each custom element is its own entrypoint, named after its source file:
 }
 ```
 
-`./dist/client/ColorPicker.js` resolves back to `src/ColorPicker.svelte`.
-A same-basename `.ts` or `.js` file is built as an ordinary module instead, so
-one package can ship components and plain helpers side by side.
+svebcomponents maps the second export to `src/ColorPicker.svelte`. Read
+[Build pipeline](/guides/build/#entry-discovery) for source mapping and module
+entries.
 
-See [how the build works](/guides/build/) for the complete inference
-rules.
+## Share the host's Svelte runtime
 
-## Ship the manifest
-
-Every build emits `custom-elements.json`, a
-[custom elements manifest](https://github.com/webcomponents/custom-elements-manifest)
-that editors read for HTML completions. Expose it, and include it in the
-published files. The build prints a hint if you forget:
-
-```json
-{
-  "customElements": "custom-elements.json",
-  "files": ["dist", "custom-elements.json"]
-}
-```
-
-## Ship the Svelte template types
-
-Every build writes the `svelte/elements` augmentation — the thing that makes
-unknown attributes and `increments={"nope"}` errors in a Svelte template — to a
-file beside the entry's declarations:
-
-```
-dist/client/FavoriteNumber.svelte-types.d.ts
-```
-
-It is a separate file because loading it requires svelte: it augments
-`svelte/elements`, which a consumer without svelte cannot resolve.
-
-Expose it, and Svelte consumers opt in with one line:
-
-```json
-{
-  "exports": {
-    "./svelte": { "types": "./dist/client/FavoriteNumber.svelte-types.d.ts" }
-  }
-}
-```
-
-```ts
-// the consumer's app.d.ts — a .d.ts, so it never reaches runtime
-import "my-components/svelte";
-```
-
-The build prints this wiring if you have not added it.
-
-:::note[Packages that already require svelte]
-If your package declares `svelte` as a required dependency of its consumers (a
-`dependency`, or a `peerDependency` not marked optional), the entry's
-declarations reference the file for you and your Svelte consumers need no setup
-at all.
-
-Declare it only if you genuinely want every consumer to install Svelte. You do
-not need to for template types, and you never had to for the bundle — the
-browser output
-[inlines every bare specifier](/guides/build/#what-ends-up-in-the-browser-bundle)
-either way.
-:::
-
-React and Vue consumers write one augmentation themselves — see
-[typing elements in React & Vue](/guides/framework-types/).
-
-## Optional: a lighter build for Svelte consumers
-
-The `default` build bundles the Svelte runtime so it works in applications that
-do not use Svelte. Adding a `svelte` condition asks for a second build that
-leaves `svelte` and `svelte/*` imports external, so Svelte-aware tooling can
-share the host application's runtime:
+Add a `svelte` condition when Svelte hosts should reuse their installed
+runtime:
 
 ```json
 {
@@ -113,62 +102,55 @@ share the host application's runtime:
 }
 ```
 
-:::caution[Version coupling]
-The Svelte-aware build relies on Svelte runtime internals. Those are versioned
-with Svelte and its compiler but are not a semver-stable public API: a patch or
-minor compiler release can change the runtime contract in ways that break
-previously compiled output. Only use this optimization when the component
-package and the consuming application are built with the same Svelte version,
-and keep the standalone `default` export as the fallback for everyone else.
+svebcomponents writes the extra build to `dist/client-svelte`. The host
+toolchain resolves that build's Svelte imports.
+
+:::caution[Match Svelte versions]
+Compiled components call private Svelte runtime APIs. Build the package and
+host application with the same Svelte version when you publish a `svelte`
+condition.
 :::
 
-## Optional: server-renderable output
+## Add server output
 
-Add a second export whose key is the component's export key followed by `/ssr`:
+Pair a component export with a `/ssr` subpath:
 
 ```json
 {
   "exports": {
-    "./color-picker": {
-      "types": "./dist/client/ColorPicker.d.ts",
-      "default": "./dist/client/ColorPicker.js"
+    ".": {
+      "types": "./dist/client/FavoriteNumber.d.ts",
+      "default": "./dist/client/FavoriteNumber.js"
     },
-    "./color-picker/ssr": {
-      "types": "./dist/server/ColorPicker.ssr.d.ts",
-      "default": "./dist/server/ColorPicker.ssr.js"
+    "./ssr": {
+      "types": "./dist/server/ssr.d.ts",
+      "default": "./dist/server/ssr.js"
+    }
+  },
+  "peerDependencies": {
+    "@svebcomponents/ssr": "^0.6.0"
+  },
+  "peerDependenciesMeta": {
+    "@svebcomponents/ssr": {
+      "optional": true
     }
   }
 }
 ```
 
-The browser export defines the custom element; the SSR export provides the
-renderer a server application registers. See
-[server rendering](/server-rendering/).
+svebcomponents generates an `ElementRenderer` at the server path. Give each
+renderer a distinct filename when several components share `dist/server`. The
+optional peer keeps browser-only consumers from installing the SSR runtime;
+apps that import `/ssr` install it with their host adapter.
+Continue with [Server rendering](/server-rendering/).
 
-:::note
-The filename you declare in the `/ssr` export becomes the generated renderer's
-filename. When several components share one server output directory, give each
-one a distinct name (`ColorPicker.ssr.js`, `Button.ssr.js`) so the generated
-entries do not overwrite each other.
-:::
+## Check the package
 
-## What consumers receive
+Before publishing:
 
-<FileTree>
-
-- dist
-  - client
-    - **FavoriteNumber.js** standalone build, bundles Svelte
-    - FavoriteNumber.d.ts element, attribute and event types
-    - FavoriteNumber.svelte-types.d.ts Svelte template types (`./svelte` export)
-  - client-svelte
-    - FavoriteNumber.js shares the host's Svelte runtime (`svelte` condition)
-  - server
-    - FavoriteNumber.ssr.js element renderer (`/ssr` export)
-- **custom-elements.json** manifest for editors and tooling
-
-</FileTree>
-
-Importing the entrypoint defines the element. Svelte's generated
-`customElements.define()` call is made idempotent at build time, so importing
-the component, or a bundle containing it, more than once never throws.
+1. Run `pnpm build` from a clean checkout.
+2. Run `pnpm pack --dry-run` and confirm the archive contains the exported
+   files and `custom-elements.json`.
+3. Import each browser entry in an example app and render its custom-element
+   tag.
+4. Test each framework integration and server entry that you publish.

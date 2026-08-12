@@ -1,238 +1,168 @@
-Server-side rendering support for Svelte-built custom elements.
+`@svebcomponents/ssr` connects server-built Svelte components to host
+frameworks. It renders a registered custom element into host attributes and a
+declarative shadow DOM template.
 
-Browsers know how to instantiate custom elements, but server renderers usually only see an unknown HTML tag. `@svebcomponents/ssr` bridges that gap by letting a custom element package provide an `ElementRenderer`, then letting a Vite app use that renderer when it sees the custom element in a Svelte template.
+The package implements Lit Labs' `ElementRenderer` contract for Svelte
+components. Lit Labs supplies `ElementRenderer`, `RenderInfo`, result
+collectors, and the server DOM shim. svebcomponents supplies the Svelte
+renderer, its own renderer registry, and host-facing render functions.
 
-The design is modeled after Lit's server-side rendering system: custom elements are rendered by `ElementRenderer` classes, and the server uses declarative shadow DOM to serialize the rendered shadow root.
-
-This package is in beta: ready for real-world evaluation and early production
-adoption, with a runtime API and generated output that may still change before
-1.0. See [Current Limitations](#current-limitations) for the security posture.
+The SSR packages are in beta. Their APIs may change before 1.0.
 
 ## Installation
 
+Install this package in a Svelte host or when you write a host adapter:
+
 ```bash
-pnpm add -D @svebcomponents/ssr
+pnpm add @svebcomponents/ssr
 ```
 
-Component packages built with `@svebcomponents/build` get the SSR build helper
-already; install this directly in the host application that renders the
-elements.
+React, Vue, and Astro apps install this runtime with their host package. The
+host package depends on the runtime, but a direct install satisfies component
+packages that declare it as a peer and lets the app choose its version.
+Component packages that use `@svebcomponents/build` get the server build helper
+through that package.
 
-## What It Provides
+## Svelte host setup
 
-`@svebcomponents/ssr` has three pieces:
-
-- `@svebcomponents/ssr/tsdown`: a tsdown config helper used by `@svebcomponents/build` to generate a server-renderable build and an `ssr.js` renderer entrypoint.
-- `@svebcomponents/ssr/vite`: a Vite pre-transform that wraps custom element tags in Svelte templates with a runtime wrapper component.
-- `@svebcomponents/ssr`: runtime utilities for installing server DOM shims, registering renderers, and rendering Svelte custom elements through Lit's SSR `ElementRenderer` API.
-
-Useful background and related upstream limitations:
-
-- [Lit SSR overview](https://lit.dev/docs/ssr/overview/)
-- [`@lit-labs/ssr`](https://github.com/lit/lit/tree/main/packages/labs/ssr)
-- [`@lit-labs/ssr-dom-shim`](https://github.com/lit/lit/tree/main/packages/labs/ssr-dom-shim)
-- Lit SSR async rendering discussion: [lit/lit#2469](https://github.com/lit/lit/issues/2469)
-- Lit SSR declarative shadow DOM discussion: [lit/lit#3080](https://github.com/lit/lit/issues/3080)
-- Browser feature used for output: declarative shadow DOM
-
-## Package-author Flow
-
-Most component packages should use `@svebcomponents/build` rather than importing the SSR build helper directly.
-
-When SSR is enabled, the build produces a server output directory containing an `ssr.js` entrypoint. That entrypoint exports an `ElementRenderer` subclass for the custom element.
-
-Expose it from your component package:
-
-```json
-{
-  "exports": {
-    ".": {
-      "types": "./dist/client/index.d.ts",
-      "default": "./dist/client/index.js"
-    },
-    "./ssr": {
-      "types": "./dist/server/ssr.d.ts",
-      "default": "./dist/server/ssr.js"
-    }
-  }
-}
-```
-
-The browser entrypoint defines the custom element. The SSR entrypoint provides the renderer an app can register on the server.
-
-When using `@svebcomponents/build`, an adjacent server module such as
-`src/index.ssr.ts` is discovered automatically. Its default `SsrPrepare` export
-runs after host attributes and properties have been applied but before the
-component renders. Values written with `setProperty` are serialized into
-hydratable output for reuse in the browser. Returning a promise puts the
-component on the async path — see
-[What makes a component asynchronous](https://svebcomponents.dev/server-rendering/#what-makes-a-component-asynchronous).
-
-If the package's Svelte config enables Svelte async rendering, the generated
-`./ssr` renderer can yield async Lit `RenderResult` chunks. Async-capable host
-integrations should use the async Vite wrapper below.
-
-## App-author Flow
-
-Install the Vite plugin in the consuming app:
+Add the SSR transform before the Svelte plugin:
 
 ```ts
+import svebcomponentsSsr from "@svebcomponents/ssr/vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { defineConfig } from "vite";
-import svebcomponentsSsr from "@svebcomponents/ssr/vite";
 
 export default defineConfig({
   plugins: [svebcomponentsSsr(), svelte()],
 });
 ```
 
-This automatically adds `@svebcomponents/ssr` to Vite's `ssr.noExternal` (it
-ships raw `.svelte` files under some export conditions, which Node's SSR
-externalization can't load directly). If your own component package also
-needs `ssr.noExternal` (e.g. an `externalSvelte` build sharing the host's
-Svelte runtime), list it via the plugin's `noExternal` option:
+Load the component's browser entry in client code:
 
 ```ts
-svebcomponentsSsr({ noExternal: ["my-component-package"] });
+// client entry
+import "my-component-package";
 ```
 
-Load the component's renderer once before rendering templates that use the custom element:
+Load its renderer entry on the server:
 
 ```ts
+// server entry
 import "my-component-package/ssr";
 ```
 
-The generated renderer reads its own tag name from the component's
-`<svelte:options customElement>` declaration at build time and registers
-itself with `ElementRendererRegistry` on import. The DOM shim installs first
-regardless of import order or bundler chunking.
-
-If a component's tag name couldn't be determined at build time (e.g. it's
-computed dynamically), the generated renderer falls back to requiring manual
-registration instead:
-
-```ts
-import { ElementRendererRegistry } from "@svebcomponents/ssr";
-import MyComponentRenderer from "my-component-package/ssr";
-
-ElementRendererRegistry.set("my-component", MyComponentRenderer);
-```
-
-Async SSR requires the host Svelte compiler to opt into Svelte's experimental
-async mode:
-
-```ts
-export default defineConfig({
-  plugins: [
-    svebcomponentsSsr({ async: true }),
-    svelte({
-      compilerOptions: {
-        experimental: {
-          async: true,
-        },
-      },
-    }),
-  ],
-});
-```
-
-The async wrapper can consume both sync and async renderers. The sync wrapper
-can only consume renderers whose shadow output is fully synchronous.
-
-A host that is **not** a Svelte app has no such compilation, so it must flip
-Svelte's async SSR flag itself, once, on the server:
-
-```ts
-import "@svebcomponents/ssr/enable-async";
-```
-
-Without it, `render()` runs synchronously even when awaited and an async
-component throws `await_invalid`.
-
-The app can then render Svelte markup containing the custom element:
+The renderer entry registers itself when the component declares a literal tag
+in `<svelte:options>`. The Vite transform routes dashed tags in Svelte files
+through the runtime wrapper.
 
 ```svelte
 <my-component title="Hello" count={5}></my-component>
 ```
 
-On the server, the Vite plugin rewrites that tag to `CustomElementWrapper`. The wrapper looks up the custom element constructor, finds the registered renderer, passes attributes and properties into it, and emits declarative shadow DOM.
+See the [SvelteKit setup](https://svebcomponents.dev/server-rendering/sveltekit/)
+for import placement, `noExternal`, and async mode.
 
-On the client, the wrapper renders the original custom element tag so the browser can hydrate/upgrade it normally.
+## Package exports
 
-## Runtime Exports
+| Export                              | Use                                                               |
+| ----------------------------------- | ----------------------------------------------------------------- |
+| `@svebcomponents/ssr`               | Registry, renderer base class, render functions, and SSR DOM shim |
+| `@svebcomponents/ssr/vite`          | Svelte template transform and wrapper selection                   |
+| `@svebcomponents/ssr/enable-async`  | Enables async Svelte component rendering in hosts outside Svelte  |
+| `@svebcomponents/ssr/tsdown`        | Server build configuration used by `@svebcomponents/build`        |
+| `@svebcomponents/ssr/svelte-config` | Svelte config type and compiler-option merge helper               |
+| `@svebcomponents/ssr/hydration`     | Client extension used by generated hydratable elements            |
 
-### `ElementRendererRegistry`
+The wrapper and hydration-host exports support generated builds and the Vite
+plugin. App code should use the host integration.
 
-A global registry that maps custom element constructors to Lit `ElementRenderer` constructors.
+## Runtime API
+
+### Render one element
+
+Use the async function in hosts that can await server work:
 
 ```ts
-ElementRendererRegistry.set("my-component", MyComponentRenderer);
+import { renderCustomElement } from "@svebcomponents/ssr";
+import "my-component-package/ssr";
+
+const rendered = await renderCustomElement("my-component", {
+  title: "Hello",
+  count: 5,
+});
 ```
 
-You can register by tag name or by constructor. Lookups walk the element prototype chain, so a renderer registered for a base element class can also serve subclasses.
+`rendered.attributes` contains unescaped host attribute values. Let the host
+framework escape them. `rendered.shadowTemplate` contains a complete
+`<template shadowrootmode="open">` string. `shadowContent` contains its inner
+markup.
 
-Any renderer conforming to Lit's `ElementRenderer` contract can be registered — the host integrations drive renderers exclusively through that contract, reading host attributes from `renderer.element.attributes` the same way `@lit-labs/ssr-react` does. A renderer that emulates its element rather than instantiating one simply contributes no host attributes, matching Lit's own behavior.
+`renderCustomElementSync(tag, props)` serves hosts with a synchronous renderer.
+It throws `AsyncRendererError` when a preparation hook or component render
+returns async work.
 
-The reverse direction holds too: the renderers this package generates implement Lit's static `matchesClass` hook, so they can be passed straight to `@lit-labs/ssr`'s `render()` in `elementRenderers`, with no adapter.
+### Register a renderer
 
-Renderers receive a fully-formed Lit `RenderInfo`, so a renderer whose shadow content is itself a template — `LitElementRenderer` calls `renderValue(value, renderInfo)` — works unchanged, and custom elements nested inside that content are resolved through the same registry.
+Generated renderer entries call `ElementRendererRegistry.set()` for their
+declared tag. You can register a computed tag yourself:
 
-Register a renderer that selects its own elements with `use()`:
+```ts
+import { ElementRendererRegistry } from "@svebcomponents/ssr";
+import MyRenderer from "my-component-package/ssr";
+
+ElementRendererRegistry.set("my-component", MyRenderer);
+```
+
+The registry accepts constructors that implement Lit Labs' `ElementRenderer`
+surface. Register a renderer that selects elements through Lit's
+`matchesClass` protocol with `use()`:
 
 ```ts
 import { LitElementRenderer } from "@lit-labs/ssr/lib/lit-element-renderer.js";
+import { ElementRendererRegistry } from "@svebcomponents/ssr";
 
 ElementRendererRegistry.use(LitElementRenderer);
 ```
 
-That one line makes every LitElement in the app server-renderable through any of the host integrations. `use()` follows Lit's static `matchesClass` protocol, so renderers written for Lit's pipeline work here unchanged; explicit `set()` registrations take precedence, so an app can still override one specific element.
+An explicit `set()` registration wins for its element. Registry lookups also
+walk the custom-element class prototype chain.
 
-### `SvelteCustomElementRenderer`
+### Prepare server data
 
-A base renderer for Svelte custom elements.
+An `SsrPrepare` hook receives a read-only property snapshot before rendering.
+`setProperty()` changes the server props. In a hydratable build, the renderer
+serializes JSON-compatible rich values for the browser. Return a promise for an
+await-capable host. Read
+[Async components and server data](https://svebcomponents.dev/server-rendering/async/)
+for the file convention and host support.
 
-It creates the client custom element class, applies incoming attributes/properties, and renders the server Svelte component with `svelte/server`. Generated SSR entrypoints extend this class and add a `matchesClass` implementation for their own element.
+## Vite plugin options
 
-Host attributes live on Lit's `ElementRenderer.element` — svelte's generated custom element class is itself an SSR-shim element — rather than in a private store, which is what keeps the renderer usable from Lit's pipeline and from host integrations that were not written for svelte.
-
-Its optional `SsrPrepare` hook receives a read-only property snapshot and a
-`setProperty` callback. Synchronous hooks preserve synchronous rendering;
-promise-returning hooks require an async-capable host integration.
-
-### `installShim`
-
-Importing `@svebcomponents/ssr` installs `@lit-labs/ssr-dom-shim` globals:
-
-- `Element`
-- `HTMLElement`
-- `customElements`
-
-Those shims allow custom element modules to be imported in server environments.
-
-## Vite Transform
-
-The Vite plugin scans `.svelte` files before they are compiled.
-
-Any regular element whose tag name contains a dash is treated as a custom element:
-
-```svelte
-<my-component count={5}></my-component>
+```ts
+svebcomponentsSsr({
+  async: true,
+  noExternal: ["my-component-package"],
+});
 ```
 
-It is rewritten to the wrapper component:
+| Option       | Purpose                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------ |
+| `async`      | Select the async Svelte wrapper. The plugin reads the host's Svelte compiler setting when you omit it. |
+| `noExternal` | Send packages with raw `.svelte` exports through Vite's SSR pipeline.                                  |
 
-```svelte
-<CustomElementWrapper _tagName="my-component" count={5}></CustomElementWrapper>
-```
+The plugin adds `@svebcomponents/ssr` to `ssr.noExternal` because its wrapper
+exports contain Svelte source.
 
-The plugin also rewrites plain `slot` attributes inside custom elements to spread attributes. This avoids Svelte's component-slot transform from removing custom-element slot attributes during SSR.
+## Limits
 
-## Current Limitations
+- Host code must load the browser custom-element module and the matching
+  server renderer.
+- The Svelte transform treats valid dashed names as custom elements.
+- Async rendering uses Svelte's experimental async compiler mode.
+- Lit Labs SSR remains experimental, so upstream contracts may change.
+- Svelte's serializer escapes generated markup, and the project tests tag,
+  attribute-name, and attribute-value paths. The maintainers have not
+  commissioned an independent security audit of the output.
 
-- This package is in beta, so its runtime API and generated output may change before 1.0.
-- Attribute values/names and tag names are validated/escaped via Svelte's SSR serializer and covered by XSS regression tests, but the generated HTML and shadow DOM output have not had an independent security audit.
-- Custom element tags are detected by the presence of a dash in the tag name.
-- The consuming app must import the browser custom element module and register the matching SSR renderer.
-- The Vite plugin currently transforms Svelte files and injects a Svelte wrapper component.
-- Async SSR currently requires Svelte's experimental async compiler mode in the
-  consuming Svelte app.
+Start with the [server rendering overview](https://svebcomponents.dev/server-rendering/)
+or open the package for your host framework.
