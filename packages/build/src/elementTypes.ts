@@ -254,11 +254,20 @@ const buildComponentDeclaration = (
     .filter((prop) => !prop.propertyOnly)
     .map((prop) => {
       const type = typeOfProp(prop);
-      // anything written directly in markup arrives as a string, so non-string
-      // props accept their own type (bound) or a string (literal attribute)
+      const attribute = prop.attribute ?? prop.name;
+      // An attribute is a string. The prop's own type belongs here only when
+      // the attribute name is also the property name, because that is the one
+      // case where a framework sets the property instead of writing an
+      // attribute — `count={5}` assigns, `thread-data={tree}` stringifies to
+      // "[object Object]". Offering the rich type under a kebab name
+      // type-checked a value that could never arrive intact.
+      const settableAsProperty = attribute === prop.name;
       return {
-        name: prop.attribute ?? prop.name,
-        type: type === "string" ? "string" : `${type} | string`,
+        name: attribute,
+        type:
+          type === "string" || !settableAsProperty
+            ? "string"
+            : `${type} | string`,
         ...(prop.description ? { description: prop.description } : {}),
       };
     });
@@ -278,6 +287,8 @@ const buildComponentDeclaration = (
   //   than a property assignment, so typing them settable here would
   //   type-check something that never runs.
   const attributeNames = new Set(templateMembers.map((member) => member.name));
+  // Whatever is not addressable as an attribute is addressable as a property,
+  // under the prop's own name and with its own type.
   const propertyMembers = metadata.props
     .filter(
       (prop) => !attributeNames.has(prop.name) && !/^on[A-Z]/.test(prop.name),
@@ -407,7 +418,20 @@ export const renderCoreDeclarations = (
         )
         .join("\n");
       sections.push(
-        `/**\n * Attributes \`<${declaration.tagName}>\` accepts in markup. Each also accepts\n * its string form, since that is what a literal attribute produces.\n */\nexport interface ${declaration.className}Attributes {\n${members}\n}`,
+        `/**\n * Attributes \`<${declaration.tagName}>\` accepts in markup.\n *\n * An attribute is always a string. A prop whose name kebab-cases to something\n * else is reachable only as a property — see \`${declaration.className}Props\`.\n */\nexport interface ${declaration.className}Attributes {\n${members}\n}`,
+        "",
+      );
+    }
+
+    if (declaration.propertyMembers.length > 0) {
+      const members = declaration.propertyMembers
+        .map(
+          (member) =>
+            `${jsDocBlock(member.description, "  ")}  "${member.name}"?: ${member.type};`,
+        )
+        .join("\n");
+      sections.push(
+        `/**\n * Properties \`<${declaration.tagName}>\` accepts from a template, under their\n * own names and with their own types.\n *\n * React, Vue and Svelte all assign a property when the element has one and\n * write an attribute otherwise, so this is how a value that does not survive\n * being turned into a string — an object, an array — is passed.\n *\n * Function and snippet props are not included: in a template \`onSelect={fn}\`\n * is event-handler syntax rather than a property assignment. Set those through\n * a DOM reference, where \`${declaration.className}Element\` types them.\n */\nexport interface ${declaration.className}Props {\n${members}\n}`,
         "",
       );
     }

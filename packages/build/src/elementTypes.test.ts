@@ -617,6 +617,45 @@ describe("requiresSvelte", () => {
   });
 });
 
+describe("renderCoreDeclarations: the property surface", () => {
+  const render = async () =>
+    renderCoreDeclarations(await analyzeWorkspace(), workspace, workspace);
+
+  it("exports a Props interface for props only reachable as properties", async () => {
+    await writeComponent("Element.svelte", BUTTON);
+    const output = await render();
+
+    expect(output).toContain("export interface MyButtonProps {");
+    expect(output).toContain('"preloadedData"?: MyButton$ChangeDetail;');
+  });
+
+  it("keeps attribute-named props out of Props so the two do not intersect", async () => {
+    // `count` appears in Attributes as `number | string`; repeating it here as
+    // `number` would narrow the intersection and reject `count="5"`
+    await writeComponent("Element.svelte", BUTTON);
+    const output = await render();
+
+    const props = output.slice(
+      output.indexOf("export interface MyButtonProps {"),
+    );
+    expect(props).not.toContain('"count"?:');
+  });
+
+  it("leaves function and snippet props out of the template surface entirely", async () => {
+    // `onPick={fn}` is event-handler syntax in a template, not a property
+    // assignment; those are reachable through a DOM reference, which the
+    // element interface types
+    await writeComponent("Element.svelte", BUTTON);
+    const output = await render();
+
+    const props = output.slice(
+      output.indexOf("export interface MyButtonProps {"),
+    );
+    expect(props).not.toContain("onPick");
+    expect(output).toContain("onPick");
+  });
+});
+
 describe("renderSvelteAugmentation", () => {
   const render = async () =>
     renderSvelteAugmentation(
@@ -669,10 +708,24 @@ describe("renderSvelteAugmentation", () => {
     const output = await render();
 
     expect(output).toContain('"preloadedData"?: MyButton$ChangeDetail;');
-    // the attribute form stays, widened, for markup that writes a literal
-    expect(output).toContain(
-      '"preloaded-data"?: MyButton$ChangeDetail | string;',
-    );
+  });
+
+  it("types a kebab-cased attribute as a string, not the prop's type", async () => {
+    // `preloaded-data` is not a property, so a framework writes an attribute
+    // and the object becomes "[object Object]". Offering the rich type here
+    // type-checked a value that could never arrive intact.
+    await writeComponent("Element.svelte", BUTTON);
+    const output = await render();
+
+    expect(output).toContain('"preloaded-data"?: string;');
+    expect(output).not.toContain('"preloaded-data"?: MyButton$ChangeDetail');
+  });
+
+  it("keeps the prop's type on an attribute whose name is also the prop name", async () => {
+    // `count` kebab-cases to itself, so `count={5}` assigns the property
+    await writeComponent("Element.svelte", BUTTON);
+
+    expect(await render()).toContain('"count"?: number | string;');
   });
 
   it("does not emit a property member that duplicates its attribute name", async () => {
