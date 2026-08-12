@@ -1,12 +1,15 @@
 ---
 title: Authoring components
-description: Write the Svelte component API that consumers use through a custom element.
+description: Define the props, events, slots, and styles exposed by a built component.
 ---
 
-Write components with Svelte's
-[custom element APIs](https://svelte.dev/docs/svelte/custom-elements).
-svebcomponents reads the component source to generate attribute options, types,
-and manifest entries. It does not replace Svelte's component API.
+Write a Svelte component, then declare the tag that the custom-element build
+will register. The
+[Svelte custom elements guide](https://svelte.dev/docs/svelte/custom-elements)
+documents the compiler behavior behind this file.
+
+svebcomponents reads the source to generate attribute options, element types,
+and manifest entries.
 
 Declare the element tag with `<svelte:options>`:
 
@@ -30,10 +33,10 @@ Declare typed props with Svelte's `$props()` rune:
 </script>
 ```
 
-Svelte exposes these props as properties on the custom element. Its
-`customElement.props` option controls attribute names, conversion, and
-reflection. [Attribute inference](/guides/attribute-inference/) generates that
-option from the TypeScript declaration above.
+The generated element exposes these props as JavaScript properties.
+`@svebcomponents/auto-options` also writes `customElement.props` metadata for
+their attribute names, conversion, and reflection. It derives that metadata
+from the TypeScript declaration above.
 
 The generated attribute names use kebab case:
 
@@ -61,7 +64,7 @@ The build adds statically named `CustomEvent` calls to the generated event map.
 
 ## Slots
 
-Svelte custom elements use standard HTML slots:
+Use `<slot>` for light DOM content:
 
 ```svelte
 <div class="card">
@@ -82,8 +85,9 @@ The manifest records each named slot. Server-rendered components with slots
 
 ## Styles
 
-Svelte puts custom-element styles in the shadow root. Use `:host` for the
-element and CSS custom properties for values consumers can change:
+In custom-element mode, the compiler puts component styles in the shadow root.
+Use `:host` for the element and CSS custom properties for values consumers can
+change:
 
 ```svelte
 <style>

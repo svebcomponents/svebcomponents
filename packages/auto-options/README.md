@@ -1,7 +1,8 @@
-Generate Svelte's custom-element prop options from `$props()` types.
+Generate `customElement.props` metadata from `$props()` types.
 
-Svelte uses the `customElement.props` option to convert attributes and reflect
-properties. TypeScript props contain the information that option needs.
+The Svelte compiler uses `customElement.props` to configure attribute
+conversion and property reflection. TypeScript props contain the same type
+information.
 
 `@svebcomponents/auto-options` reads a component's instance script and writes
 the inferred metadata into Svelte's `<svelte:options customElement={...} />`.

@@ -1,9 +1,9 @@
 # svebcomponents
 
-[Svelte can compile components into custom elements](https://svelte.dev/docs/svelte/custom-elements).
-Building a library around those elements takes more work: you have to supply
-attribute metadata, configure several build targets, generate consumer types,
-and handle server rendering.
+[Svelte has a compiler mode for custom elements](https://svelte.dev/docs/svelte/custom-elements).
+Building a library with it takes more work: you have to supply attribute
+metadata, configure several build targets, generate consumer types, and handle
+server rendering.
 
 svebcomponents is a toolkit for boilerplate-free, type-safe, server-renderable
 web components with Svelte. It adds:
@@ -13,8 +13,8 @@ web components with Svelte. It adds:
 - declarative shadow DOM with hydration
 - SSR integrations for Svelte, React, Vue, and Astro
 
-Svelte owns the component and custom-element APIs. svebcomponents packages the
-compiled output and adds the library tooling around it.
+You author Svelte components and declare their element tags. svebcomponents
+configures the compiler and builds the package around them.
 
 > [!NOTE]
 > svebcomponents is in beta. APIs may change before 1.0.
@@ -23,8 +23,8 @@ compiled output and adds the library tooling around it.
 
 Read the docs at [svebcomponents.dev](https://svebcomponents.dev/).
 
-- [Svelte custom elements](https://svebcomponents.dev/introduction/): how
-  Svelte custom elements work and where the toolkit fits
+- [Building web components with Svelte](https://svebcomponents.dev/introduction/):
+  the compiler mode and the tooling svebcomponents adds
 - [Getting Started](https://svebcomponents.dev/getting-started/): create and
   run a project
 - [Authoring components](https://svebcomponents.dev/authoring/): props,
@@ -34,14 +34,14 @@ Read the docs at [svebcomponents.dev](https://svebcomponents.dev/).
 
 ## Packages
 
-| Package | What it adds |
-| --- | --- |
-| [`@svebcomponents/build`](https://svebcomponents.dev/packages/build/) | Build CLI, declarations, and custom elements manifest |
-| [`@svebcomponents/auto-options`](https://svebcomponents.dev/packages/auto-options/) | Svelte custom-element prop options inferred from TypeScript |
-| [`@svebcomponents/ssr`](https://svebcomponents.dev/packages/ssr/) | Server output, declarative shadow DOM, and SvelteKit integration |
-| [`@svebcomponents/ssr-vue`](https://svebcomponents.dev/packages/ssr-vue/) | Vue SSR integration |
-| [`@svebcomponents/ssr-react`](https://svebcomponents.dev/packages/ssr-react/) | React SSR integration |
-| [`@svebcomponents/ssr-astro`](https://svebcomponents.dev/packages/ssr-astro/) | Astro SSR integration |
+| Package                                                                             | What it adds                                                     |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| [`@svebcomponents/build`](https://svebcomponents.dev/packages/build/)               | Build CLI, declarations, and custom elements manifest            |
+| [`@svebcomponents/auto-options`](https://svebcomponents.dev/packages/auto-options/) | `customElement.props` metadata inferred from TypeScript          |
+| [`@svebcomponents/ssr`](https://svebcomponents.dev/packages/ssr/)                   | Server output, declarative shadow DOM, and SvelteKit integration |
+| [`@svebcomponents/ssr-vue`](https://svebcomponents.dev/packages/ssr-vue/)           | Vue SSR integration                                              |
+| [`@svebcomponents/ssr-react`](https://svebcomponents.dev/packages/ssr-react/)       | React SSR integration                                            |
+| [`@svebcomponents/ssr-astro`](https://svebcomponents.dev/packages/ssr-astro/)       | Astro SSR integration                                            |
 
 The SSR pipeline accepts any custom element with a registered
 `ElementRenderer`, including elements built with other frameworks.

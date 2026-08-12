@@ -1,9 +1,10 @@
 ---
-title: Svelte custom elements
-description: How Svelte turns a component into a custom element, and where svebcomponents fits.
+title: Building web components with Svelte
+description: Start with Svelte's custom-element compiler mode, then add the tooling needed for a library.
 ---
 
-Svelte can compile a component into a custom element:
+Svelte has a compiler mode for custom elements. Start by declaring a tag on the
+component:
 
 ```svelte
 <svelte:options customElement="favorite-number" />
@@ -19,15 +20,14 @@ Svelte can compile a component into a custom element:
 <button onclick={() => change(value + 1)}>{value}</button>
 ```
 
-Compile it with Svelte's `customElement: true` option. Importing the result
-registers `<favorite-number>` with the browser. Svelte creates the custom
-element class, exposes props on the element, attaches a shadow root, and
-connects the component lifecycle.
+Set `customElement: true` in the Svelte compiler options. The compiler emits an
+`HTMLElement` class around the component. Because this example declares a tag,
+importing the compiled module registers `<favorite-number>` in the browser.
 
-`<svelte:options>`, `$props()`, `$host()`, slots, and component styles are
-Svelte APIs. Read Svelte's
-[custom elements guide](https://svelte.dev/docs/svelte/custom-elements) before
-using svebcomponents.
+The official
+[custom elements guide](https://svelte.dev/docs/svelte/custom-elements)
+documents the compiler mode, `<svelte:options>`, `$host()`, prop options, and
+the generated element's lifecycle. Read it before the rest of these docs.
 
 ## Svelte Summit 2025
 
@@ -43,32 +43,29 @@ using svebcomponents.
 
 ### TL;DR
 
-Svelte wraps the compiled component in an `HTMLElement` subclass. The browser
-creates that class when it upgrades the matching tag. Svelte mounts the
-component inside its shadow root and maps element properties and attributes to
-component props.
+The compiler wraps the component in an `HTMLElement` subclass. The browser
+creates an instance when it upgrades the matching tag. The wrapper mounts the
+component inside a shadow root and connects element properties and attributes
+to component props.
 
-Svelte needs `customElement.props` metadata to convert attribute strings into
-numbers, booleans, arrays, or objects. It also mounts custom elements in the
-browser, so its standard output cannot preserve server-rendered shadow DOM.
-Those two constraints account for much of the setup in a component library.
+The `customElement.props` compiler option controls attribute conversion and
+reflection. Writing that metadata by hand repeats information from your
+TypeScript props. The generated wrapper mounts in the browser; it does not
+produce or adopt declarative shadow DOM on the server.
 
 ## Where svebcomponents fits
 
-Building a library adds repetitive prop metadata, packaging, consumer types,
-and server output. svebcomponents supplies that tooling around Svelte:
+`@svebcomponents/build` configures custom-element compilation, discovers
+entries from package exports, and produces the browser bundles. It also emits
+element declarations and a custom elements manifest.
 
-| Need                                                          | Provided by                    |
-| ------------------------------------------------------------- | ------------------------------ |
-| Custom element class and lifecycle                            | Svelte                         |
-| Props, events, slots, and styles                              | Svelte                         |
-| Attribute metadata inferred from `$props()` types             | `@svebcomponents/auto-options` |
-| Browser bundles, declarations, and a custom elements manifest | `@svebcomponents/build`        |
-| Declarative shadow DOM and hydration                          | `@svebcomponents/ssr`          |
-| Svelte, React, Vue, and Astro SSR adapters                    | svebcomponents integrations    |
+`@svebcomponents/auto-options` turns `$props()` types into
+`customElement.props` metadata. The SSR packages generate declarative shadow
+DOM, preserve it during upgrade, and connect the result to Svelte, React, Vue,
+or Astro hosts.
 
-svebcomponents keeps Svelte's authoring model. You write a Svelte custom
-element; the toolkit packages it for use across frameworks.
+You write Svelte components and declare their tags. svebcomponents handles the
+library around them.
 
 :::note[Beta]
 svebcomponents is in beta. APIs may change before 1.0.

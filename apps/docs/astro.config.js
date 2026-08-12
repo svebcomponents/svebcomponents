@@ -61,7 +61,10 @@ export default defineConfig({
         {
           label: "Start here",
           items: [
-            { label: "Svelte custom elements", slug: "introduction" },
+            {
+              label: "Building web components with Svelte",
+              slug: "introduction",
+            },
             { label: "Getting Started", slug: "getting-started" },
             { label: "Authoring components", slug: "authoring" },
             { label: "Publishing your package", slug: "publishing" },

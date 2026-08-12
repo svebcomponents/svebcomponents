@@ -1,6 +1,6 @@
 ---
 title: Build pipeline
-description: Package Svelte custom elements for browsers, TypeScript, and server rendering.
+description: Build web-component packages from Svelte source files.
 ---
 
 `@svebcomponents/build` configures the Svelte compiler and tsdown. It runs
@@ -8,9 +8,9 @@ description: Package Svelte custom elements for browsers, TypeScript, and server
 declarations, generates a custom elements manifest, and creates server output
 when the package exports it.
 
-Svelte compiles the component and generates the custom element class.
-The build packages that output and guards Svelte's registration call so an
-entrypoint can run more than once.
+The CLI compiles each component in custom-element mode, packages the generated
+class, and guards its registration call so an entrypoint can run more than
+once.
 
 ## Entrypoints from package exports
 

@@ -3,9 +3,9 @@ title: SSR
 description: How server rendering works for Svelte-built custom elements.
 ---
 
-Svelte can render a component on the server. Its custom-element wrapper runs in
-the browser, where it creates the shadow root and mounts that component after
-the element upgrades.
+Svelte's custom-element compiler output runs in the browser. It creates the
+shadow root and mounts the component after the element upgrades. That output
+does not provide a server renderer for the element.
 
 `@svebcomponents/ssr` connects those paths. The build generates a server
 renderer for the Svelte component. A host integration calls it and writes the
@@ -42,15 +42,15 @@ entrypoint:
 }
 ```
 
-The browser entrypoint defines Svelte's custom element. The generated SSR
-entrypoint renders its inner Svelte component through `ElementRenderer`.
+The browser entrypoint defines the generated element. The SSR entrypoint renders
+the component through `ElementRenderer`.
 
 The optional `svelte` conditions create renderer and browser builds that share
 the consuming application's Svelte runtime, with the
-[version-compatibility tradeoff](/publishing/#optional-a-lighter-build-for-svelte-consumers)
+[version-compatibility tradeoff](/publishing/#share-the-svelte-runtime)
 that carries.
 
-See [Publishing your package](/publishing/#optional-server-renderable-output)
+See [Publishing your package](/publishing/#add-server-output)
 for how matching `/ssr` exports enable this output.
 
 ## Register it in a Svelte app

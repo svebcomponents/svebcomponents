@@ -1,6 +1,6 @@
-Package Svelte custom elements with the `svebcomponents` command. Svelte
-compiles each component and generates its custom element class. This package
-configures the build around that output:
+Build web-component packages from Svelte components with the `svebcomponents`
+command. The CLI configures Svelte's custom-element compiler mode and the
+surrounding package output:
 
 - browser and server Svelte compiler targets
 - `@svebcomponents/auto-options` adds inferred props to

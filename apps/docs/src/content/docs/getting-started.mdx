@@ -32,9 +32,10 @@ In the component package, open `src/FavoriteNumber.svelte`:
 </button>
 ```
 
-This is a [Svelte custom element](https://svelte.dev/docs/svelte/custom-elements).
-The build reads the `$props()` type and supplies Svelte's attribute metadata,
-so `increments="5"` reaches the component as a number.
+The build compiles this component in Svelte's custom-element mode.
+`@svebcomponents/auto-options` reads the `$props()` type and writes the prop
+metadata used for attribute conversion, so `increments="5"` reaches the
+component as a number.
 
 ## Build it
 
