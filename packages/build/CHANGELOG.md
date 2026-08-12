@@ -1,5 +1,143 @@
 # @svebcomponents/build
 
+## 0.5.0
+
+### Minor Changes
+
+- 039d2ed: Inline every bare specifier into the browser output, instead of inferring what
+  to bundle from `dependencies` vs `devDependencies`.
+
+  `dist/client` is a final-form browser artifact — loaded from a URL, or from a
+  bundle that already resolved everything. There is no module resolver at that
+  point. tsdown's default is to externalize whatever `package.json` lists as a
+  `dependency` or `peerDependency`, which answers a different question: what a
+  consumer must install. The two coincide most of the time, and every time they
+  did not, the build wrote a file no browser could load and reported success.
+
+  Three separate ways to hit it, all found while migrating two real projects:
+
+  - A component importing a package it declares as a `dependency` — which it must
+    declare, if its published element types name a type from that package.
+  - Declaring `svelte`, which is the documented way to register element types with
+    Svelte's template types. The standalone bundle went from ~38 kB with the
+    runtime to ~4 kB with a bare `svelte` import.
+  - `@svebcomponents/ssr`'s hydration entries, when a component declares that
+    package as the optional peer dependency it is meant to be. That one had a
+    targeted workaround; the other two did not.
+
+  The browser builds now state the contract rather than infer it. Left external:
+  Node builtins (a browser bundle importing `node:fs` is broken either way, and
+  inlining one turns a dependency's dead branch into a build error), relative and
+  absolute paths, virtual modules, and protocol imports. A specifier that is
+  inlined but cannot be resolved now fails the build, so this class of mistake is
+  loud rather than silent.
+
+  Server output is unchanged: Node resolves declared dependencies at runtime, so
+  it keeps ordinary externalization. The Svelte-aware build (`svelteOutDir`, the
+  `svelte` export condition) still externalizes `svelte` — sharing the host
+  application's runtime is that output's entire purpose.
+
+  ## Migration
+
+  Nothing to do in most packages, and several can delete a workaround: a
+  dependency that had to be a `devDependency` to stay in the bundle can now be
+  declared for what it is.
+
+  Bundles grow for anyone who was relying on `dependencies` being externalized
+  from `dist/client`. That output was not loadable as documented, but if you were
+  depending on it deliberately — a package the host provides, say — opt out:
+
+  ```json
+  {
+    "svebcomponents": { "neverBundle": ["@acme/design-system"] }
+  }
+  ```
+
+  `defineConfig` takes the same list as a `neverBundle` option. Entries are
+  matched against the whole import specifier, so cover subpaths too if the package
+  has them.
+
+- 039d2ed: Write the Svelte template types to their own file, so shipping them no longer
+  requires declaring `svelte`.
+
+  The `svelte/elements` augmentation can only be loaded where svelte exists — it
+  augments that module, and augmenting requires resolving it. That was handled by
+  emitting it into the entry's declarations only when the package declared
+  `svelte` as a required dependency of its consumers.
+
+  Which made "I want Svelte template types" mean "every one of my consumers must
+  install svelte", including the ones on a plain HTML page. For a toolchain whose
+  standalone build exists precisely to run without Svelte, that is the wrong
+  trade to force.
+
+  The augmentation is now always written, beside the entry's declarations:
+
+  ```
+  dist/client/FavoriteNumber.svelte-types.d.ts
+  ```
+
+  A package that requires svelte of its consumers has it referenced from those
+  declarations automatically, exactly as before — no setup for Svelte consumers.
+  Any other package exposes it and its Svelte consumers opt in with one line:
+
+  ```json
+  {
+    "exports": {
+      "./svelte": { "types": "./dist/client/FavoriteNumber.svelte-types.d.ts" }
+    }
+  }
+  ```
+
+  ```ts
+  // the consumer's app.d.ts — a .d.ts, so it never reaches runtime
+  import "my-components/svelte";
+  ```
+
+  The build prints that wiring when it writes types nothing can reach.
+
+  ## Migration
+
+  Nothing to do for packages that declare `svelte`. Packages that avoided
+  declaring it — and therefore had no template types — can now ship them by
+  adding the export above.
+
+- 039d2ed: Depend on `tsdown` instead of asking consumers to install it.
+
+  `@svebcomponents/build` runs tsdown — `svebcomponents` imports `build()` and
+  calls it. A peer dependency says the opposite: that the host provides it. Every
+  consumer therefore had to install a build tool they never invoke, and pick a
+  version.
+
+  That is also what produced a whole class of silent breakage. The declared range
+  was `>=0.15.0` while the code depended on `deps.alwaysBundle`, which tsdown
+  introduced in 0.21.0. Package managers that auto-install peers resolve the
+  bottom of a range, so consumers got 0.15.x — which accepts the config, ignores
+  the option, and externalizes everything the build meant to inline. `dist/client`
+  then shipped bare specifiers no browser could resolve, and the build reported
+  success throughout.
+
+  tsdown is now an ordinary dependency, pinned to the version this repository
+  builds and tests against. There is no range for a consumer to get wrong, and
+  nothing to install.
+
+  `@svebcomponents/ssr` keeps `tsdown` and `rolldown` as optional peers — it only
+  imports their types, and `@svebcomponents/build` supplies them.
+
+  ## Migration
+
+  Remove `tsdown` from your package if you added it only for this:
+
+  ```diff
+  -  "devDependencies": { "tsdown": "^0.22.0" }
+  ```
+
+  Keep it if you use tsdown directly for something else.
+
+### Patch Changes
+
+- Updated dependencies [039d2ed]
+  - @svebcomponents/ssr@0.6.0
+
 ## 0.4.0
 
 ### Minor Changes
