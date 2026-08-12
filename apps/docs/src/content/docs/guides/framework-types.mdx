@@ -9,12 +9,47 @@ declared by the `.` export:
 | Type                           | What it describes                                                             |
 | ------------------------------ | ----------------------------------------------------------------------------- |
 | `SimpleComponentElement`       | The DOM element: every prop as a property, plus a narrowed `addEventListener` |
-| `SimpleComponentAttributes`    | What may be set in markup — each attribute also accepting its string form     |
+| `SimpleComponentAttributes`    | Attributes markup may set. An attribute is a string                           |
+| `SimpleComponentProps`         | Properties a template may set, under their own names and with their own types |
 | `SimpleComponentEventHandlers` | `onchange`-style handler props for dispatched events                          |
 | `SimpleComponentEventMap`      | Event name to `CustomEvent<Detail>`, for `addEventListener`                   |
 
 The element is registered in `HTMLElementTagNameMap`, so
 `document.querySelector("simple-component")` is typed with no setup at all.
+
+:::caution[Attributes cannot carry objects]
+An attribute is always a string, so `SimpleComponentAttributes` types one as a
+string — except where the attribute name is also the prop name (`count`), the
+one case where a framework assigns the property instead of writing an
+attribute.
+
+Anything that does not survive stringification is passed as a property, under
+its camelCase name. That is what `SimpleComponentProps` is for, and why every
+recipe below composes both:
+
+```svelte
+<simple-component preloadedData={value}></simple-component>
+```
+
+React, Vue and Svelte all resolve this the same way — assign a property when
+the element has one, write an attribute otherwise.
+:::
+
+:::note[Function and snippet props are not in either]
+In a template `onSelect={fn}` is event-handler syntax rather than a property
+assignment, so props typed as functions or snippets are deliberately absent
+from `SimpleComponentAttributes` and `SimpleComponentProps` alike — listing
+them would type-check a handler that never runs.
+
+They are still part of the element's surface and typed on
+`SimpleComponentElement`. Set them through a DOM reference:
+
+```ts
+const el = document.querySelector("simple-component");
+if (el) el.onSelect = handleSelect;
+```
+
+:::
 
 Getting the same in a framework's templates takes one augmentation, which you
 write once in your own project. svebcomponents deliberately does not generate
@@ -38,6 +73,7 @@ import type { HTMLAttributes } from "svelte/elements";
 import type {
   SimpleComponentElement,
   SimpleComponentAttributes,
+  SimpleComponentProps,
   SimpleComponentEventHandlers,
 } from "my-components";
 
@@ -71,6 +107,7 @@ import type { DetailedHTMLProps, HTMLAttributes } from "react";
 import type {
   SimpleComponentElement,
   SimpleComponentAttributes,
+  SimpleComponentProps,
   SimpleComponentEventHandlers,
 } from "my-components";
 
@@ -82,6 +119,7 @@ declare module "react" {
         SimpleComponentElement
       > &
         SimpleComponentAttributes &
+        SimpleComponentProps &
         SimpleComponentEventHandlers;
     }
   }
@@ -98,6 +136,7 @@ import type { HTMLAttributes, PublicProps } from "vue";
 import type {
   SimpleComponentElement,
   SimpleComponentAttributes,
+  SimpleComponentProps,
   SimpleComponentEventMap,
 } from "my-components";
 
@@ -105,8 +144,9 @@ type DefineCustomElement<
   ElementType extends HTMLElement,
   Events extends Record<string, Event>,
   Attributes,
+  Props,
 > = new () => ElementType & {
-  $props: HTMLAttributes & Partial<Attributes> & PublicProps;
+  $props: HTMLAttributes & Partial<Attributes> & Partial<Props> & PublicProps;
   $emit: <K extends keyof Events>(event: K, payload: Events[K]) => void;
 };
 
@@ -115,7 +155,8 @@ declare module "vue" {
     "simple-component": DefineCustomElement<
       SimpleComponentElement,
       SimpleComponentEventMap,
-      SimpleComponentAttributes
+      SimpleComponentAttributes,
+      SimpleComponentProps
     >;
   }
 }
