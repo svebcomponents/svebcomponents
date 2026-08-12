@@ -4,28 +4,16 @@ description: Server-rendering svebcomponents custom elements in Svelte, Vue, Rea
 ---
 
 :::note[Beta]
-Like the rest of svebcomponents, the Vue, React and Astro integrations are in
-beta: ready for real-world evaluation and early production adoption, with APIs
-that may still change before 1.0.
+The Vue, React, and Astro integrations are in beta. Their APIs may change before
+1.0.
 :::
 
-**The custom element itself is framework-agnostic.** The same built artifact
-drops into a Svelte, Vue, React or plain HTML page and behaves identically.
-Nothing on this page changes the component.
+The same custom element runs in Svelte, Vue, React, Astro, or a plain HTML page.
+Each server framework needs an integration that routes `<my-component>` to its
+`ElementRenderer` and emits markup the framework can hydrate. The element
+[hydrates](/server-rendering/hydration/) its shadow root in the browser.
 
-What differs is one server-side detail. [Server rendering](/server-rendering/)
-has two halves: producing the element's shadow DOM, which the component's
-`ElementRenderer` does identically everywhere, and getting that markup into the
-host framework's output, which every framework spells differently. A host has
-to be told that `<my-component>` is something to ask a renderer about, and the
-resulting markup has to be shaped so the framework hydrates around the element
-rather than re-creating it.
-
-An integration supplies only that second half. In the browser none of it is
-involved: the element upgrades and [hydrates](/server-rendering/hydration/)
-itself, exactly as on a page with no framework.
-
-## What Every Integration Does
+## Server output
 
 On the server, an integration emits the element with its shadow root inline:
 
@@ -36,21 +24,18 @@ On the server, an integration emits the element with its shadow root inline:
 </my-component>
 ```
 
-The `<template shadowrootmode>` **must be the element's first child**. The HTML
-parser adopts it into a shadow root and removes it from the light DOM before
-any script runs, which is what makes declarative shadow DOM work at all.
+The HTML parser requires `<template shadowrootmode>` as the element's first
+child. It adopts the template into a shadow root and removes it from the light
+DOM before scripts run.
 
-In the browser the integration renders the same element _without_ the
-template, because by then the parser has already consumed it. The host
-framework hydrates against the post-parse child list, so both sides agree, and
-the element itself [hydrates](/server-rendering/hydration/) its shadow root
-in place.
+In the browser, the integration omits the consumed template. The host framework
+hydrates against the remaining child list, while the element hydrates its
+shadow root.
 
 ## Svelte
 
-See the [SSR guide](/server-rendering/) for the full walkthrough. In short, a
-Vite plugin rewrites custom element tags in `.svelte` templates to a wrapper
-component:
+A Vite plugin rewrites custom element tags in `.svelte` templates to a wrapper
+component. The [SSR guide](/server-rendering/) covers the setup:
 
 ```ts
 import { sveltekit } from "@sveltejs/kit/vite";
@@ -62,9 +47,9 @@ export default defineConfig({
 });
 ```
 
-Svelte is the only integration with a synchronous/asynchronous split. Its
-async wrapper uses `await` in the template, which requires the host app itself
-to be compiled with `compilerOptions.experimental.async`.
+Svelte provides separate synchronous and asynchronous wrappers. The async
+wrapper uses `await` in the template, so compile the host app with
+`compilerOptions.experimental.async`.
 
 ## Vue
 
@@ -97,23 +82,20 @@ Then write custom elements in any single-file component:
 </template>
 ```
 
-### No async split in Vue
+### Async rendering
 
-Vue's `renderToString` fully awaits an async `setup()` and emits its output in
-order, so one wrapper handles both synchronous and asynchronous element
-renderers. An
-[asynchronous component](/server-rendering/#what-makes-a-component-asynchronous)
+Vue's `renderToString` awaits an async `setup()` before emitting output, so one
+wrapper handles synchronous and asynchronous element renderers. An
+[asynchronous component](/server-rendering/#asynchronous-components)
 needs nothing extra here beyond the
 [`enable-async` opt-in](/server-rendering/#async-rendering-outside-svelte)
 every non-Svelte host needs.
 
-### Why a Vite plugin rather than a compiler transform
+### Vite transform
 
-Vue exposes `compilerOptions.nodeTransforms`, which looks like the natural
-place to retag custom elements. It does not work for server rendering: user
-node transforms run after the built-in ones, and `@vue/compiler-ssr` resolves
-a component's identity before they get a chance to rename the tag. The result
-is an app that renders correctly in the browser and not at all on the server.
+Vue runs user `compilerOptions.nodeTransforms` after its built-in transforms.
+By then, `@vue/compiler-ssr` has resolved the component identity and ignores a
+renamed tag on the server.
 
 Rewriting the single-file component's source before `@vitejs/plugin-vue` sees
 it means the client and server compiles observe the same template.
@@ -132,18 +114,15 @@ Install `@svebcomponents/ssr-react` and point the JSX transform at it:
 }
 ```
 
-That is the whole setup. Any tag containing a dash is then routed through the
-integration:
+The JSX runtime routes tags containing a dash through the integration:
 
 ```tsx
 <my-component title="Hello" count={5} />
 ```
 
-Unlike the Svelte and Vue integrations there is no bundler plugin, because the
-JSX runtime swap is a compiler setting. React is therefore the one integration
-that does not require Vite — it works in any React setup.
+The JSX runtime setting works in React setups that do not use Vite.
 
-If you would rather not swap the JSX runtime, use the wrapper directly:
+You can use the wrapper without changing the JSX runtime:
 
 ```tsx
 import { CustomElement } from "@svebcomponents/ssr-react";
@@ -151,16 +130,15 @@ import { CustomElement } from "@svebcomponents/ssr-react";
 <CustomElement tag="my-component" title="Hello" count={5} />;
 ```
 
-### Synchronous by default, with an RSC opt-in
+### Async rendering with RSC
 
 React's `renderToString` cannot await, so an
-[asynchronous component](/server-rendering/#what-makes-a-component-asynchronous)
+[asynchronous component](/server-rendering/#asynchronous-components)
 cannot be server-rendered by the default `CustomElement`.
 
-Rather than failing the page, such an element is emitted without
-server-rendered shadow content and rendered in the browser only, with a
-one-time console warning naming the tag. Genuine configuration errors, such as
-an element with no registered renderer, still throw.
+For an async element, the default wrapper emits the host tag without shadow
+content and logs one warning. The browser renders the component. Configuration
+errors, such as a missing renderer, still throw.
 
 Apps on a React Server Components framework can server-render these elements
 instead, from a Server Component:
@@ -171,22 +149,19 @@ import { CustomElement } from "@svebcomponents/ssr-react/rsc";
 <CustomElement tag="my-component" title="Hello" count={5} />;
 ```
 
-An RSC async function component runs to completion before any markup is
-emitted, so it can simply `await` the renderer — no cache, no `use()`, no
-Suspense boundary required, and it accepts
-[asynchronous components](/server-rendering/#what-makes-a-component-asynchronous)
+An RSC async function component can await the renderer before it emits markup.
+It accepts
+[asynchronous components](/server-rendering/#asynchronous-components)
 in either form (given the
 [`enable-async` opt-in](/server-rendering/#async-rendering-outside-svelte)
 every non-Svelte host needs for that).
 
-It only helps where the element is rendered from a Server Component, though:
-an async function component cannot be imported into a Client Component
-(`"use client"`), so an element rendered from client-side React — whether or
-not the app is on RSC — keeps the default's degrade-to-client-only behavior.
+The RSC wrapper works from Server Components. Client Components cannot import
+an async function component, so they use the default browser-rendered fallback.
 
 ## Astro
 
-Add the integration. That is the entire configuration:
+Add the integration:
 
 ```ts
 import { defineConfig } from "astro/config";
@@ -205,22 +180,20 @@ Custom elements then work in any `.astro` template:
 </my-component>
 ```
 
-### No client-side counterpart
+### Browser behavior
 
-Astro is the one integration with nothing to register in the browser, because
-Astro ships no client JavaScript for these elements. There is no host render to
-match against: the parser attaches the shadow root, the element upgrades when
-its bundle loads, and it hydrates itself.
+Astro ships no host JavaScript for these elements. The parser attaches the
+shadow root, then the element upgrades and hydrates when its bundle loads.
 
 The exception is islands. A custom element inside a `client:*` React, Vue or
 Svelte island belongs to that framework, and the corresponding integration
 applies there instead.
 
-### No async split either
+### Async rendering
 
-Astro frontmatter is an async module scope, so the wrapper awaits the element
-renderer directly —
-[asynchronous components](/server-rendering/#what-makes-a-component-asynchronous)
+Astro frontmatter runs in an async module scope, so the wrapper awaits the
+element renderer.
+[asynchronous components](/server-rendering/#asynchronous-components)
 need nothing extra beyond the
 [`enable-async` opt-in](/server-rendering/#async-rendering-outside-svelte)
 every non-Svelte host needs.
@@ -241,17 +214,16 @@ const { attributes, shadowTemplate, shadowContent } = await renderCustomElement(
 );
 ```
 
-Use `renderCustomElementSync` when the host's rendering pipeline cannot await
-— it throws `AsyncRendererError` if the element turns out to need awaiting, so
-the host can degrade deliberately — and `renderCustomElement` when it can. `shadowTemplate` is the complete
+Use `renderCustomElementSync` when the host cannot await. It throws
+`AsyncRendererError` for an async element, allowing the host to choose a
+fallback. Use `renderCustomElement` when the host can await. `shadowTemplate` is the complete
 `<template shadowrootmode="open">…</template>` string for hosts that emit raw
 markup; `shadowContent` is its inner markup, for hosts that build the template
 element themselves.
 
-Since the pipeline only depends on Lit's `ElementRenderer` contract, an
-integration written this way renders [any custom element with a registered
-renderer](/server-rendering/#any-custom-element-not-just-svelte-built-ones),
-not only svebcomponents ones.
+The pipeline renders [any custom element with a registered
+renderer](/server-rendering/#other-custom-elements) through Lit's
+`ElementRenderer` contract.
 
 ## Requirements
 

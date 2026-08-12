@@ -5,13 +5,12 @@ description: Start from the svebcomponents template and build your first Svelte 
 
 import { Tabs, TabItem, FileTree } from "@astrojs/starlight/components";
 
-You need Node 20.19 or later. The examples use pnpm; npm and yarn work the
-same way.
+You need Node 20.19 or later.
 
 ## Scaffold the project
 
-The recommended starting point is the official
-[template repo](https://github.com/svebcomponents/template):
+Create a project from the
+[svebcomponents template](https://github.com/svebcomponents/template):
 
 <Tabs syncKey="pkg">
   <TabItem label="pnpm">
@@ -49,19 +48,18 @@ yarn dev
 `dev` starts the SvelteKit app that consumes the component, on
 `localhost:5173`.
 
-The template is a small pnpm workspace:
+The workspace contains:
 
-- `components/*` — a Svelte custom element package
-- `apps/svelte-kit` — a SvelteKit app that consumes the custom element
-- `configs/*` — shared linting, formatting, and TypeScript config
+- `components/*`: a Svelte custom element package
+- `apps/svelte-kit`: a SvelteKit app that consumes the custom element
+- `configs/*`: shared linting, formatting, and TypeScript config
 
-The rest of this page walks through what that component package contains, so
-you can also build one from scratch in an existing repo.
+The following sections show the component package's files.
 
 ## Write the component
 
-A svebcomponent is a Svelte component that declares its own tag. This is the
-whole of `src/FavoriteNumber.svelte`:
+A svebcomponent declares its custom element tag in a Svelte component. Open
+`src/FavoriteNumber.svelte`:
 
 ```svelte title="src/FavoriteNumber.svelte"
 <svelte:options customElement="favorite-number" />
@@ -81,24 +79,20 @@ whole of `src/FavoriteNumber.svelte`:
 </button>
 ```
 
-If you know Svelte 5 there is nothing unfamiliar here: typed props, and
-`<svelte:options>` to declare the custom element tag.
-
-The one line that matters is the type annotation:
+The component uses Svelte 5 runes, typed props, and `<svelte:options>` for the
+tag. Auto-options reads this type annotation:
 
 ```ts
 increments: number;
 ```
 
-That is enough for
-[auto-options](/guides/attribute-inference/) to generate the prop metadata
-Svelte needs to convert the `increments` attribute from a string to a number.
-Without it you would write the `customElement={{ props: … }}` object yourself.
+[Auto-options](/guides/attribute-inference/) uses it to generate the prop
+metadata that converts `increments` from a string to a number.
 
 ## Declare the exports
 
-The `exports` field of the component's `package.json` tells consumers where the
-custom element lives — and doubles as the build configuration:
+The `exports` field tells consumers where the custom element lives and
+configures the build:
 
 ```json title="package.json"
 {
@@ -187,7 +181,7 @@ The build prints a hint if you forget. See
 
 ## Use it
 
-The generated custom element behaves like any other web component:
+Import the package, then use its custom element:
 
 ```svelte
 <script lang="ts">
@@ -200,7 +194,7 @@ The generated custom element behaves like any other web component:
 The build also emitted TypeScript declarations for the element. If the package
 declares `svelte` as a dependency of its consumers, those are registered with
 Svelte's template types automatically, making unknown attributes and
-`increments={"nope"}` type errors — see
+`increments={"nope"}` type errors. See
 [Publishing your package](/publishing/#ship-the-svelte-template-types).
 
 :::caution[Pass non-string values as expressions]

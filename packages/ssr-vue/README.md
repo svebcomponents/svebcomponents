@@ -1,15 +1,11 @@
 Server-side rendering support for Svelte-built custom elements inside Vue apps.
 
-This is the Vue counterpart to `@svebcomponents/ssr`'s Svelte integration. The
-element renderers, the DOM shim, the renderer registry and the client-side
-hydration machinery are all shared; this package only supplies the two pieces
-that are host-framework specific: finding custom element tags in Vue templates,
-and emitting declarative shadow DOM around them.
+This package finds custom element tags in Vue templates, routes them through
+the shared `@svebcomponents/ssr` registry, and emits declarative shadow DOM.
 
-This package is in beta: ready for real-world evaluation and early production
-adoption, with an API that may still change before 1.0.
+This package is in beta. Its API may change before 1.0.
 
-## What It Provides
+## Exports
 
 - `@svebcomponents/ssr-vue/vite`: a Vite plugin that rewrites custom element
   tags in SFC templates to the wrapper component.
@@ -44,9 +40,8 @@ import { svebcomponents } from "@svebcomponents/ssr-vue";
 app.use(svebcomponents());
 ```
 
-Then load the component package's browser entry (which defines the custom
-element) and its `/ssr` entry (which registers the renderer), and render the
-custom element in any SFC:
+Load the package's browser entry to define the element and its `/ssr` entry to
+register the renderer. Then use the element in an SFC:
 
 ```vue
 <template>
@@ -54,30 +49,26 @@ custom element in any SFC:
 </template>
 ```
 
-## Any custom element, not just Svelte-built ones
+## Other custom elements
 
-This integration depends only on Lit's `ElementRenderer` contract, so it
-server-renders any custom element with a registered renderer — Lit elements
-included. See
-[Any custom element](https://svebcomponents.dev/server-rendering/#any-custom-element-not-just-svelte-built-ones).
+This integration server-renders any custom element with a registered Lit
+`ElementRenderer`, including Lit elements. See
+[Other custom elements](https://svebcomponents.dev/server-rendering/#other-custom-elements).
 
 ## Async Components
 
-Unlike the Svelte integration, there is no sync/async wrapper split. Vue's
-`renderToString` fully awaits an async `setup()` and emits its output in order,
-so an
-[asynchronous component](https://svebcomponents.dev/server-rendering/#what-makes-a-component-asynchronous)
-renders through the same wrapper a synchronous one does.
+Vue's `renderToString` awaits an async `setup()` before emitting output. An
+[asynchronous component](https://svebcomponents.dev/server-rendering/#asynchronous-components)
+uses the same wrapper as a synchronous component.
 
-Like any non-Svelte host, a Vue app must opt into Svelte's async SSR mode
-explicitly on the server:
+Enable Svelte's async SSR mode in the Vue server entry:
 
 ```ts
 import "@svebcomponents/ssr/enable-async";
 ```
 
-Without it, `render()` runs synchronously even when awaited and an async
-component throws `await_invalid`.
+Without it, `render()` uses synchronous mode and an async component throws
+`await_invalid`.
 
 ## Requirements
 
@@ -85,7 +76,7 @@ component throws `await_invalid`.
 though no Svelte components appear in it; see
 [Compatibility](https://svebcomponents.dev/reference/compatibility/).
 
-## How It Works
+## Render flow
 
 On the server the wrapper resolves the custom element's registered
 `ElementRenderer`, applies the incoming attributes and properties, and renders:
@@ -97,25 +88,20 @@ On the server the wrapper resolves the custom element's registered
 </my-component>
 ```
 
-The `<template shadowrootmode>` must be the element's first child, because the
-HTML parser adopts it into a shadow root and removes it from the light DOM
-before any script runs. In the browser the wrapper therefore renders the same
-element _without_ it — what Vue hydrates against is the post-parse child list.
+The HTML parser requires `<template shadowrootmode>` as the element's first
+child. It adopts the template into a shadow root and removes it from the light
+DOM. The browser wrapper omits the consumed template, and Vue hydrates against
+the remaining child list.
 
-Both branches build the child list identically (slot content is spread, never
-nested), because a nested array becomes a Vue Fragment and Vue SSR brackets a
-Fragment in `<!--[-->` / `<!--]-->` anchors. Emitting those on one side only is
-a hydration mismatch.
+Both branches spread slot content into the child list. A nested array becomes
+a Vue Fragment, and Vue SSR wraps it in `<!--[-->` and `<!--]-->` anchors that
+would cause a hydration mismatch.
 
-## Why a Vite Plugin Instead of a Compiler Transform
+## Vite transform
 
-Vue exposes `compilerOptions.nodeTransforms`, which looks like the natural
-place to retag custom elements. It does not work for SSR: user node transforms
-run after the built-in ones on enter, and `@vue/compiler-ssr` resolves a
-component's identity during `ssrTransformComponent`'s enter phase. A transform
-that renames the tag is honored by the client compile and silently ignored by
-the SSR compile, producing an app that renders correctly in the browser and
-not at all on the server.
+Vue runs user `compilerOptions.nodeTransforms` after its built-in transforms.
+By then, `@vue/compiler-ssr` has resolved the component identity and ignores a
+renamed tag on the server.
 
 Rewriting the SFC source before `@vitejs/plugin-vue` sees it means both
 compiles observe the same template.

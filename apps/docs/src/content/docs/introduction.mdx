@@ -1,18 +1,11 @@
 ---
 title: What is svebcomponents?
-description: The problems svebcomponents solves for Svelte custom element libraries, and where it fits next to plain Svelte and Lit.
+description: Tools for building, packaging, and server-rendering Svelte custom elements.
 ---
 
-Svelte already allows compiling to custom elements today: set
-`customElement: true` and you have a working web component.
-
-That is enough for one component. A library is a different job. You write prop
-metadata by hand for every attribute, assemble a build pipeline SvelteKit does
-not provide, ship no types to your consumers, and give up server rendering
-entirely — because a Svelte custom element wipes its shadow root the moment it
-upgrades.
-
-svebcomponents is the toolchain for that second job.
+Svelte compiles components into custom elements. A component library also needs
+attribute metadata, package outputs, consumer types, and a server-rendering
+path. svebcomponents supplies those pieces.
 
 ## What you get over `customElement: true`
 
@@ -32,7 +25,7 @@ Svelte needs prop metadata to turn an HTML attribute string into a typed prop.
 and generates it, so `value: number` is all you write to make `value="42"`
 arrive as `42`.
 
-### Your package.json is the build config
+### Package exports configure the build
 
 SvelteKit packages Svelte components, not custom elements.
 [The build](/guides/build/) infers entrypoints from your `exports`
@@ -54,9 +47,9 @@ el?.count; // number | undefined
 
 ### Server rendering that survives hydration
 
-This is the part plain Svelte custom elements cannot do at all. Svelte's
-generated element attaches a shadow root on upgrade, which per spec clears any
-declarative shadow root the server delivered, and then mounts from scratch.
+Svelte's generated element attaches a shadow root on upgrade. The browser
+clears the declarative shadow root from the server, then Svelte mounts the
+component from scratch.
 
 svebcomponents renders the shadow root on the server as declarative shadow DOM
 and [adopts it in place](/server-rendering/hydration/) in the browser: the nodes
@@ -65,23 +58,18 @@ by default for every SSR-enabled component.
 
 ## Is this for you?
 
-svebcomponents is a good fit if you write Svelte and want to ship components
-that non-Svelte applications can use — a design system consumed by several
-frameworks, embeddable widgets, or anything that outlives one app's stack.
+svebcomponents fits Svelte component libraries consumed by several frameworks,
+including design systems and embeddable widgets.
 
-If your consumers are all Svelte applications, plain Svelte components are
-simpler and faster; you do not need custom elements. If you have no Svelte in
-your stack at all, [Lit](https://lit.dev) is the more direct choice —
-svebcomponents' value is that it lets you keep writing Svelte.
+For Svelte-only applications, publish Svelte components. For projects without
+Svelte, [Lit](https://lit.dev) provides a direct custom element toolchain.
 
 :::note[Beta]
-svebcomponents is in beta: ready for real-world evaluation and early production
-adoption. APIs may still change before 1.0, and breaking changes are documented
-in the changelogs.
+svebcomponents is in beta. APIs may change before 1.0. The changelogs document
+breaking changes.
 :::
 
 :::note
-Watch [Theo Steiner's "Ultimate Guide to Building Web Components with Svelte"](https://www.youtube.com/watch?v=lDWfdfTH3e8)
-for a look under the hood of the Svelte compiler and how svebcomponents
-approaches its limitations.
+[Theo Steiner's "Ultimate Guide to Building Web Components with Svelte"](https://www.youtube.com/watch?v=lDWfdfTH3e8)
+explains the compiler behavior behind this project.
 :::

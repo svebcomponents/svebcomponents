@@ -3,10 +3,9 @@ title: Manual configuration
 description: When package export inference is not enough, configure svebcomponents explicitly.
 ---
 
-Package exports are the recommended configuration, and cover most packages.
-Reach for a config file when you need source paths or output directories that
-the [inference rules](/guides/build/#zero-config-builds) cannot express —
-for example a subpath export pattern, or sources that do not live in `src`.
+Create a config file when you need source paths or output directories that the
+[inference rules](/guides/build/#zero-config-builds) cannot express, such as a
+subpath export pattern or sources outside `src`.
 
 Create `svebcomponents.config.ts` in the package root:
 
@@ -60,7 +59,7 @@ and `generate: "server"` still take precedence.
 
 If that configuration enables `compilerOptions.experimental.async`, the browser
 and SSR outputs are async-compiled, and host apps consuming those renderers need
-an [async-capable integration](/server-rendering/#what-makes-a-component-asynchronous).
+an [async-capable integration](/server-rendering/#asynchronous-components).
 
 ## Opting out of hydration
 
@@ -71,11 +70,11 @@ whole package:
 export default defineConfig({ hydratable: false });
 ```
 
-Or for a single component, by declaring your own `extend` in
-`<svelte:options customElement={{ ... }}>` — auto-options never injects over one
-you wrote. See [hydration](/server-rendering/hydration/#opting-out).
+For one component, declare `extend` in
+`<svelte:options customElement={{ ... }}>`. Auto-options preserves your
+extension. See [hydration](/server-rendering/hydration/#opting-out).
 
-## When configuration is missing
+## Default configuration
 
 If the CLI can neither load `svebcomponents.config.ts` nor infer any component
 exports from `package.json`, it falls back to `defineConfig({})`, which builds

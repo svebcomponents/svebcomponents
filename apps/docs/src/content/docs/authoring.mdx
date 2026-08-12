@@ -3,13 +3,11 @@ title: Authoring components
 description: Props, events, slots and styling in a Svelte component that ships as a custom element.
 ---
 
-A svebcomponent is a normal Svelte 5 component. What changes is that its public
-surface (props, events, slots, CSS custom properties) is also the public
-surface of an HTML element. This page covers how each one crosses that
-boundary.
+A svebcomponent is a Svelte 5 component whose props, events, slots, and CSS
+custom properties form an HTML element API.
 
-Everything on this page is read at build time to produce your element's
-TypeScript types and its
+The build reads these declarations to produce the element's TypeScript types
+and
 [custom elements manifest](/guides/build/#element-types--manifest).
 
 ## Props
@@ -78,32 +76,28 @@ svebcomponents endorses, and the only one it can describe:
 </script>
 ```
 
-The explicit type argument on `CustomEvent` is what types `detail`. It is read
-verbatim from your source, with no type checker involved, so inferring it from
-the `detail` value instead still records the event, but its detail becomes
-`unknown`.
+The build reads the explicit `CustomEvent` type argument without running a type
+checker. Without that argument, it records the event with `unknown` detail.
 
-Each event joins a typed event map, so consumers get narrowing for free:
+Each event joins a typed event map that narrows listeners:
 
 ```ts
 el.addEventListener("change", (event) => event.detail.value);
 ```
 
 :::note[Callback props are not events]
-A prop like `onPick` appears on the element interface, where
-`element.onPick = fn` genuinely works, but never among the attributes. In a
-template `onPick={fn}` is event-handler syntax rather than a property
-assignment, so listing it as an attribute would type-check a handler that never
-runs.
+A prop like `onPick` appears on the element interface. The build omits it from
+attributes because templates interpret `onPick={fn}` as event-handler syntax,
+not a property assignment.
 :::
 
 `createEventDispatcher` still works, but its events are not forwarded through
-the hydration host — see
+the hydration host. See
 [hydration limitations](/server-rendering/hydration/#limitations).
 
 ## Slots
 
-Statically named `<slot>` elements are collected automatically:
+The build collects named `<slot>` elements:
 
 ```svelte
 <div class="card">
@@ -122,10 +116,9 @@ Consumers fill them with light DOM children, as with any web component:
 ```
 
 :::caution[Slots disable hydration today]
-A component that declares `<slot>` elements renders correctly on the server but
-falls back to a client-side re-render on upgrade instead of adopting the
-server-rendered DOM. This is a Svelte 5 compilation detail expected to lift with
-Svelte 6 — see [hydration limitations](/server-rendering/hydration/#slots).
+A component that declares `<slot>` elements renders on the server and
+re-renders on upgrade. Svelte 5 compiles slots without hydration support. See
+[hydration limitations](/server-rendering/hydration/#slots).
 :::
 
 ## Styling
@@ -147,15 +140,13 @@ than expecting them to reach inside:
 </style>
 ```
 
-A CSS custom property the component _reads_ without defining is treated as part
-of its public API and collected into the manifest: those are the ones a
-consumer is expected to supply. The `var()` fallback becomes the documented
-default.
+The build adds CSS custom properties that the component reads but does not
+define to the manifest. A `var()` fallback becomes the documented default.
 
 For consumers who need to reach a specific inner node, add `part` attributes;
 `::part()` works as it does on any custom element.
 
-## Documenting what the scan cannot see
+## Component comments
 
 The component comment supplies descriptions, and can declare a member the build
 could not find on its own:
@@ -170,8 +161,8 @@ A fancy button.
 -->
 ```
 
-Documentation is additive: it adds descriptions, or declares a member the scan
-missed. It never overrides inferred structure.
+Component comments add descriptions and members that the scan cannot find.
+They do not override inferred structure.
 
 ## Declaring the tag
 
@@ -181,8 +172,7 @@ Every component declares its own tag with Svelte's string shorthand:
 <svelte:options customElement="favorite-number" />
 ```
 
-The object form works identically and is what you want when you also need
-`shadow` or your own `extend`:
+Use the object form when you need `shadow` or a custom `extend`:
 
 ```svelte
 <svelte:options customElement={{ tag: "favorite-number" }} />
@@ -197,8 +187,8 @@ dynamically interpolated tag (`customElement="{x}"`) or the bare
 hydration. Use a plain string literal or the object form.
 :::
 
-## Next
+## Next steps
 
-- [Publishing your package](/publishing/) — exports, the manifest, and what
+- [Publishing your package](/publishing/): exports, the manifest, and what
   consumers receive.
-- [Server rendering](/server-rendering/) — opt a component into SSR.
+- [Server rendering](/server-rendering/): opt a component into SSR.

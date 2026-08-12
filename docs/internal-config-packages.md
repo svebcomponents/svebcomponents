@@ -1,6 +1,6 @@
 # Internal config packages
 
-The `configs/*` workspace packages are private monorepo infrastructure. They keep package-level tooling consistent without copying the same config into every package.
+The private `configs/*` packages share tooling across the monorepo.
 
 They are not part of the public svebcomponents API.
 
@@ -31,7 +31,7 @@ Exports:
 - `@svebcomponents/prettier-config/base`
 - `@svebcomponents/prettier-config/svelte`
 
-The base config is intentionally empty today. The Svelte config extends it with `prettier-plugin-svelte` and a `*.svelte` parser override.
+The base config is empty. The Svelte config adds `prettier-plugin-svelte` and a `*.svelte` parser override.
 
 Use `base` for plain TypeScript packages and `svelte` for packages that contain Svelte files.
 
@@ -70,10 +70,9 @@ The SSR config extends the base config with a server-side test project matching:
 test/server/*.test.ts
 ```
 
-These two are mostly used by the `e2e/*` packages to keep integration tests consistent.
+The `e2e/*` packages use both configs for integration tests.
 
-The node config is for `packages/*`, whose tests run in node against `src`. It
-excludes build output (`dist/**`, `.svelte-kit/**`) from test discovery:
-packages compile their tests alongside their sources, and vitest's defaults
-would otherwise run each suite twice, once from `src` and once from a stale
-compiled copy that can pass while the source is failing.
+The node config runs `packages/*` tests against `src` and excludes build output
+from discovery. Vitest does not exclude `dist/**` or `.svelte-kit/**`, so a
+built package could run each suite from both its source and a stale compiled
+copy.

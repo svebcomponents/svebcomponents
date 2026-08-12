@@ -1,35 +1,28 @@
 Server-side rendering support for Svelte-built custom elements inside React apps.
 
-This is the React counterpart to `@svebcomponents/ssr`'s Svelte integration.
-The element renderers, the DOM shim, the renderer registry and the client-side
-hydration machinery are all shared; this package only supplies the two pieces
-that are host-framework specific: routing custom element tags to a wrapper, and
-emitting declarative shadow DOM around them.
+This package routes React custom element tags through the shared
+`@svebcomponents/ssr` renderer registry and emits declarative shadow DOM.
 
-This package is in beta: ready for real-world evaluation and early production
-adoption, with an API that may still change before 1.0.
+This package is in beta. Its API may change before 1.0.
 
-**The default `CustomElement` is synchronous rendering only.** See "Async
-Components" below for the RSC opt-in.
+**The default `CustomElement` uses synchronous rendering.** See "Async
+Components" for the RSC opt-in.
 
-## What It Provides
+## Exports
 
-- `@svebcomponents/ssr-react` — the `CustomElement` component.
-- `@svebcomponents/ssr-react/jsx-runtime` (and `/jsx-dev-runtime`) — drop-in
+- `@svebcomponents/ssr-react`: the `CustomElement` component.
+- `@svebcomponents/ssr-react/jsx-runtime` and `/jsx-dev-runtime`: drop-in
   replacements for React's JSX runtime that route any dashed tag through it.
-- `@svebcomponents/ssr-react/rsc` — an async `CustomElement` for React Server
+- `@svebcomponents/ssr-react/rsc`: an async `CustomElement` for React Server
   Components, which server-renders asynchronous elements instead of degrading.
 
-Unlike the Svelte and Vue integrations, there is no bundler plugin. The JSX
-runtime swap is a compiler setting, so this works anywhere React does,
-including hosts that are not Vite-based.
+The JSX runtime setting works in React hosts that do not use Vite.
 
-## Any custom element, not just Svelte-built ones
+## Other custom elements
 
-This integration depends only on Lit's `ElementRenderer` contract, so it
-server-renders any custom element with a registered renderer — Lit elements
-included. See
-[Any custom element](https://svebcomponents.dev/server-rendering/#any-custom-element-not-just-svelte-built-ones).
+This integration server-renders any custom element with a registered Lit
+`ElementRenderer`, including Lit elements. See
+[Other custom elements](https://svebcomponents.dev/server-rendering/#other-custom-elements).
 
 ## Installation
 
@@ -52,14 +45,14 @@ Point the JSX transform at this package:
 ```
 
 Load the component package's browser entry (which defines the custom element)
-and its `/ssr` entry (which registers the renderer), then write custom elements
-as normal JSX:
+and its `/ssr` entry (which registers the renderer), then use the element in
+JSX:
 
 ```tsx
 <my-component title="Hello" count={5} />
 ```
 
-Or skip the runtime swap and use the wrapper directly:
+You can use the wrapper without changing the runtime:
 
 ```tsx
 import { CustomElement } from "@svebcomponents/ssr-react";
@@ -70,17 +63,14 @@ import { CustomElement } from "@svebcomponents/ssr-react";
 ## Async Components
 
 React's `renderToString` cannot await, so an
-[asynchronous component](https://svebcomponents.dev/server-rendering/#what-makes-a-component-asynchronous)
+[asynchronous component](https://svebcomponents.dev/server-rendering/#asynchronous-components)
 **cannot be server-rendered by the default `CustomElement`**.
 
-Rather than failing the page, such an element is emitted without server-rendered
-shadow content and rendered in the browser only, with a one-time console
-warning naming the tag. Genuine render failures (an unregistered renderer, for
-instance) still throw, because those are configuration errors rather than a
-capability gap.
+The default wrapper emits an async element without shadow content and logs one
+warning. The browser renders the component. Configuration errors, such as a
+missing renderer, still throw.
 
-Apps on a React Server Components framework can avoid the degrade entirely by
-rendering the element from a Server Component instead:
+React Server Components can use the async wrapper:
 
 ```tsx
 import { CustomElement } from "@svebcomponents/ssr-react/rsc";
@@ -88,13 +78,9 @@ import { CustomElement } from "@svebcomponents/ssr-react/rsc";
 <CustomElement tag="my-component" title="Hello" count={5} />;
 ```
 
-An RSC async function component runs to completion before any markup is
-emitted, so it can `await` the renderer directly: no cache, no `use()`, no
-Suspense boundary. That only works for elements rendered from a Server
-Component, though: an async function component cannot be imported into a
-Client Component (`"use client"`), so an element rendered from client-side
-React, on an RSC framework or not, has no async path and keeps the default's
-degrade-to-client-only behavior.
+An RSC async function component awaits the renderer before emitting markup.
+Client Components cannot import an async function component, so they use the
+browser-rendered fallback.
 
 ## Requirements
 
@@ -102,7 +88,7 @@ degrade-to-client-only behavior.
 though no Svelte components appear in it; see
 [Compatibility](https://svebcomponents.dev/reference/compatibility/).
 
-## How It Works
+## Render flow
 
 On the server the wrapper resolves the custom element's registered
 `ElementRenderer`, applies the incoming attributes and properties, and renders:
@@ -114,7 +100,7 @@ On the server the wrapper resolves the custom element's registered
 </my-component>
 ```
 
-Two details make this work in React specifically:
+React requires two details:
 
 - `dangerouslySetInnerHTML` goes on the `<template>`, not on the host element.
   React refuses to render raw HTML and children on the same element, so putting
@@ -122,13 +108,11 @@ Two details make this work in React specifically:
 - The host element's props are the union of the incoming props and the
   renderer's attributes. The renderer's values win where both supply one.
   Emitting only the renderer's attributes would leave React's client tree
-  carrying primitive props the server never serialized, which React reports as
+  carrying primitive props the server did not serialize, which React reports as
   a hydration mismatch.
 
-In the browser the wrapper renders the same element _without_ the template,
-because the HTML parser has already adopted it into a shadow root and removed
-it from the light DOM. What React hydrates against is the post-parse child
-list, so the two trees agree.
+In the browser, the wrapper omits the template after the HTML parser adopts it
+into a shadow root. React hydrates against the remaining child list.
 
 ## Current Limitations
 

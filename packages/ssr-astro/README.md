@@ -1,13 +1,10 @@
 Server-side rendering support for custom elements inside Astro apps.
 
-This is the Astro counterpart to `@svebcomponents/ssr`'s Svelte integration.
-The element renderers, the DOM shim, the renderer registry and the client-side
-hydration machinery are all shared; this package only supplies what is
-specific to Astro: finding custom element tags in `.astro` templates, and
-emitting declarative shadow DOM around them.
+This package finds custom element tags in `.astro` templates, routes them
+through the shared `@svebcomponents/ssr` registry, and emits declarative shadow
+DOM.
 
-This package is in beta: ready for real-world evaluation and early production
-adoption, with an API that may still change before 1.0.
+This package is in beta. Its API may change before 1.0.
 
 ## Installation
 
@@ -17,7 +14,7 @@ pnpm add -D @svebcomponents/ssr-astro
 
 ## Setup
 
-Add the integration. That is the entire configuration:
+Add the integration:
 
 ```ts
 import { defineConfig } from "astro/config";
@@ -28,9 +25,8 @@ export default defineConfig({
 });
 ```
 
-Load the component package's browser entry (which defines the custom element)
-and its `/ssr` entry (which registers the renderer), then write custom elements
-in any `.astro` file:
+Load the package's browser entry to define the element and its `/ssr` entry to
+register the renderer. Then use the element in an `.astro` file:
 
 ```astro
 ---
@@ -43,16 +39,11 @@ import "my-component-package/ssr";
 </my-component>
 ```
 
-## No client-side counterpart
+## Browser behavior
 
-Astro ships no client-side JavaScript for these elements, so there is no
-client-side counterpart to this integration and nothing to register in the
-browser. The parser attaches the server-rendered shadow root, the element
-upgrades when its bundle loads, and it hydrates its own shadow content.
-
-That removes the entire class of problem the Vue and React integrations have
-to manage — matching a client render against the server's markup. There is no
-host render to match.
+Astro ships no host JavaScript for these elements. The parser attaches the
+server-rendered shadow root, then the element upgrades and hydrates when its
+bundle loads.
 
 The exception is Astro islands: a custom element inside a `client:*` React,
 Vue or Svelte island belongs to that framework, and the corresponding
@@ -60,25 +51,22 @@ svebcomponents integration applies there.
 
 ## Async Components
 
-Astro frontmatter is an async module scope, so the wrapper awaits the element
-renderer directly. An
-[asynchronous component](https://svebcomponents.dev/server-rendering/#what-makes-a-component-asynchronous)
-works through the same wrapper as a synchronous one: no sync/async split as in
-the Svelte integration, and no degradation as in React's.
+Astro frontmatter runs in an async module scope, so the wrapper awaits the
+element renderer. An
+[asynchronous component](https://svebcomponents.dev/server-rendering/#asynchronous-components)
+uses the same wrapper as a synchronous component.
 
-Like any non-Svelte host, an Astro app must opt into Svelte's async SSR mode
-explicitly on the server:
+Enable Svelte's async SSR mode in the Astro server entry:
 
 ```ts
 import "@svebcomponents/ssr/enable-async";
 ```
 
-## Any custom element, not just Svelte-built ones
+## Other custom elements
 
-This integration depends only on Lit's `ElementRenderer` contract, so it
-server-renders any custom element with a registered renderer — Lit elements
-included. See
-[Any custom element](https://svebcomponents.dev/server-rendering/#any-custom-element-not-just-svelte-built-ones).
+This integration server-renders any custom element with a registered Lit
+`ElementRenderer`, including Lit elements. See
+[Other custom elements](https://svebcomponents.dev/server-rendering/#other-custom-elements).
 
 ## Requirements
 
@@ -86,7 +74,7 @@ included. See
 though no Svelte components appear in it; see
 [Compatibility](https://svebcomponents.dev/reference/compatibility/).
 
-## How It Works
+## Render flow
 
 A Vite plugin rewrites custom element tags in `.astro` source to a wrapper
 component, which renders:
@@ -98,31 +86,23 @@ component, which renders:
 </my-component>
 ```
 
-Two implementation details are easy to get wrong:
+The integration rewrites source in Vite's `load` hook. Astro's `transform` hook
+runs first and would leave the integration with compiled JavaScript. The
+`load` hook serves Astro's virtual `?astro=…` requests before compilation.
 
-**The rewrite happens in Vite's `load` hook, not `transform`.** Astro compiles
-`.astro` to JavaScript in its own `transform`, and its plugin is `enforce:
-"pre"` and registered ahead of anything an integration contributes — so a
-`transform` here would receive compiled JavaScript with no custom element tags
-left in it. Astro's `load` hook only serves its virtual `?astro=…`
-sub-requests, so supplying the component file's contents there means Astro's
-compiler transforms the rewritten source regardless of plugin order.
+The wrapper closes `<template>` with an end tag. Astro does not treat a
+self-closing `<template ... />` as void, so it would place the following
+`<slot />` inside the shadow content.
 
-**The wrapper closes its `<template>` explicitly.** A self-closing
-`<template ... />` is not treated as void by Astro's compiler; it swallows the
-following `<slot />`, putting the light-dom children inside the shadow content.
+Astro's parser classifies a dashed tag as a `custom-element` AST node. The
+integration reads that node instead of maintaining an exclusion list.
 
-Detection needs no heuristics: Astro's parser classifies a dashed tag as its
-own `custom-element` AST node, so unlike the Svelte and Vue integrations there
-is no "contains a dash" rule and no reserved SVG/MathML exclusion list.
+## Astro integration API
 
-## Not an Astro "Renderer"
-
-Astro's `addRenderer()` API is for UI-framework components used as islands,
-with `client:*` directives — it expects `check()` and `renderToStaticMarkup()`
-entrypoints. A custom element is not an island: it hydrates itself and needs no
-directive. So this ships as a template rewrite plus a wrapper component rather
-than a renderer registration.
+Astro's `addRenderer()` API handles UI framework islands with `client:*`
+directives and expects `check()` and `renderToStaticMarkup()` entrypoints.
+Custom elements hydrate themselves, so this package uses a template rewrite
+and wrapper component.
 
 ## Current Limitations
 

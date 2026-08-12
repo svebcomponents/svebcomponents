@@ -5,8 +5,7 @@ description: Exports, the custom elements manifest, and what consumers receive w
 
 import { FileTree } from "@astrojs/starlight/components";
 
-Your `package.json` does double duty: it configures the build and it describes
-the result to consumers. This page covers what to put in it before you publish.
+Your `package.json` configures the build and describes its outputs to consumers.
 
 ## One export per component
 
@@ -50,9 +49,9 @@ published files. The build prints a hint if you forget:
 
 ## Ship the Svelte template types
 
-Every build writes the `svelte/elements` augmentation — the thing that makes
-unknown attributes and `increments={"nope"}` errors in a Svelte template — to a
-file beside the entry's declarations:
+Each build writes a `svelte/elements` augmentation beside the entry's
+declarations. It makes unknown attributes and `increments={"nope"}` type
+errors:
 
 ```
 dist/client/FavoriteNumber.svelte-types.d.ts
@@ -72,7 +71,7 @@ Expose it, and Svelte consumers opt in with one line:
 ```
 
 ```ts
-// the consumer's app.d.ts — a .d.ts, so it never reaches runtime
+// the consumer's app.d.ts
 import "my-components/svelte";
 ```
 
@@ -84,14 +83,13 @@ If your package declares `svelte` as a required dependency of its consumers (a
 declarations reference the file for you and your Svelte consumers need no setup
 at all.
 
-Declare it only if you genuinely want every consumer to install Svelte. You do
-not need to for template types, and you never had to for the bundle — the
-browser output
+Declare it when each consumer should install Svelte. Template types do not
+require it, and the browser output
 [inlines every bare specifier](/guides/build/#what-ends-up-in-the-browser-bundle)
 either way.
 :::
 
-React and Vue consumers write one augmentation themselves — see
+React and Vue consumers write one augmentation. See
 [typing elements in React & Vue](/guides/framework-types/).
 
 ## Optional: a lighter build for Svelte consumers
@@ -114,12 +112,10 @@ share the host application's runtime:
 ```
 
 :::caution[Version coupling]
-The Svelte-aware build relies on Svelte runtime internals. Those are versioned
-with Svelte and its compiler but are not a semver-stable public API: a patch or
-minor compiler release can change the runtime contract in ways that break
-previously compiled output. Only use this optimization when the component
-package and the consuming application are built with the same Svelte version,
-and keep the standalone `default` export as the fallback for everyone else.
+The Svelte-aware build relies on private Svelte runtime APIs. A patch or minor
+release can break compiled output. Build the component package and consuming
+application with the same Svelte version. Other consumers use the standalone
+`default` export.
 :::
 
 ## Optional: server-renderable output
@@ -169,6 +165,5 @@ entries do not overwrite each other.
 
 </FileTree>
 
-Importing the entrypoint defines the element. Svelte's generated
-`customElements.define()` call is made idempotent at build time, so importing
-the component, or a bundle containing it, more than once never throws.
+Importing the entrypoint defines the element. The build guards Svelte's
+`customElements.define()` call against duplicate registration.

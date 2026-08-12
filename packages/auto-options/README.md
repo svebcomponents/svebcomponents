@@ -1,8 +1,11 @@
 Infer Svelte custom element prop options from `$props()`.
 
-Svelte custom elements need prop metadata to expose component props as HTML attributes. Writing that metadata by hand gets repetitive, especially when the same information already exists in your TypeScript props.
+Svelte custom elements need prop metadata to expose component props as HTML
+attributes. TypeScript props contain the same information.
 
-`@svebcomponents/auto-options` is a build plugin that reads a Svelte component's instance script, infers prop names and primitive prop types from `$props()`, and injects or updates `<svelte:options customElement={...} />`.
+`@svebcomponents/auto-options` reads a Svelte component's instance script,
+infers prop names and primitive types from `$props()`, and updates
+`<svelte:options customElement={...} />`.
 
 ## Example
 
@@ -18,7 +21,7 @@ Svelte custom elements need prop metadata to expose component props as HTML attr
 <h1>Favorite number: {props.favoriteNumber}</h1>
 ```
 
-is transformed before the Svelte compiler runs:
+The plugin transforms it before the Svelte compiler runs:
 
 ```svelte
 <svelte:options
@@ -54,7 +57,7 @@ The generated attribute name is kebab-cased, so consumers can use:
 
 ### With `@svebcomponents/build`
 
-If you build with `@svebcomponents/build`, no extra setup is needed. The generated tsdown config already runs `@svebcomponents/auto-options` before compiling Svelte.
+`@svebcomponents/build` runs `@svebcomponents/auto-options` before Svelte.
 
 ### Manual Usage
 
@@ -83,7 +86,8 @@ export default defineConfig({
 });
 ```
 
-Then expose the compiled custom element from your package entrypoint. Outside `@svebcomponents/build`'s pipeline you don't get its automatic registration guard, so guard it by hand:
+Expose the compiled custom element from your package entrypoint. Without
+`@svebcomponents/build`, guard the registration yourself:
 
 ```ts
 import Component from "./Component.svelte";
@@ -95,15 +99,18 @@ if (!customElements.get("favorite-number") && Component.element) {
 export default Component;
 ```
 
-`auto-options` generates the prop metadata Svelte needs for attribute conversion, but the component still has to be compiled and registered as a custom element. Without that custom element output, attributes such as `favorite-number="42"` will stay strings.
+`auto-options` generates prop metadata for attribute conversion. You must also
+compile and register the component as a custom element. Otherwise,
+`favorite-number="42"` remains a string.
 
-Declare the tag directly in the component with the string-shorthand form, and `auto-options` expands it into the object form with the inferred `props` merged in:
+Declare the tag with Svelte's string shorthand. `auto-options` expands it and
+adds the inferred `props`:
 
 ```svelte
 <svelte:options customElement="favorite-number" />
 ```
 
-The object form works too — use it directly when you also need `shadow` or a manual `extend`:
+Use the object form when you need `shadow` or a custom `extend`:
 
 ```svelte
 <svelte:options
@@ -113,7 +120,7 @@ The object form works too — use it directly when you also need `shadow` or a m
 />
 ```
 
-## What Gets Inferred
+## Inferred types
 
 The plugin looks for a variable declaration initialized from `$props()` in the component instance script.
 
@@ -137,7 +144,7 @@ It can infer prop names and custom element types from:
 | `Record<...>`              | `"Object"`                             |
 | interface references       | `"Object"`                             |
 
-Props without TypeScript type information are still added, but default to `"String"` because HTML attributes are strings by default.
+Props without TypeScript types use `"String"`, the default HTML attribute type.
 
 ## Supported Prop Shapes
 
@@ -191,7 +198,7 @@ Untyped destructured props:
 
 ## Existing Options
 
-Manual custom element options are treated as the highest-priority source of truth.
+Manual custom element options take precedence.
 
 ```svelte
 <svelte:options
@@ -203,9 +210,11 @@ Manual custom element options are treated as the highest-priority source of trut
 />
 ```
 
-If the plugin later infers `count` as a number, the existing `type` and `attribute` values are preserved. Missing fields and newly discovered props are still filled in.
+If the plugin infers `count` as a number, it preserves your `type` and
+`attribute` values and fills in missing fields.
 
-Use this as the escape hatch when inference is wrong or incomplete. You can manually define one prop, several props, or the entire `props` object; the plugin will preserve the fields you wrote and infer the rest where it can.
+Define one prop or the full `props` object when inference cannot describe the
+component. The plugin preserves those fields and infers the rest.
 
 ## Defaults
 
@@ -217,7 +226,11 @@ For every inferred prop, the plugin generates:
 
 ## Current Limitations
 
-- Only Svelte 5 `$props()` declarations are inspected.
-- The bare `customElement` boolean shorthand, and a dynamically-interpolated string tag (e.g. `customElement="{x}"`), aren't supported — use a plain string literal tag or the object form.
-- Imported prop types are not resolved. Type aliases and interfaces must be declared in the same component instance script to be inspected.
-- Generic and complex TypeScript types are not fully resolved. Unknown types fall back to `"String"` unless they are interface references, which are treated as `"Object"`.
+- The plugin inspects Svelte 5 `$props()` declarations.
+- Use a string literal tag or the object form. The plugin does not support the
+  bare `customElement` boolean or an interpolated tag such as
+  `customElement="{x}"`.
+- The plugin does not resolve imported prop types. Declare type aliases and
+  interfaces in the component instance script.
+- The plugin does not resolve generic or complex TypeScript types. It maps
+  unknown types to `"String"` and interface references to `"Object"`.

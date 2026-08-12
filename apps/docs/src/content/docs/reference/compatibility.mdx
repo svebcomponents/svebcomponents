@@ -28,15 +28,15 @@ with APIs that may still change before 1.0.
 
 ## Host framework notes
 
-- **SvelteKit / Vite + Svelte** — the reference integration. Asynchronous
+- **SvelteKit / Vite + Svelte:** the reference integration. Asynchronous
   components additionally need
   `compilerOptions.experimental.async` in the host app.
-- **Vue 3.5+** — requires Vite. No synchronous/asynchronous split.
-- **React 19+** — no bundler requirement; works anywhere React does. React 18
+- **Vue 3.5+:** requires Vite. No synchronous/asynchronous split.
+- **React 19+:** no bundler requirement; works anywhere React does. React 18
   and earlier stringify props passed to custom elements and do not attach
   listeners for custom event names. Asynchronous components need the
   [RSC entry point](/server-rendering/other-frameworks/#synchronous-by-default-with-an-rsc-opt-in).
-- **Astro 5+** — no client-side counterpart; the element hydrates itself.
+- **Astro 5+:** no client-side counterpart; the element hydrates itself.
 
 Every non-Svelte host must also opt into Svelte's async SSR mode explicitly
 before rendering an asynchronous component; see

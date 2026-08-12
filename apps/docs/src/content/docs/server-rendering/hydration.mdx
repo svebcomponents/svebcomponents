@@ -3,26 +3,19 @@ title: Hydration
 description: How server-rendered declarative shadow DOM is adopted instead of re-rendered when a Svelte-built custom element upgrades.
 ---
 
-Svelte's compiler-generated custom elements cannot hydrate on their own. When
-an element upgrades, its constructor attaches a shadow root, which per spec
-clears any declarative shadow root the server delivered, and then mounts the
-component from scratch. Server-rendered DOM was paint-and-throw-away: good for
-first paint and SEO, but every node was re-created the moment JavaScript
-arrived.
+Svelte's generated custom elements mount from scratch when they upgrade. The
+constructor attaches a shadow root, which clears the declarative shadow root
+from the server. The browser then creates each node again.
 
-Components built with `@svebcomponents/build` hydrate instead. The
-server-rendered shadow DOM is **adopted in place**: existing nodes are kept,
-component styles are reused rather than re-injected, and the component is fully
-reactive afterwards.
+Components built with `@svebcomponents/build` adopt the server-rendered shadow
+DOM. Svelte keeps the nodes and styles, then connects its reactivity.
 
-Hydration is **on by default** for every SSR-enabled component. There is
-nothing to configure, but it helps to know how it works and where its limits
-are today.
+The build enables hydration for each SSR component. Set `hydratable: false` to
+disable it.
 
-## How it works
+## Hydration flow
 
-Everything is built on documented Svelte extension points, not forked compiler
-output:
+svebcomponents uses Svelte's public extension points:
 
 1. During the build, [auto-options](/guides/attribute-inference/) injects
    Svelte's official
@@ -34,27 +27,20 @@ output:
 3. On connect, the wrapper hydrates the claimed shadow root with Svelte's
    public [`hydrate()`](https://svelte.dev/docs/svelte/imperative-component-api#hydrate)
    API instead of mounting.
-4. Both sides render the component through the same internal `HydrationHost`
-   component, so the server markup structurally matches what the client
-   expects: the generated SSR entry uses a server-compiled copy, and the client
-   hydrates against it.
-5. The same symmetry protects the element inside **hydrating Svelte host apps**
-   such as SvelteKit. The SSR wrapper and the browser wrapper render
-   structurally identical `<svelte:element>` fragments, selected per
-   environment through export conditions rather than a runtime branch, so the
-   host's hydration claims the server-rendered element instead of re-creating
-   it. Re-creating it would discard the shadow root before the element could
-   hydrate.
-6. Rich, non-attribute props the server rendered with are serialized into the
-   shadow output and restored before hydrating, so host frameworks that only
-   re-supply props after their own asynchronous hydration do not cause a
-   mismatch.
+4. The server and client render through the same internal `HydrationHost`
+   component. The generated SSR entry uses a server build of that component;
+   the client hydrates against it.
+5. In a hydrating Svelte host such as SvelteKit, the server and browser wrappers
+   render matching `<svelte:element>` fragments. Export conditions select each
+   wrapper. The host claims the existing element before it can discard the
+   shadow root.
+6. The server serializes rich props into the shadow output. The wrapper restores
+   them before hydration, even if the host supplies props after its own
+   hydration finishes.
 
-## Graceful degradation
+## Fallbacks
 
-Anything the wrapper cannot hydrate falls back to Svelte's untouched mount
-path, which is exactly how all custom elements behaved before hydration
-existed:
+The wrapper uses Svelte's mount path in four cases:
 
 | Situation                                                                   | Behaviour                                                |
 | --------------------------------------------------------------------------- | -------------------------------------------------------- |
@@ -63,28 +49,24 @@ existed:
 | Re-connection after teardown (removed long enough for Svelte to destroy it) | Fresh mount                                              |
 | Hydration mismatch                                                          | Svelte logs a warning, clears the shadow root, re-mounts |
 
-The worst outcome is a re-render, never a broken component.
+Each fallback re-renders the component.
 
 ## Limitations
 
 ### Slots
 
-Components that declare `<slot>` elements currently **fall back to the mount
-path**. They render correctly, but re-render on upgrade instead of adopting the
-server DOM. In dev mode the element logs a `console.info` when this happens, so
-the fallback is never mistaken for broken hydration.
+Components that declare `<slot>` elements use the mount path and re-render on
+upgrade. In dev mode, the element logs a `console.info` for this fallback.
 
-Svelte 5 still compiles `<slot>` elements in custom-element mode through a
-legacy transformation that creates slot elements imperatively, with no
-hydration awareness. That transformation is expected to disappear with **Svelte
-6**, at which point literal `<slot>` elements flow through Svelte's normal,
-hydration-aware element path and this limitation should lift.
+Svelte 5 compiles `<slot>` elements in custom-element mode through a legacy
+transform without hydration support. Svelte plans to remove that transform in
+version 6.
 
 ### Legacy component events
 
 `createEventDispatcher` events are not forwarded through the hydration host.
-Events dispatched via [`$host()`](https://svelte.dev/docs/svelte/$host), the
-idiomatic pattern for custom elements, bubble natively and work unchanged.
+Events dispatched through [`$host()`](https://svelte.dev/docs/svelte/$host)
+bubble from the custom element.
 
 ### Component exports
 
@@ -93,16 +75,15 @@ hosts.
 
 ## Bundle cost
 
-Hydration support adds roughly **4–5&nbsp;KB gzipped** to a self-contained
+Hydration support adds about **4–5&nbsp;KB gzipped** to a self-contained
 client bundle: Svelte's hydration internals plus the wrapper. Builds that share
 the host application's Svelte runtime through the
 [`svelte` condition](/publishing/#optional-a-lighter-build-for-svelte-consumers)
-pay less. If a component is only ever used client-side, `hydratable: false`
-reclaims it.
+reduce that cost. Set `hydratable: false` for client-only components.
 
 ## Opting out
 
-Per package, in `svebcomponents.config.ts`:
+Disable hydration for a package in `svebcomponents.config.ts`:
 
 ```ts
 import { defineConfig } from "@svebcomponents/build";
@@ -112,7 +93,7 @@ export default defineConfig({
 });
 ```
 
-Per component, declare your own `extend` in
-`<svelte:options customElement={{ ... }}>`. auto-options never injects over one
-you wrote, so the component keeps Svelte's default mount behaviour unless your
-extension implements hydration itself.
+To control one component, declare `extend` in
+`<svelte:options customElement={{ ... }}>`. Auto-options preserves your
+extension. The component uses Svelte's mount behavior unless the extension
+implements hydration.

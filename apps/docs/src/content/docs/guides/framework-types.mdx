@@ -18,8 +18,8 @@ The element is registered in `HTMLElementTagNameMap`, so
 `document.querySelector("simple-component")` is typed with no setup at all.
 
 :::caution[Attributes cannot carry objects]
-An attribute is always a string, so `SimpleComponentAttributes` types one as a
-string — except where the attribute name is also the prop name (`count`), the
+An attribute is a string, so `SimpleComponentAttributes` types one as a string.
+If the attribute name is also the prop name (`count`), the
 one case where a framework assigns the property instead of writing an
 attribute.
 
@@ -31,15 +31,14 @@ recipe below composes both:
 <simple-component preloadedData={value}></simple-component>
 ```
 
-React, Vue and Svelte all resolve this the same way — assign a property when
+React, Vue, and Svelte assign a property when
 the element has one, write an attribute otherwise.
 :::
 
 :::note[Function and snippet props are not in either]
 In a template `onSelect={fn}` is event-handler syntax rather than a property
-assignment, so props typed as functions or snippets are deliberately absent
-from `SimpleComponentAttributes` and `SimpleComponentProps` alike — listing
-them would type-check a handler that never runs.
+assignment, so the build omits function and snippet props from
+`SimpleComponentAttributes` and `SimpleComponentProps`.
 
 They are still part of the element's surface and typed on
 `SimpleComponentElement`. Set them through a DOM reference:
@@ -51,20 +50,19 @@ if (el) el.onSelect = handleSelect;
 
 :::
 
-Getting the same in a framework's templates takes one augmentation, which you
-write once in your own project. svebcomponents deliberately does not generate
-these: they name types from frameworks it neither depends on nor tests against,
-and those conventions change between major versions.
+Add one augmentation to the consuming project for framework templates.
+svebcomponents does not generate types for frameworks it cannot test or
+version alongside this package.
 
 :::note
-Put the augmentation in a `.d.ts` — or any module — that your `tsconfig.json`
+Put the augmentation in a `.d.ts` or another module that your `tsconfig.json`
 includes. It applies project-wide.
 :::
 
 ## Svelte
 
-If the package declares `svelte` as a required dependency of its consumers,
-this is already done for you — see
+If the package requires consumers to install `svelte`, the generated
+declarations register these types. See
 [Publishing your package](/publishing/#ship-the-svelte-template-types).
 Write the augmentation yourself only when it does not:
 
@@ -91,9 +89,9 @@ attributes also accept their string form (`count="3"`) since that is what
 markup produces.
 
 :::caution
-`SvelteHTMLElements` ends with a catch-all index signature, so a tag that was
-never registered is silently accepted with any attributes. Typo protection only
-applies to elements you have declared.
+`SvelteHTMLElements` ends with a catch-all index signature, so Svelte accepts an
+undeclared tag with any attributes. Typo protection applies to declared
+elements.
 :::
 
 ## React

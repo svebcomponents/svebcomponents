@@ -1,10 +1,8 @@
 Small shared helpers used by the svebcomponents packages.
 
-You do not need to install this. It is a transitive dependency of
-`@svebcomponents/auto-options` and `@svebcomponents/ssr`, documented here so
-its behaviour is inspectable. It keeps common string transformations in one
-place so the build-time and runtime packages agree on how prop names and
-attribute names map to each other.
+`@svebcomponents/auto-options` and `@svebcomponents/ssr` install this package as
+a transitive dependency. It keeps their shared string transformations in one
+place.
 
 ## Exports
 
@@ -49,6 +47,6 @@ Used by `@svebcomponents/ssr` when mapping non-string kebab-case values to compo
 
 ## Registering custom elements
 
-There is no registration helper here. Declare the tag in the component and let
-`@svebcomponents/build` handle it — see
+Declare the tag in the component and let `@svebcomponents/build` register it.
+See
 [Authoring components](https://svebcomponents.dev/authoring/#declaring-the-tag).

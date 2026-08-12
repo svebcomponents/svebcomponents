@@ -1,13 +1,14 @@
 Build Svelte custom element packages with the `svebcomponents` command.
 
-This package wraps `tsdown` with the defaults svebcomponents needs:
+It configures `tsdown` for Svelte custom elements:
 
-- Svelte files are compiled as custom elements for the browser build.
-- `@svebcomponents/auto-options` runs before Svelte, so component props can be inferred into `<svelte:options customElement={...} />`.
-- The browser build guards Svelte's generated custom element registration against being run more than once.
-- Type declarations are emitted alongside the JavaScript output.
-- An SSR build can be generated with `@svebcomponents/ssr/tsdown`.
-- Svelte conditional exports can be generated for Svelte-aware tooling.
+- Svelte compiles files as custom elements for the browser build.
+- `@svebcomponents/auto-options` adds inferred props to
+  `<svelte:options customElement={...} />` before compilation.
+- The browser build prevents duplicate custom element registration.
+- tsdown emits type declarations with the JavaScript output.
+- `@svebcomponents/ssr/tsdown` can generate an SSR build.
+- A `svelte` condition can share the host's Svelte runtime.
 
 ## Installation
 
@@ -28,8 +29,7 @@ build script:
 
 ## Zero-config Builds
 
-For the common case, describe your component entrypoints in `package.json`
-exports:
+Describe component entrypoints in `package.json` exports:
 
 ```json
 {
@@ -74,9 +74,8 @@ For the example above, `./dist/client/ExampleComponent.js` maps to
 - `dist/server/*` for the server-renderable build because the matching `./ssr` export exists.
 - `dist/server-svelte/*` for Svelte-aware SSR tooling because the `./ssr` export also has a `svelte` condition.
 
-If a component export does not have a matching SSR export, only the browser
-build is generated. Ordinary modules are built independently and do not
-receive component SSR output.
+Without a matching SSR export, the CLI generates a browser build for the
+component. It builds ordinary modules without component SSR output.
 
 ### Server preparation
 
@@ -99,29 +98,25 @@ const prepare: SsrPrepare = ({ props, setProperty }) => {
 export default prepare;
 ```
 
-The build discovers this file automatically and includes it only in the server
-output. Properties set by the hook participate in rich-property serialization,
-so hydratable components receive the prepared value without repeating the work
-in the browser. Return synchronously when no preparation is needed to preserve
-the synchronous SSR path; a returned promise requires an async-capable host.
+The build includes this file in the server output. It serializes properties set
+by the hook so hydratable components can reuse them in the browser. Return
+without a promise when preparation does not need async work; a promise requires
+an async host.
 
-## What Ends Up In The Browser Bundle
+## Browser bundle contents
 
-`dist/client` is a final-form browser artifact: it is loaded from a URL, or from
-a bundle that has already resolved everything. There is no module resolver at
-that point, so the browser builds **inline every bare specifier**, regardless of
-whether `package.json` calls it a `dependency` or a `devDependency`.
+Apps load `dist/client` from a URL or a bundle that has resolved its imports.
+The browser builds inline each bare specifier, whether `package.json` lists it
+as a `dependency` or `devDependency`.
 
-That classification answers a different question — what a consumer must install
-— and inferring bundling from it produced files no browser could load, silently.
-A specifier that is inlined but cannot be resolved now fails the build instead.
+Dependency classification controls what consumers install. The build fails when
+it cannot resolve a specifier selected for inlining.
 
 Left external: Node builtins (a browser bundle importing `node:fs` is broken
 either way), relative and absolute paths, and protocol imports.
 
-You are therefore free to declare dependencies for what they actually mean. If
-your published element types name a type from another package, declare it and
-the browser bundle still carries the code:
+Declare packages that consumers need as dependencies. The browser build still
+includes their code:
 
 ```json
 {
@@ -129,13 +124,11 @@ the browser bundle still carries the code:
 }
 ```
 
-The same goes for `svelte`: declaring it never costs you the runtime the
-standalone build exists to carry.
+Declaring `svelte` also keeps the runtime in the standalone build.
 
 ### Opting out
 
-For the rare dependency the host should provide — another custom element package
-you must not duplicate, say — list it:
+List a dependency in `neverBundle` when the host must provide it:
 
 ```json
 {
@@ -151,28 +144,26 @@ at runtime, so it keeps ordinary externalization.
 
 ## Svelte Template Types
 
-Every build writes the `svelte/elements` augmentation that teaches Svelte
-templates about your elements — unknown attributes and `increments={"nope"}`
-become errors — to a file beside the entry's declarations:
+Each build writes a `svelte/elements` augmentation beside the entry's
+declarations. It makes unknown attributes and `increments={"nope"}` type
+errors:
 
 ```
 dist/client/ExampleComponent.svelte-types.d.ts
 ```
 
-It covers both halves of the element's surface: kebab-cased attributes, and the
-camelCase properties a template assigns with `preloadedData={value}` — the only
-way to pass a value that does not survive being turned into a string.
+It covers kebab-case attributes and camelCase properties assigned through
+expressions such as `preloadedData={value}`.
 
 It lives in its own file because loading it requires svelte: it augments
 `svelte/elements`, and a consumer without svelte installed cannot resolve that.
 
-**If your package requires svelte of its consumers** (a `dependency`, or a
+**If your package requires Svelte from consumers** through a `dependency` or a
 `peerDependency` not marked optional) the entry's declarations reference it, and
 your Svelte consumers need no setup.
 
-**Otherwise** — including every package meant to work in non-Svelte
-applications — expose it so Svelte consumers can opt in. The build prints the
-wiring if you have not:
+For packages that work without Svelte, expose the augmentation as an opt-in.
+The build prints the required export:
 
 ```json
 {
@@ -182,18 +173,18 @@ wiring if you have not:
 }
 ```
 
-They then add one line, in a `.d.ts` so it never reaches runtime:
+Consumers import it from a `.d.ts` file:
 
 ```ts
 // app.d.ts
 import "my-components/svelte";
 ```
 
-Wanting Svelte template types therefore never obliges you to declare svelte, and
-never obliges your consumers to install it.
+Svelte template types do not require the package or all its consumers to
+install Svelte.
 
-React and Vue consumers write their own augmentation from the exported types —
-see [typing elements in React & Vue](https://svebcomponents.dev/guides/framework-types/).
+React and Vue consumers write their own augmentation from the exported types.
+See [typing elements in React & Vue](https://svebcomponents.dev/guides/framework-types/).
 
 ## Svelte Conditional Exports
 
@@ -205,13 +196,9 @@ reuse the host application's runtime.
 Other consumers fall back to `default`, which includes the Svelte runtime and
 can run outside Svelte applications.
 
-This optimization comes with a compatibility risk: the Svelte runtime internals
-are versioned with Svelte and its compiler, but they are not a semver-stable
-public API. A patch or minor compiler release can change the runtime contract in
-ways that break previously compiled output. The component package and host
-application should be built with the same Svelte version when using the `svelte`
-export. Consumers that cannot guarantee that should use the standalone
-`default` build.
+The `svelte` export relies on private Svelte runtime APIs. A patch or minor
+release can break compiled output. Build the component package and host with
+the same Svelte version, or use the standalone `default` build.
 
 ## Multiple Components
 
@@ -263,14 +250,15 @@ export default defineConfig({
 });
 ```
 
-`defineConfig` returns an array of `tsdown` options. By default it creates two builds:
+`defineConfig` returns an array of `tsdown` options with two builds:
 
 - a browser build from `src/ExampleComponent.svelte` to `dist/client`
 - an SSR build from `src/ExampleComponent.svelte` to `dist/server`
 
-Set `svelteOutDir` and `ssrSvelteOutDir` to also emit Svelte-aware builds that externalize Svelte runtime imports.
+Set `svelteOutDir` and `ssrSvelteOutDir` to emit builds that externalize Svelte
+runtime imports.
 
-Set `ssr: false` to emit only the browser custom element build.
+Set `ssr: false` to emit a browser custom element build without an SSR build.
 
 A config file replaces export inference for the whole package, so a package
 with several components exports one `defineConfig` call per component,
@@ -286,10 +274,9 @@ export default [
 ];
 ```
 
-svebcomponents loads the package's Svelte configuration from `vite.config.*` or
-`svelte.config.*` and passes `preprocess`, `extensions`, and `compilerOptions`
-to the generated browser and SSR builds. svebcomponents-owned compiler options
-such as `customElement` and `generate: "server"` still take precedence.
+svebcomponents reads `vite.config.*` or `svelte.config.*` and passes
+`preprocess`, `extensions`, and `compilerOptions` to the browser and SSR builds.
+Its `customElement` and `generate: "server"` settings take precedence.
 
 If the loaded Svelte config enables `compilerOptions.experimental.async`, the
 generated browser and SSR outputs are async-compiled. Host apps that consume
@@ -317,12 +304,11 @@ The browser build uses:
 1. `@svebcomponents/auto-options`
 2. `rollup-plugin-svelte` with `compilerOptions.customElement: true`
 3. a guard that makes Svelte's generated `customElements.define(...)` call
-   idempotent, so evaluating the compiled component (or a bundle containing
-   it) more than once never throws
+   idempotent
 4. declaration generation from the component analyzer
 
-When a Svelte-aware browser build is generated, it uses the same pipeline but
-marks `svelte` and `svelte/*` imports as external.
+A Svelte-aware browser build uses the same pipeline and marks `svelte` and
+`svelte/*` imports as external.
 
 The SSR build uses:
 
@@ -330,16 +316,15 @@ The SSR build uses:
 2. Svelte compiled with `generate: "server"`
 3. a generated `ElementRenderer` entrypoint for server-side rendering
 
-If an adjacent `entry.ssr.ts` or `entry.ssr.js` file exists, it is compiled as
-an additional server-only entry and wired into the generated renderer.
+The build compiles an adjacent `entry.ssr.ts` or `entry.ssr.js` file as a server
+entry and connects it to the generated renderer.
 
-When a Svelte-aware SSR build is generated, it also externalizes `svelte` and
-`svelte/*` imports and generates its renderer against the Svelte-aware client
-output.
+A Svelte-aware SSR build externalizes `svelte` and `svelte/*` imports and uses
+the Svelte-aware client output.
 
-## When Configuration Is Missing
+## Default configuration
 
-If the CLI cannot load `svebcomponents.config.ts` or infer any component exports from `package.json`, it falls back to:
+If the CLI finds no config file or component exports, it uses:
 
 ```ts
 defineConfig({});

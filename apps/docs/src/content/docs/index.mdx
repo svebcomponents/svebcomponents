@@ -1,9 +1,9 @@
 ---
 title: svebcomponents
-description: Build Svelte components into web components that package themselves, describe themselves to other people's editors, and server-render with real hydration.
+description: Build, package, type, and server-render Svelte custom elements.
 template: splash
 hero:
-  tagline: Boilerplate-free, type-safe, server-rendered web components — with Svelte.
+  tagline: Build and server-render web components with Svelte.
   image:
     file: ../../assets/svebcomponents_logo.svg
   actions:
@@ -21,31 +21,31 @@ hero:
 
 import { Card, CardGrid } from "@astrojs/starlight/components";
 
-Svelte already allows compiling to custom elements today. svebcomponents is
-the toolchain for everything that comes next: packaging it, typing it for the
-people who use it, and rendering it on the server.
+Svelte compiles components into custom elements. svebcomponents packages those
+elements, generates consumer types, and renders them on the server.
 
 <CardGrid>
-  <Card title="No boilerplate options" icon="pencil">
+  <Card title="Attribute metadata" icon="pencil">
     Your `$props()` TypeScript types become attribute names, converters and
     reflection settings. Write `increments: number`, and `increments="5"`
     arrives as a number.
   </Card>
-  <Card title="package.json is the build config" icon="setting">
+  <Card title="Build configuration" icon="setting">
     Declare where the built files go in `exports`, then run the `svebcomponents`
-    command. No bundler config, no entry list.
+    command.
   </Card>
   <Card title="Typed for your consumers" icon="approve-check">
     A custom elements manifest plus `.d.ts`, so editors autocomplete your tags
-    and `querySelector` comes back typed — in Svelte, React, Vue or plain HTML.
+    and `querySelector` returns a typed element in Svelte, React, Vue, or plain
+    HTML.
   </Card>
-  <Card title="Server-rendered, and hydrated" icon="rocket">
+  <Card title="Server rendering" icon="rocket">
     Declarative shadow DOM on the server; the browser adopts that DOM in place
-    instead of throwing it away. Svelte's own custom elements can't do this.
+    instead of replacing it.
   </Card>
 </CardGrid>
 
-## A component, end to end
+## Example
 
 ```svelte title="src/FavoriteNumber.svelte"
 <svelte:options customElement="favorite-number" />
@@ -75,9 +75,9 @@ people who use it, and rendering it on the server.
 svebcomponents
 ```
 
-That is the whole setup. It compiles the component, infers that `value` is a
-`Number` attribute, emits declarations and a custom elements manifest, and
-makes registration idempotent. Consumers write:
+The command compiles the component, infers that `value` is a `Number`
+attribute, emits declarations and a custom elements manifest, and guards
+against duplicate registration. Consumers write:
 
 ```html
 <favorite-number value="42"></favorite-number>
