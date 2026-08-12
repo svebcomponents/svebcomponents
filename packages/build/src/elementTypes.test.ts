@@ -49,9 +49,11 @@ const BUTTON = `<svelte:options customElement={{ tag: 'my-button' }} />
     /** The visible label. */
     label: string;
     count?: number;
+    /** Preloaded detail, passed as a property. */
+    preloadedData?: ChangeDetail;
     onPick?: (value: string) => void;
   }
-  let { label, count = 2, onPick }: Props = $props();
+  let { label, count = 2, preloadedData, onPick }: Props = $props();
   const emit = () =>
     $host().dispatchEvent(new CustomEvent<ChangeDetail>("change", { detail: { value: label } }));
 </script>
@@ -657,6 +659,29 @@ describe("renderSvelteAugmentation", () => {
   it("keeps property-only props off the template surface", async () => {
     await writeComponent("Element.svelte", BUTTON);
     expect(await render()).not.toContain("onPick");
+  });
+
+  it("exposes camelCase props as properties, with their real type", async () => {
+    // a Svelte template assigns `preloadedData={value}` as a property, which is
+    // the only way to pass anything that does not survive stringification —
+    // the kebab attribute form cannot carry an object
+    await writeComponent("Element.svelte", BUTTON);
+    const output = await render();
+
+    expect(output).toContain('"preloadedData"?: MyButton$ChangeDetail;');
+    // the attribute form stays, widened, for markup that writes a literal
+    expect(output).toContain(
+      '"preloaded-data"?: MyButton$ChangeDetail | string;',
+    );
+  });
+
+  it("does not emit a property member that duplicates its attribute name", async () => {
+    // `count` kebab-cases to itself; two members of the same name in one object
+    // type is a duplicate-identifier error
+    await writeComponent("Element.svelte", BUTTON);
+    const output = await render();
+
+    expect(output.match(/"count"\?:/g)).toHaveLength(1);
   });
 
   it(

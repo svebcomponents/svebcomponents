@@ -159,6 +159,10 @@ become errors — to a file beside the entry's declarations:
 dist/client/ExampleComponent.svelte-types.d.ts
 ```
 
+It covers both halves of the element's surface: kebab-cased attributes, and the
+camelCase properties a template assigns with `preloadedData={value}` — the only
+way to pass a value that does not survive being turned into a string.
+
 It lives in its own file because loading it requires svelte: it augments
 `svelte/elements`, and a consumer without svelte installed cannot resolve that.
 

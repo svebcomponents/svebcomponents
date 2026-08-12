@@ -157,6 +157,8 @@ interface ComponentDeclaration {
    * them at its own nesting depth.
    */
   templateMembers: { name: string; type: string; description?: string }[];
+  /** camelCase props a Svelte template sets as JavaScript properties. */
+  propertyMembers: { name: string; type: string; description?: string }[];
   eventMap: { name: string; detail: string; description?: string }[];
   description: string | undefined;
 }
@@ -261,6 +263,31 @@ const buildComponentDeclaration = (
       };
     });
 
+  // A custom element's public surface is properties as well as attributes, and
+  // in a Svelte template `preloadedData={value}` assigns the property rather
+  // than writing an attribute. That is the only way to pass anything that does
+  // not survive being turned into a string — an object, an array, a function —
+  // so the template surface has to describe it, with the prop's real type
+  // rather than the attribute's widened `T | string`.
+  //
+  // Skipped:
+  //
+  // - props whose attribute name is already the prop name (`count`), which the
+  //   attribute member above covers; emitting both would be a duplicate key.
+  // - `on`-prefixed props, which Svelte reads as event-handler syntax rather
+  //   than a property assignment, so typing them settable here would
+  //   type-check something that never runs.
+  const attributeNames = new Set(templateMembers.map((member) => member.name));
+  const propertyMembers = metadata.props
+    .filter(
+      (prop) => !attributeNames.has(prop.name) && !/^on[A-Z]/.test(prop.name),
+    )
+    .map((prop) => ({
+      name: prop.name,
+      type: typeOfProp(prop),
+      ...(prop.description ? { description: prop.description } : {}),
+    }));
+
   const eventMap = metadata.events.map((event) => ({
     name: event.name,
     detail: event.detailTypeText ? qualify(event.detailTypeText) : "unknown",
@@ -275,6 +302,7 @@ const buildComponentDeclaration = (
     properties,
     shadowedProperties,
     templateMembers,
+    propertyMembers,
     eventMap,
     description: metadata.description,
   };
@@ -463,6 +491,10 @@ export const renderSvelteAugmentation = (
   const entries = declarations.map((declaration) => {
     const members = [
       ...declaration.templateMembers.map(
+        (member) =>
+          `${jsDocBlock(member.description, "      ")}      "${member.name}"?: ${member.type};`,
+      ),
+      ...declaration.propertyMembers.map(
         (member) =>
           `${jsDocBlock(member.description, "      ")}      "${member.name}"?: ${member.type};`,
       ),

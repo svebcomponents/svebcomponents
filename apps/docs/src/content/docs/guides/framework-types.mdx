@@ -16,6 +16,26 @@ declared by the `.` export:
 The element is registered in `HTMLElementTagNameMap`, so
 `document.querySelector("simple-component")` is typed with no setup at all.
 
+:::caution[Attributes cannot carry objects]
+`SimpleComponentAttributes` is the _attribute_ surface, and an attribute is
+always a string. A prop whose value does not survive stringification — an
+object, an array — has to be passed as a property, under its camelCase name:
+
+```svelte
+<simple-component preloadedData={value}></simple-component>
+```
+
+The generated Svelte augmentation includes those property members already. A
+hand-written augmentation composes `SimpleComponentAttributes`, so add the ones
+you need alongside it — `SimpleComponentElement` types every prop as a
+property:
+
+```ts
+type Props = Pick<SimpleComponentElement, "preloadedData">;
+```
+
+:::
+
 Getting the same in a framework's templates takes one augmentation, which you
 write once in your own project. svebcomponents deliberately does not generate
 these: they name types from frameworks it neither depends on nor tests against,
