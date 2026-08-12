@@ -1,21 +1,26 @@
 ---
 title: Authoring components
-description: Define the props, events, slots, and styles exposed by a built component.
+description: Declare the props, events, slots, and styles that consumers use.
 ---
 
-Write a Svelte component, then declare the tag that the custom-element build
-will register. The
+Write a Svelte component and declare its custom-element tag. Svelte defines the
+component behavior; svebcomponents reads the source to generate attribute
+options, element types, and a custom elements manifest.
+
+Read the
 [Svelte custom elements guide](https://svelte.dev/docs/svelte/custom-elements)
-documents the compiler behavior behind this file.
+for the compiler rules behind these components.
 
-svebcomponents reads the source to generate attribute options, element types,
-and manifest entries.
+## Declare the tag
 
-Declare the element tag with `<svelte:options>`:
+Give each published component a literal tag name:
 
 ```svelte
 <svelte:options customElement="favorite-number" />
 ```
+
+svebcomponents uses this string in the generated types and manifest. It cannot
+name a computed tag during the build.
 
 ## Props and attributes
 
@@ -33,34 +38,43 @@ Declare typed props with Svelte's `$props()` rune:
 </script>
 ```
 
-The generated element exposes these props as JavaScript properties.
-`@svebcomponents/auto-options` also writes `customElement.props` metadata for
-their attribute names, conversion, and reflection. It derives that metadata
-from the TypeScript declaration above.
-
-The generated attribute names use kebab case:
+Svelte exposes each prop as a property on the custom element.
+`@svebcomponents/auto-options` derives its attribute name, converter, and
+reflection setting from the TypeScript declaration.
 
 | Property   | Attribute   |
 | ---------- | ----------- |
 | `pageSize` | `page-size` |
 | `featured` | `featured`  |
 
+Scalar props reflect to attributes. `auto-options` disables reflection for
+arrays, objects, and unresolved type references. Read
+[Attribute metadata](/guides/attribute-inference/) for the inference rules and
+overrides.
+
 ## Events
 
-Use Svelte's [`$host()`](https://svelte.dev/docs/svelte/$host) rune to dispatch
-an event from the custom element:
+Dispatch events from Svelte's
+[`$host()`](https://svelte.dev/docs/svelte/$host) rune. Add an explicit type
+argument when the event carries detail:
 
 ```svelte
 <script lang="ts">
+  interface ChangeDetail {
+    value: string;
+  }
+
   function change(value: string) {
     $host().dispatchEvent(
-      new CustomEvent("change", { detail: { value } }),
+      new CustomEvent<ChangeDetail>("change", { detail: { value } }),
     );
   }
 </script>
 ```
 
-The build adds statically named `CustomEvent` calls to the generated event map.
+svebcomponents records the literal event name and the `CustomEvent` type
+argument. It cannot derive a name from a variable or a detail type from the
+value passed to `detail`.
 
 ## Slots
 
@@ -80,14 +94,14 @@ Use `<slot>` for light DOM content:
 </my-card>
 ```
 
-The manifest records each named slot. Server-rendered components with slots
-[mount again during upgrade](/server-rendering/hydration/#slots).
+svebcomponents records static slot names. Read
+[Hydration](/server-rendering/hydration/#slots) before you server-render a
+component with slots.
 
 ## Styles
 
-In custom-element mode, the compiler puts component styles in the shadow root.
-Use `:host` for the element and CSS custom properties for values consumers can
-change:
+Svelte puts component styles in the shadow root. Use `:host` for the custom
+element and CSS custom properties for values consumers can set:
 
 ```svelte
 <style>
@@ -98,12 +112,13 @@ change:
 </style>
 ```
 
-The manifest records CSS custom properties that the component reads.
+svebcomponents records CSS custom properties that the component reads through
+`var()` and does not declare in the same stylesheet.
 
-## Manifest descriptions
+## Describe the public API
 
-JSDoc on a prop becomes its description. Add descriptions for the component,
-slots, events, or CSS properties in an `@component` comment:
+Document props with JSDoc as shown above. Use an `@component` comment for the
+component, slots, events, and CSS custom properties:
 
 ```svelte
 <!-- @component
@@ -114,3 +129,14 @@ A button with a configurable corner radius.
 @cssprop --button-radius - Corner radius.
 -->
 ```
+
+The analyzer uses these source patterns for generated types and manifest data:
+
+| Source pattern                                     | Generated data                   |
+| -------------------------------------------------- | -------------------------------- |
+| Literal `<svelte:options>` tag                     | Custom-element name              |
+| Typed `$props()` declaration and JSDoc             | Properties, attributes, comments |
+| Literal event name in `$host().dispatchEvent(...)` | Event name and detail type       |
+| Static `<slot>` element                            | Slot name                        |
+| External `var(--name)` in component CSS            | CSS custom property              |
+| `@component` documentation tags                    | API descriptions                 |

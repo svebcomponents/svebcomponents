@@ -1,23 +1,59 @@
 ---
 title: Getting Started
-description: Create and run a svebcomponents project.
+description: Build and run your first component package.
 ---
 
-You need Node 20.19 or later. Start from the
-[project template](https://github.com/svebcomponents/template):
+You need Node 20.19 or later.
+
+## Create the package
+
+Create a directory with a `src` folder:
 
 ```bash
-pnpm dlx degit svebcomponents/template my-project
-cd my-project
-pnpm install
-pnpm dev
+mkdir -p favorite-number/src
+cd favorite-number
 ```
 
-The dev server runs a SvelteKit app that imports the component package.
+Add `package.json`:
 
-## Write a component
+```json
+{
+  "name": "favorite-number",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "files": ["dist", "custom-elements.json"],
+  "customElements": "custom-elements.json",
+  "scripts": {
+    "build": "svebcomponents",
+    "dev": "vite"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/client/FavoriteNumber.d.ts",
+      "default": "./dist/client/FavoriteNumber.js"
+    },
+    "./svelte": {
+      "types": "./dist/client/FavoriteNumber.svelte-types.d.ts"
+    }
+  },
+  "devDependencies": {
+    "@svebcomponents/build": "^0.6.0",
+    "svelte": "^5.0.0",
+    "vite": "^8.0.0"
+  }
+}
+```
 
-In the component package, open `src/FavoriteNumber.svelte`:
+Install the dependencies:
+
+```bash
+pnpm install
+```
+
+## Write the component
+
+Create `src/FavoriteNumber.svelte`:
 
 ```svelte
 <svelte:options customElement="favorite-number" />
@@ -32,34 +68,57 @@ In the component package, open `src/FavoriteNumber.svelte`:
 </button>
 ```
 
-The build compiles this component in Svelte's custom-element mode.
-`@svebcomponents/auto-options` reads the `$props()` type and writes the prop
-metadata used for attribute conversion, so `increments="5"` reaches the
-component as a number.
+Svelte compiles the file in custom-element mode.
+`@svebcomponents/auto-options` reads the `$props()` type and supplies the
+metadata Svelte uses to convert `increments="5"` to a number.
 
 ## Build it
-
-Run the package's build script:
 
 ```bash
 pnpm build
 ```
 
-The build writes the browser bundle and its types to `dist/client`. It also
-writes `custom-elements.json` for editors and other custom-element tooling.
+svebcomponents writes the browser bundle and declarations to `dist/client`.
+It writes `custom-elements.json` at the package root.
 
-## Use it
+## Run it
 
-Import the package once, then write the tag:
+Create `index.html`:
 
-```svelte
-<script lang="ts">
-  import "my-components";
-</script>
+```html
+<script type="module" src="/dist/client/FavoriteNumber.js"></script>
 
-<favorite-number increments={5}></favorite-number>
+<favorite-number increments="5"></favorite-number>
 ```
 
-Continue with [Authoring components](/authoring/). Read
-[Publishing your package](/publishing/) when you need to add entries or change
-the generated output.
+Start the development server:
+
+```bash
+pnpm dev
+```
+
+Open the local URL printed in the terminal. Click the button and confirm that
+the count rises by five.
+
+## Add svebcomponents to an existing package
+
+Install the build tool and add its command to `package.json`:
+
+```bash
+pnpm add -D @svebcomponents/build
+```
+
+```json
+{
+  "scripts": {
+    "build": "svebcomponents"
+  }
+}
+```
+
+Add a literal custom-element tag to each Svelte component. Then declare its
+browser output in `package.json`. svebcomponents maps an export such as
+`./dist/client/FavoriteNumber.js` to `src/FavoriteNumber.svelte`.
+
+Continue with [Authoring components](/authoring/) and
+[Configure package outputs](/publishing/).

@@ -1,0 +1,92 @@
+---
+title: Astro
+description: Server-render and hydrate svebcomponents custom elements in Astro.
+---
+
+The Astro integration rewrites custom-element tags in `.astro` templates. Its
+wrapper calls the registered renderer and puts a declarative shadow template
+before the element's light-DOM children.
+
+:::note[Beta]
+The Astro integration may change before 1.0.
+:::
+
+## Install
+
+```bash
+pnpm add @svebcomponents/ssr @svebcomponents/ssr-astro svelte
+```
+
+## Configure
+
+Add the integration in `astro.config.mjs`:
+
+```js
+import { defineConfig } from "astro/config";
+import svebcomponents from "@svebcomponents/ssr-astro";
+
+export default defineConfig({
+  integrations: [svebcomponents()],
+});
+```
+
+## Import browser and server entries
+
+Import the renderer in Astro frontmatter. Load the browser entry from a
+processed `<script>` so Astro includes it in the client bundle:
+
+```astro
+---
+import "my-component-package/ssr";
+---
+
+<script>
+  import "my-component-package";
+</script>
+```
+
+Place these imports in a shared layout when several pages use the components.
+
+## Render
+
+Use the element in an `.astro` template:
+
+```astro
+<my-component title="Hello" count="5">
+  <p>Light DOM child</p>
+</my-component>
+```
+
+The adapter emits a declarative shadow template on the server. The browser
+turns that template into a shadow root. Astro ships the element's browser
+bundle with no host-framework runtime for this markup, and the generated
+custom-element extension asks Svelte to hydrate the root when the browser entry
+loads.
+
+A custom element inside a `client:*` React, Vue, or Svelte island belongs to
+that island's renderer. Configure the adapter for the island framework.
+
+## Async components
+
+Astro can await its element wrapper. Enable Svelte's async server mode in
+frontmatter that runs before the renderer import:
+
+```astro
+---
+import "@svebcomponents/ssr/enable-async";
+import "my-component-package/ssr";
+---
+```
+
+The same Astro wrapper handles synchronous and asynchronous renderers. See
+[Async components and server data](/server-rendering/async/) for package
+setup.
+
+## Limits
+
+- The integration rewrites `.astro` templates.
+- Custom elements in `.mdx` have no tested SSR path.
+- Framework islands use the adapter for their framework.
+
+See the [`@svebcomponents/ssr-astro` reference](/packages/ssr-astro/) for the
+integration API.

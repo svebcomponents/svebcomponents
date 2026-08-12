@@ -1,6 +1,6 @@
 ---
-title: Building web components with Svelte
-description: Build boilerplate-free, type-safe, server-renderable web component libraries with Svelte.
+title: Build a web component library with Svelte
+description: Turn Svelte custom elements into typed packages with browser builds and server rendering.
 ---
 
 [Svelte has a compiler mode for custom elements](https://svelte.dev/docs/svelte/custom-elements).
@@ -14,14 +14,15 @@ web components with Svelte. It adds:
 - `customElement.props` metadata inferred from your `$props()` types
 - browser and server builds derived from package exports
 - TypeScript declarations and a custom elements manifest
-- declarative shadow DOM with hydration in Svelte, React, Vue, and Astro
+- host adapters that emit declarative shadow DOM, plus a custom-element
+  extension that hydrates it
 
-You keep writing Svelte components. svebcomponents handles the library around
-them.
+You declare each component API once in Svelte. svebcomponents configures the
+compiler and generates the package around it.
 
-## Author in Svelte
+## One component, complete package
 
-Declare the tag and write the component in Svelte:
+Start with a Svelte component and a custom-element tag:
 
 ```svelte
 <svelte:options customElement="favorite-number" />
@@ -29,34 +30,48 @@ Declare the tag and write the component in Svelte:
 <script lang="ts">
   let { value = 0 }: { value?: number } = $props();
 
-  function change(value: number) {
+  function increment() {
+    value += 1;
     $host().dispatchEvent(new CustomEvent("change", { detail: value }));
   }
 </script>
 
-<button onclick={() => change(value + 1)}>{value}</button>
+<button onclick={increment}>{value}</button>
 ```
 
-The build enables Svelte's custom-element compiler mode. It reads `value` from
-the TypeScript declaration and generates the metadata for number conversion,
-attribute reflection, element types, and the manifest.
+svebcomponents reads your package exports to choose build entries. From this
+source, svebcomponents can generate:
 
-## Browser and server output
+| Output                         | Consumer                                  |
+| ------------------------------ | ----------------------------------------- |
+| standalone browser bundle      | HTML and framework apps                   |
+| element and event declarations | TypeScript and editors                    |
+| `custom-elements.json`         | web-component tooling                     |
+| runtime-sharing Svelte build   | Svelte apps that share the runtime        |
+| server renderer                | SvelteKit, React, Vue, and Astro adapters |
 
-The browser build registers a standard custom element. Consumers can use it in
-HTML or any framework without installing Svelte.
+The generated declarations extend `HTMLElementTagNameMap`, so DOM queries know
+the element's props and events:
 
-Add an SSR export and the build generates a server renderer. Host integrations
-emit declarative shadow DOM and hydrate its existing nodes when the element
-upgrades.
+```ts
+const favorite = document.querySelector("favorite-number");
+favorite?.value;
+//         ^? number | undefined
+```
 
-[Create a project](/getting-started/) or read the
+Add the generated server export to a host app and the adapter emits a
+declarative shadow template. The browser turns that template into a shadow root
+and can paint its contents before it downloads the component bundle. After the
+bundle registers the element, the generated extension passes the existing
+nodes to Svelte's `hydrate` function.
+
+[Create a package](/getting-started/) or inspect the
 [build pipeline](/guides/build/).
 
-## How the compiler output works
+## How Svelte custom elements work
 
-This Svelte Summit 2025 talk covers the compiler output, the custom-element
-lifecycle, and the SSR problem that led to svebcomponents.
+This Svelte Summit 2025 talk follows the generated class, the custom-element
+lifecycle, and the server-rendering work behind svebcomponents.
 
 <iframe
   width="100%"
@@ -70,13 +85,20 @@ lifecycle, and the SSR problem that led to svebcomponents.
 
 ### TL;DR
 
-Svelte's compiler can wrap a component in an `HTMLElement` subclass. That
-wrapper mounts the component inside a shadow root and connects element
-properties and attributes to component props.
+Svelte compiles the component and an `HTMLElement` wrapper. The wrapper creates
+a shadow root, maps element properties and attributes to component props, and
+mounts the component after the browser connects the element.
 
-The generated browser wrapper mounts from scratch during upgrade, replacing a
-declarative shadow root. svebcomponents adds the server renderer and hydration
-layer that preserve those nodes.
+For server rendering, svebcomponents generates an entry that calls Svelte's
+server renderer. A host adapter writes the result into a declarative shadow
+template. The browser turns that template into a shadow root before JavaScript
+runs.
+
+During upgrade, Svelte's wrapper calls `attachShadow()`. A browser would clear
+an existing declarative shadow root before returning it. The svebcomponents
+wrapper intercepts that call, preserves the server nodes, and passes them to
+Svelte for hydration. Read the [hydration contract](/server-rendering/hydration/)
+for fallbacks and limits.
 
 :::note[Beta]
 svebcomponents is in beta. APIs may change before 1.0.

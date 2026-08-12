@@ -1,31 +1,29 @@
 ---
 title: Troubleshooting
-description: What svebcomponents' build errors, warnings and runtime messages mean, and how to resolve them.
+description: Fix svebcomponents build errors, warnings, and runtime messages.
 ---
 
 ## Build errors
 
 ### could not find a source for `./dist/client/X.js`
 
-The export points at an output path with no matching source. The build maps
-`dist/client` to `src` and looks for exactly one of `src/X.svelte`,
-`src/X.ts` or `src/X.js`.
+The export points to an output path with no matching source. svebcomponents
+maps `dist/client` to `src` and looks for one of `src/X.svelte`, `src/X.ts`, or
+`src/X.js`.
 
-Check that the basename in the export matches the source filename exactly,
-including case. If your layout cannot be expressed this way, use
-[manual configuration](/guides/manual-configuration/).
+Match the export basename and letter case to the source file. Use
+[manual configuration](/guides/manual-configuration/) if your source and output
+paths follow another pattern.
 
 ### multiple sources match `./dist/client/X.js`
 
-Both `src/X.svelte` and `src/X.ts` (or `.js`) exist, so the build cannot tell
-whether the entry is a component or an ordinary module. Rename one of them, or
-name the entrypoints explicitly with
+The source directory contains more than one candidate, such as `src/X.svelte`
+and `src/X.ts`. Rename one file or declare the entrypoints in
 [manual configuration](/guides/manual-configuration/).
 
 ### could not find expected ESM ssr export
 
-An export key ending in `/ssr` exists, but has no `default` or `import`
-condition pointing at a file. Every SSR export needs one:
+An export key ending in `/ssr` needs a `default` or `import` condition:
 
 ```json
 {
@@ -38,14 +36,14 @@ condition pointing at a file. Every SSR export needs one:
 
 ### no valid configuration found
 
-Neither `svebcomponents.config.ts` nor any `exports` entry pointing into
-`./dist/client/` was found. Add the exports described in
-[Publishing your package](/publishing/), or a config file.
+svebcomponents found neither `svebcomponents.config.ts` nor an export that
+points into `./dist/client/`. Add the exports from
+[Configure package outputs](/publishing/) or create a config file.
 
 ### custom-elements.json is not exposed to consumers
 
-A hint, not an error. The manifest was written, but consumers cannot find it.
-Add both fields:
+svebcomponents wrote the manifest, but your package does not publish a path to
+it. Add both fields:
 
 ```json
 {
@@ -56,15 +54,16 @@ Add both fields:
 
 ## Build warnings
 
-### A dynamically-interpolated `customElement` string tag is not supported
+### Unsupported `customElement` tag syntax
 
-### The bare `customElement` boolean shorthand is not supported
+auto-options reports either warning when it cannot find a literal tag:
 
-auto-options needs a statically readable tag. When it cannot read one it leaves
-`<svelte:options>` untouched entirely, so the component gets **no inferred prop
-metadata and no hydration wrapper**: attributes stay strings.
+- `A dynamically-interpolated customElement string tag is not supported`
+- `The bare customElement boolean shorthand is not supported`
 
-Use a plain string literal, or the object form:
+auto-options needs a string literal for the tag. If it cannot read one, it
+leaves `<svelte:options>` unchanged and skips the prop metadata and hydration
+wrapper. Use either supported form:
 
 ```svelte
 <svelte:options customElement="my-element" />
@@ -74,9 +73,8 @@ Use a plain string literal, or the object form:
 
 ### cannot infer a single attribute type for a union mixing […]
 
-A prop typed as a union of different primitive kinds (`string | number`) has no
-single attribute converter, so it falls back to `"String"`. Narrow the type, or
-set it explicitly:
+A union such as `string | number` has no single attribute converter, so
+auto-options uses `String`. Narrow the type or set the converter:
 
 ```svelte
 <svelte:options
@@ -84,67 +82,51 @@ set it explicitly:
 />
 ```
 
-Unions that resolve to one kind (`string | null`, `"a" | "b"`) infer fine.
+Unions with one primitive kind, such as `string | null` or `"a" | "b"`, map
+to that kind.
 
 ### could not resolve prop types since they were not of expected shape
 
-The type annotation on `$props()` is not an object type, an interface, or a
-type alias for one, or it references a type imported from another module.
-auto-options only inspects declarations in the same component instance script.
-Move the type into the component, or write the props metadata by hand.
+auto-options can inspect an object type, an interface, or a local type alias on
+`$props()`. Move imported prop types into the component or write the metadata
+by hand.
 
 ### skipping _file_ in the custom elements manifest: it could not be parsed
 
-The component could not be parsed by the analyzer. The build still succeeds;
-the element is just absent from the manifest and its generated types.
+The analyzer could not parse the component. The build omits that element from
+the manifest and generated types. Check the preceding parser error.
 
-## Runtime errors
+## Server errors
 
 ### `await_invalid`
 
-Svelte's own error, raised when a component performs asynchronous work during a
-synchronous server render.
-
-If the host is not a Svelte app, it has to opt into Svelte's async SSR mode
-explicitly on the server:
-
-```ts
-import "@svebcomponents/ssr/enable-async";
-```
-
-If the host is a Svelte app, compile it with
-`compilerOptions.experimental.async` and use the async wrapper. See
-[async rendering outside Svelte](/server-rendering/#async-rendering-outside-svelte).
+Svelte throws this error when a component awaits during a synchronous server
+render. Follow the setup for [async components](/server-rendering/async/).
 
 ### AsyncRendererError: `<my-element>` renders asynchronously…
 
-The element was rendered through a synchronous path (`renderCustomElementSync`,
-or a host integration that cannot await) but turned out to need awaiting,
-either because it awaits while rendering or because its `<entry>.ssr.ts` hook
-returned a promise.
-
-Render it from an await-capable host with `renderCustomElement`, or let the
-host degrade to client-only rendering. React's default `CustomElement` does the
-latter automatically; see
-[the RSC opt-in](/server-rendering/other-frameworks/#synchronous-by-default-with-an-rsc-opt-in).
+Your host called a synchronous path for a component that awaits during render
+or in its `<entry>.ssr.ts` preparation hook. Use an await-capable host path.
+React's standard wrapper emits the host element without shadow content in this
+case; its [React Server Component path](/server-rendering/react/) can await.
 
 ### Custom element `my-element` not found
 
-The browser entrypoint was never imported on the server, so the element was
-never defined. Import the component package before rendering templates that use
-it.
+Your server has not imported the browser entrypoint, so its custom-element
+registry has no constructor for the tag. Import the component package before
+the host renders the element.
 
 ### Custom element renderer for `my-element` not found
 
-The element is defined but no renderer is registered. Import the package's
-`/ssr` entry once, for example from `hooks.server.ts`:
+The custom element exists, but the renderer registry has no matching entry.
+Import the package's `/ssr` export once from server setup:
 
 ```ts
 import "my-component-package/ssr";
 ```
 
-If the component's tag could not be read at build time, the generated renderer
-does not self-register and you must register it by hand:
+A generated renderer registers itself when svebcomponents can read the tag at
+build time. Register dynamic tags in code:
 
 ```ts
 import { ElementRendererRegistry } from "@svebcomponents/ssr";
@@ -155,32 +137,31 @@ ElementRendererRegistry.set("my-component", MyComponentRenderer);
 
 ### Could not access custom element constructor for tag: `my-element`
 
-`ElementRendererRegistry.set()` was called with a tag that is not yet defined.
-Import the browser entrypoint before registering the renderer for it.
+Your code registered a renderer before it defined the custom element. Import
+the browser entrypoint before you call `ElementRendererRegistry.set()`.
 
 ## Browser messages
 
 ### `<my-element>` declares slots and was mounted instead of hydrated
 
-A development-mode notice, not an error. Components that declare `<slot>`
-elements currently fall back to a client-side mount rather than adopting the
-server-rendered DOM. They render correctly; they just re-render on upgrade.
-See [hydration limitations](/server-rendering/hydration/#slots).
+svebcomponents mounts components that declare `<slot>` instead of hydrating
+their server nodes. The rendered result remains usable, but the upgrade replaces
+the shadow content. See [Hydration](/server-rendering/hydration/).
 
-### Svelte logs a hydration mismatch and re-renders
+### Svelte logs `hydration_mismatch` and re-renders
 
-The server markup did not structurally match what the client expected. Svelte's
-own recovery clears the shadow root and mounts from scratch, so the component
-still works.
+The server and browser produced different structures. Check conditional
+branches, list lengths, and elements that depend on browser-only state. Pass
+the same props into both renders. The
+[async components guide](/server-rendering/async/) covers server preparation
+hooks.
 
-The usual cause is the server and browser rendering different content: a
-timestamp, a random value, or data that changed between the two. Move
-non-deterministic work into an
-[`<entry>.ssr.ts` preparation hook](/guides/build/#server-preparation)
-so the value is serialized and reused rather than recomputed.
+During `hydration_mismatch` recovery, Svelte clears the affected content and
+mounts the component. Some text, attribute, and `{@html}` differences use
+other warnings and recovery paths.
 
-## Nothing above matches
+## Ask for help
 
-Open an issue at
+Open an issue in
 [svebcomponents/svebcomponents](https://github.com/svebcomponents/svebcomponents/issues)
-with the message and a minimal reproduction.
+with the error and a minimal reproduction.

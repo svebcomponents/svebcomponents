@@ -48,6 +48,12 @@ pnpm changeset
 Select the affected packages, describe the change, and commit the generated
 file in `.changeset/`.
 
+## Documentation
+
+Follow the [documentation style guide](./apps/docs/WRITING.md) when you edit the
+site or a package README. It defines page roles, actor names, vocabulary, and
+the docs checks.
+
 ## Repository layout
 
 - `packages/*`: the published svebcomponents packages.

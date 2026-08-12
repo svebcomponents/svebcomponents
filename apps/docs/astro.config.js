@@ -13,7 +13,7 @@ export default defineConfig({
     starlight({
       title: "svebcomponents",
       description:
-        "Build Svelte components into web components that package themselves, describe themselves to other people's editors, and server-render with real hydration.",
+        "Build typed, publishable, server-renderable web components with Svelte.",
       customCss: ["./src/styles/custom.css"],
       routeMiddleware: "./src/starlightRouteData.ts",
       logo: {
@@ -62,89 +62,76 @@ export default defineConfig({
           label: "Start here",
           items: [
             {
-              label: "Building web components with Svelte",
+              label: "Why svebcomponents",
               slug: "introduction",
             },
-            { label: "Getting Started", slug: "getting-started" },
+            { label: "Quickstart", slug: "getting-started" },
+          ],
+        },
+        {
+          label: "Build a library",
+          items: [
             { label: "Authoring components", slug: "authoring" },
-            { label: "Publishing your package", slug: "publishing" },
+            { label: "Configure package outputs", slug: "publishing" },
+            { label: "Consumer types", slug: "guides/framework-types" },
           ],
         },
         {
           label: "Server rendering",
           items: [
             { label: "Overview", slug: "server-rendering" },
-            { label: "Hydration", slug: "server-rendering/hydration" },
-            {
-              label: "Other frameworks",
-              slug: "server-rendering/other-frameworks",
-            },
+            { label: "SvelteKit", slug: "server-rendering/sveltekit" },
+            { label: "React", slug: "server-rendering/react" },
+            { label: "Vue", slug: "server-rendering/vue" },
+            { label: "Astro", slug: "server-rendering/astro" },
+            { label: "Async components", slug: "server-rendering/async" },
           ],
         },
         {
-          label: "Guides",
+          label: "How it works",
           collapsed: true,
           items: [
             { label: "Build pipeline", slug: "guides/build" },
             {
-              label: "Attribute inference",
+              label: "Attribute metadata",
               slug: "guides/attribute-inference",
             },
-            {
-              label: "Typing elements in React & Vue",
-              slug: "guides/framework-types",
-            },
-            {
-              label: "Manual configuration",
-              slug: "guides/manual-configuration",
-            },
+            { label: "Hydration", slug: "server-rendering/hydration" },
           ],
         },
         {
           label: "Reference",
           collapsed: true,
           items: [
+            {
+              label: "Configuration",
+              slug: "guides/manual-configuration",
+            },
             { label: "Compatibility", slug: "reference/compatibility" },
             { label: "Troubleshooting", slug: "reference/troubleshooting" },
-            { label: "@svebcomponents/build", slug: "packages/build" },
             {
-              label: "@svebcomponents/auto-options",
-              slug: "packages/auto-options",
-            },
-            { label: "@svebcomponents/ssr", slug: "packages/ssr" },
-            {
-              label: "SSR integrations",
+              label: "Package APIs",
               collapsed: true,
               items: [
                 {
-                  label: "@svebcomponents/ssr-vue",
-                  slug: "packages/ssr-vue",
+                  label: "@svebcomponents/build",
+                  slug: "packages/build",
                 },
                 {
-                  label: "@svebcomponents/ssr-react",
-                  slug: "packages/ssr-react",
+                  label: "@svebcomponents/auto-options",
+                  slug: "packages/auto-options",
                 },
                 {
-                  label: "@svebcomponents/ssr-astro",
-                  slug: "packages/ssr-astro",
+                  label: "@svebcomponents/ssr",
+                  slug: "packages/ssr",
                 },
               ],
             },
-            { label: "@svebcomponents/utils", slug: "packages/utils" },
           ],
         },
         {
-          label: "Changelog",
-          collapsed: true,
-          items: [
-            { label: "@svebcomponents/build", slug: "changelog/build" },
-            {
-              label: "@svebcomponents/auto-options",
-              slug: "changelog/auto-options",
-            },
-            { label: "@svebcomponents/ssr", slug: "changelog/ssr" },
-            { label: "@svebcomponents/utils", slug: "changelog/utils" },
-          ],
+          label: "Releases",
+          slug: "releases",
         },
       ],
     }),

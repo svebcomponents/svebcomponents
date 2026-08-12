@@ -1,112 +1,78 @@
-Server-side rendering support for custom elements inside Astro apps.
-
-This package finds custom element tags in `.astro` templates, routes them
-through the shared `@svebcomponents/ssr` registry, and emits declarative shadow
-DOM.
-
-This package is in beta. Its API may change before 1.0.
-
-## Installation
-
-```bash
-pnpm add -D @svebcomponents/ssr-astro
-```
+`@svebcomponents/ssr-astro` renders registered custom elements with declarative
+shadow DOM in Astro pages. The package is in beta.
 
 ## Setup
+
+```bash
+pnpm add @svebcomponents/ssr @svebcomponents/ssr-astro svelte
+```
 
 Add the integration:
 
 ```ts
-import { defineConfig } from "astro/config";
 import svebcomponents from "@svebcomponents/ssr-astro";
+import { defineConfig } from "astro/config";
 
 export default defineConfig({
   integrations: [svebcomponents()],
 });
 ```
 
-Load the package's browser entry to define the element and its `/ssr` entry to
-register the renderer. Then use the element in an `.astro` file:
+Load the server entries from Astro frontmatter. Put the browser entry in a
+processed script so Astro includes it in the client bundle:
 
 ```astro
 ---
-import "my-component-package";
 import "my-component-package/ssr";
 ---
 
+<script>
+  import "my-component-package";
+</script>
+
 <my-component title="Hello" count="5">
-  <p>light dom child</p>
+  <p>Light-DOM child</p>
 </my-component>
 ```
 
-## Browser behavior
+Astro ships no host runtime for this element. The browser parser attaches the
+server-rendered shadow root, and the component's browser class upgrades and
+hydrates it.
 
-Astro ships no host JavaScript for these elements. The parser attaches the
-server-rendered shadow root, then the element upgrades and hydrates when its
-bundle loads.
+See the [Astro setup guide](https://svebcomponents.dev/server-rendering/astro/)
+for project layout and island behavior.
 
-The exception is Astro islands: a custom element inside a `client:*` React,
-Vue or Svelte island belongs to that framework, and the corresponding
-svebcomponents integration applies there.
+## Async components
 
-## Async Components
-
-Astro frontmatter runs in an async module scope, so the wrapper awaits the
-element renderer. An
-[asynchronous component](https://svebcomponents.dev/server-rendering/#asynchronous-components)
-uses the same wrapper as a synchronous component.
-
-Enable Svelte's async SSR mode in the Astro server entry:
+Astro can await the wrapper and promise-returning preparation hooks. Enable
+Svelte's async server mode in server code when the Svelte component itself
+awaits during rendering:
 
 ```ts
 import "@svebcomponents/ssr/enable-async";
 ```
 
-## Other custom elements
+## Exports and options
 
-This integration server-renders any custom element with a registered Lit
-`ElementRenderer`, including Lit elements. See
-[Other custom elements](https://svebcomponents.dev/server-rendering/#other-custom-elements).
+| Export                                | Use                               |
+| ------------------------------------- | --------------------------------- |
+| `@svebcomponents/ssr-astro`           | Astro integration                 |
+| `@svebcomponents/ssr-astro/vite`      | Vite transform for custom setups  |
+| `@svebcomponents/ssr-astro/component` | Wrapper that the integration uses |
 
-## Requirements
+Pass `tags` to limit which custom elements the integration renders:
 
-`svelte` must be installed as a server-side dependency of the Astro app, even
-though no Svelte components appear in it; see
-[Compatibility](https://svebcomponents.dev/reference/compatibility/).
-
-## Render flow
-
-A Vite plugin rewrites custom element tags in `.astro` source to a wrapper
-component, which renders:
-
-```html
-<my-component title="Hello">
-  <template shadowrootmode="open"><!-- shadow content --></template>
-  <!-- light dom children -->
-</my-component>
+```ts
+svebcomponents({ tags: ["my-component", "my-dialog"] });
 ```
 
-The integration rewrites source in Vite's `load` hook. Astro's `transform` hook
-runs first and would leave the integration with compiled JavaScript. The
-`load` hook serves Astro's virtual `?astro=…` requests before compilation.
+## Limits
 
-The wrapper closes `<template>` with an end tag. Astro does not treat a
-self-closing `<template ... />` as void, so it would place the following
-`<slot />` inside the shadow content.
+- Use Astro 5 and install Svelte in the server app.
+- The integration transforms `.astro` templates. It does not cover MDX.
+- A custom element inside a React, Vue, or Svelte `client:*` island belongs to
+  that framework's render tree. Configure the matching host integration there.
+- App code must load the component's browser entry and server renderer.
 
-Astro's parser classifies a dashed tag as a `custom-element` AST node. The
-integration reads that node instead of maintaining an exclusion list.
-
-## Astro integration API
-
-Astro's `addRenderer()` API handles UI framework islands with `client:*`
-directives and expects `check()` and `renderToStaticMarkup()` entrypoints.
-Custom elements hydrate themselves, so this package uses a template rewrite
-and wrapper component.
-
-## Current Limitations
-
-- Only `.astro` templates are rewritten. Custom elements inside `.mdx` are
-  untested.
-- The consuming app must import the browser custom element module and register
-  the matching SSR renderer, exactly as with the other integrations.
+Read [Async components and server data](https://svebcomponents.dev/server-rendering/async/)
+for server data hooks and host support.

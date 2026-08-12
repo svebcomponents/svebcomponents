@@ -1,0 +1,104 @@
+---
+title: SvelteKit
+description: Server-render and hydrate svebcomponents custom elements in SvelteKit.
+---
+
+The SvelteKit adapter wraps dashed tags during Svelte compilation. On the
+server, the wrapper calls the registered element renderer. In the browser, it
+leaves the custom element in place for upgrade and hydration.
+
+## Install
+
+```bash
+pnpm add @svebcomponents/ssr
+```
+
+## Configure
+
+Add the svebcomponents plugin before `sveltekit()` in `vite.config.ts`:
+
+```ts
+import { sveltekit } from "@sveltejs/kit/vite";
+import svebcomponents from "@svebcomponents/ssr/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [svebcomponents(), sveltekit()],
+});
+```
+
+The plugin adds `@svebcomponents/ssr` to `ssr.noExternal`. If your component
+package exposes raw `.svelte` files, include its package name too:
+
+```ts
+svebcomponents({ noExternal: ["my-component-package"] });
+```
+
+## Import browser and server entries
+
+Import the browser entry from a root layout so SvelteKit includes it in the
+client build:
+
+```svelte
+<!-- src/routes/+layout.svelte -->
+<script lang="ts">
+  import "my-component-package";
+
+  let { children } = $props();
+</script>
+
+{@render children()}
+```
+
+Import the renderer once in `src/hooks.server.ts`:
+
+```ts
+import "my-component-package/ssr";
+```
+
+The generated `/ssr` entry registers its tag when `<svelte:options>` contains a
+literal tag. For a computed tag, register the renderer through
+[`ElementRendererRegistry`](/packages/ssr/).
+
+## Render
+
+Use the custom element in a Svelte template:
+
+```svelte
+<my-component title="Hello" count={5}></my-component>
+```
+
+The server wrapper emits the host element with a declarative shadow template.
+The browser turns that template into a shadow root. SvelteKit hydrates the light
+DOM while the generated element extension asks Svelte to hydrate the shadow
+root.
+
+## Async components
+
+Enable Svelte's async compiler mode in `svelte.config.js` when a component
+awaits during rendering or uses an async preparation hook:
+
+```js
+export default {
+  compilerOptions: {
+    experimental: {
+      async: true,
+    },
+  },
+};
+```
+
+The Vite plugin reads this setting and selects its async wrapper. Pass
+`svebcomponents({ async: true })` if the plugin cannot read that setting.
+
+Read [Async components and server data](/server-rendering/async/) before adding
+server preparation.
+
+## Limits
+
+- The Vite plugin treats dashed tags as custom elements.
+- The plugin rewrites `.svelte` files before Svelte compiles them.
+- Async rendering uses Svelte's experimental async compiler option.
+
+See the [`@svebcomponents/ssr` reference](/packages/ssr/) for plugin options
+and runtime APIs.

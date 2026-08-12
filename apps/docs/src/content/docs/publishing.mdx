@@ -1,14 +1,70 @@
 ---
-title: Publishing your package
-description: Declare component exports, types, the manifest, and server output.
+title: Configure package outputs
+description: Declare browser, type, manifest, and server exports for a component package.
 ---
 
-The CLI reads `package.json` exports to find source components and choose build
-targets. Consumers use the same exports to load the output.
+svebcomponents reads `package.json` exports to find source entries and select
+build targets. Start with one browser entry:
 
-## Export each component
+```json
+{
+  "name": "my-components",
+  "version": "0.1.0",
+  "type": "module",
+  "files": ["dist", "custom-elements.json"],
+  "customElements": "custom-elements.json",
+  "scripts": {
+    "build": "svebcomponents"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/client/FavoriteNumber.d.ts",
+      "default": "./dist/client/FavoriteNumber.js"
+    },
+    "./svelte": {
+      "types": "./dist/client/FavoriteNumber.svelte-types.d.ts"
+    }
+  },
+  "devDependencies": {
+    "@svebcomponents/build": "^0.6.0",
+    "svelte": "^5.0.0"
+  }
+}
+```
 
-Match each browser output to a same-basename file in `src`:
+svebcomponents maps the `default` path to `src/FavoriteNumber.svelte`.
+Consumers import the same entry to register the element. The standalone browser
+output includes the Svelte runtime, so hosts do not need Svelte as a dependency.
+
+Editors use `customElements` to find the generated manifest. npm uses `files` to
+include the build output and manifest in the published package.
+
+Run the build:
+
+```bash
+pnpm build
+```
+
+svebcomponents produces this core output:
+
+```text
+custom-elements.json
+dist/
+└── client/
+    ├── FavoriteNumber.js
+    ├── FavoriteNumber.d.ts
+    └── FavoriteNumber.svelte-types.d.ts
+```
+
+The `./svelte` export lets Svelte consumers opt into template types without
+installing Svelte in HTML, React, or Vue projects. Read
+[Consumer types](/guides/framework-types/) for the import and the React and Vue
+project declarations.
+
+## Add component entries
+
+Give each public component a browser export. Match the output basename to one
+`.svelte`, `.ts`, or `.js` source in `src`:
 
 ```json
 {
@@ -25,60 +81,13 @@ Match each browser output to a same-basename file in `src`:
 }
 ```
 
-The second export builds `src/ColorPicker.svelte`. A matching `.ts` or `.js`
-file creates a standard JavaScript entry. See the full
-[entrypoint rules](/guides/build/#entrypoints-from-package-exports).
+svebcomponents maps the second export to `src/ColorPicker.svelte`. Read
+[Build pipeline](/guides/build/#entry-discovery) for source mapping and module
+entries.
 
-## Publish the manifest
+## Share the host's Svelte runtime
 
-The build writes a
-[custom elements manifest](https://github.com/webcomponents/custom-elements-manifest)
-for editors and other custom-element tooling:
-
-```json
-{
-  "customElements": "custom-elements.json",
-  "files": ["dist", "custom-elements.json"]
-}
-```
-
-## Publish Svelte template types
-
-The declaration for each component types its DOM class and registers its tag in
-`HTMLElementTagNameMap`. The build also writes a `svelte/elements`
-augmentation for Svelte templates:
-
-```text
-dist/client/FavoriteNumber.svelte-types.d.ts
-```
-
-Packages that require consumers to install Svelte reference this file from the
-main declaration. Other packages can expose it as an opt-in:
-
-```json
-{
-  "exports": {
-    "./svelte": {
-      "types": "./dist/client/FavoriteNumber.svelte-types.d.ts"
-    }
-  }
-}
-```
-
-Consumers import that entry from a project declaration file:
-
-```ts
-// app.d.ts
-import "my-components/svelte";
-```
-
-React and Vue projects need a framework augmentation. See
-[Typing elements in React and Vue](/guides/framework-types/).
-
-## Share the Svelte runtime
-
-The `default` output includes the Svelte runtime for use in any application. A
-`svelte` condition creates another output that shares the host application's
+Add a `svelte` condition when Svelte hosts should reuse their installed
 runtime:
 
 ```json
@@ -93,30 +102,55 @@ runtime:
 }
 ```
 
-:::caution[Version coupling]
+svebcomponents writes the extra build to `dist/client-svelte`. The host
+toolchain resolves that build's Svelte imports.
+
+:::caution[Match Svelte versions]
 Compiled components call private Svelte runtime APIs. Build the package and
-host application with the same Svelte version when you use this condition.
+host application with the same Svelte version when you publish a `svelte`
+condition.
 :::
 
 ## Add server output
 
-Add `/ssr` to a component's export key:
+Pair a component export with a `/ssr` subpath:
 
 ```json
 {
   "exports": {
-    "./color-picker": {
-      "types": "./dist/client/ColorPicker.d.ts",
-      "default": "./dist/client/ColorPicker.js"
+    ".": {
+      "types": "./dist/client/FavoriteNumber.d.ts",
+      "default": "./dist/client/FavoriteNumber.js"
     },
-    "./color-picker/ssr": {
-      "types": "./dist/server/ColorPicker.ssr.d.ts",
-      "default": "./dist/server/ColorPicker.ssr.js"
+    "./ssr": {
+      "types": "./dist/server/ssr.d.ts",
+      "default": "./dist/server/ssr.js"
+    }
+  },
+  "peerDependencies": {
+    "@svebcomponents/ssr": "^0.6.0"
+  },
+  "peerDependenciesMeta": {
+    "@svebcomponents/ssr": {
+      "optional": true
     }
   }
 }
 ```
 
-The build generates an `ElementRenderer` at the server path. Give each server
-entry a distinct filename when components share an output directory. Continue
-with [Server rendering](/server-rendering/).
+svebcomponents generates an `ElementRenderer` at the server path. Give each
+renderer a distinct filename when several components share `dist/server`. The
+optional peer keeps browser-only consumers from installing the SSR runtime;
+apps that import `/ssr` install it with their host adapter.
+Continue with [Server rendering](/server-rendering/).
+
+## Check the package
+
+Before publishing:
+
+1. Run `pnpm build` from a clean checkout.
+2. Run `pnpm pack --dry-run` and confirm the archive contains the exported
+   files and `custom-elements.json`.
+3. Import each browser entry in an example app and render its custom-element
+   tag.
+4. Test each framework integration and server entry that you publish.

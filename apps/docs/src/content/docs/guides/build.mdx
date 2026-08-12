@@ -1,118 +1,112 @@
 ---
 title: Build pipeline
-description: Build web-component packages from Svelte source files.
+description: See how svebcomponents turns package exports into browser bundles, types, a manifest, and server renderers.
 ---
 
-`@svebcomponents/build` configures the Svelte compiler and tsdown. It runs
-[attribute inference](/guides/attribute-inference/), writes browser bundles and
-declarations, generates a custom elements manifest, and creates server output
-when the package exports it.
+`@svebcomponents/build` configures Svelte and tsdown for each package entry.
+Svelte compiles component source; svebcomponents supplies attribute metadata,
+guards custom-element registration, emits public types, and writes a custom
+elements manifest.
 
-The CLI compiles each component in custom-element mode, packages the generated
-class, and guards its registration call so an entrypoint can run more than
-once.
+## Entry discovery
 
-## Entrypoints from package exports
-
-The CLI infers entrypoints from the `exports` field:
+The CLI reads browser paths from `package.json` exports:
 
 ```json
 {
   "exports": {
     ".": {
       "types": "./dist/client/FavoriteNumber.d.ts",
-      "svelte": "./dist/client-svelte/FavoriteNumber.js",
       "default": "./dist/client/FavoriteNumber.js"
+    },
+    "./helpers": {
+      "types": "./dist/client/helpers.d.ts",
+      "default": "./dist/client/helpers.js"
     }
   }
 }
 ```
 
-The CLI maps each browser export to a source file:
+The CLI replaces `dist/client` with `src` and finds one source with the same
+basename:
 
-1. The export's `default` or `import` condition must start with
-   `./dist/client/`.
-2. The output path is mapped from `dist/client` to `src`.
-3. A same-basename `.svelte` source is a svebcomponent.
-4. A same-basename `.ts` or `.js` source receives a standard tsdown build.
-5. Exactly one matching source must exist.
-6. Subpath patterns (`"./*"`) are not inferred. Give each entry its own export
-   key, or use [manual configuration](/guides/manual-configuration/).
+| Browser export                    | Source candidate                     | Pipeline        |
+| --------------------------------- | ------------------------------------ | --------------- |
+| `./dist/client/FavoriteNumber.js` | `src/FavoriteNumber.svelte`          | Custom element  |
+| `./dist/client/helpers.js`        | `src/helpers.ts` or `src/helpers.js` | Standard module |
 
-In this example, `./dist/client/FavoriteNumber.js` resolves to
-`src/FavoriteNumber.svelte`.
+The CLI stops when more than one candidate matches. Export patterns such as
+`"./*"` do not provide concrete entries, so those layouts need
+[Configuration](/guides/manual-configuration/).
 
-A `svelte` condition adds a second, lighter build, and a matching `/ssr` export
-adds a server renderer. Both are covered in
-[Publishing your package](/publishing/).
+## Build targets
 
-### Server preparation
+The CLI uses each export condition to select a target:
 
-An SSR-enabled component can acquire its own data on the server by adding an
-adjacent `<entry>.ssr.ts` or `.js` module next to the component. The build
-includes it in the server output and serializes its values for the client.
+| Package export            | Output               | Svelte runtime                     |
+| ------------------------- | -------------------- | ---------------------------------- |
+| Browser `default`         | `dist/client`        | Bundled                            |
+| Browser `svelte`          | `dist/client-svelte` | Host resolves the Svelte runtime   |
+| Matching `/ssr` `default` | `dist/server`        | Bundled in generated server output |
+| Matching `/ssr` `svelte`  | `dist/server-svelte` | Host resolves the Svelte runtime   |
 
-See the
-[`SsrPrepare` signature](/packages/build/#server-preparation) and
-[asynchronous components](/server-rendering/#asynchronous-components).
+svebcomponents creates the standalone build for a browser export. It adds a
+runtime-sharing build for a `svelte` condition. A matching `/ssr` export makes
+svebcomponents compile the component for the server and generate an
+`ElementRenderer` entry.
 
-## Element types and manifest
+Read [Configure package outputs](/publishing/) for the export shapes.
 
-The build describes each direct `.svelte` entry in two forms:
+## Component compilation
 
-- `custom-elements.json` for editors and custom-element tooling
-- TypeScript declarations for the element, tag, props, and events
+The browser pipeline performs these steps for each `.svelte` entry:
+
+1. `@svebcomponents/auto-options` derives `customElement.props` from
+   `$props()`.
+2. Svelte compiles the component with `compilerOptions.customElement: true`.
+3. svebcomponents guards Svelte's `customElements.define()` call so repeated
+   imports do not throw.
+4. tsdown bundles JavaScript and writes declarations.
+
+The standalone browser build bundles bare package imports. The Svelte-aware
+build keeps `svelte` and `svelte/*` for the host resolver. Server builds keep
+normal Node dependency resolution. Read the
+[`@svebcomponents/build` reference](/packages/build/) for dependency controls.
+
+## Element types & manifest
+
+svebcomponents analyzes each direct `.svelte` entry with a literal tag. It
+writes:
+
+- `custom-elements.json` for editors and custom-element tools
+- a component declaration with the DOM element, props, attributes, and events
+- a separate `svelte/elements` augmentation
+
+The component declaration registers its tag in `HTMLElementTagNameMap`:
 
 ```ts
 import "my-components";
 
-const el = document.querySelector("simple-component");
-el?.count; // number | undefined
+const element = document.querySelector("favorite-number");
+element?.increments; // number | undefined
 ```
 
-The analyzer reads props, `$host()` events, slots, CSS custom properties, and
-component comments. See [Authoring components](/authoring/).
+The analyzer cannot name a computed tag. It does not analyze a component that a
+`.ts` entry re-exports, so export the `.svelte` file as the public component
+entry. Read [Authoring components](/authoring/) for the source patterns it
+supports.
 
-### Static tags only
+## Server preparation
 
-The analyzer needs a literal tag in `<svelte:options>` and a direct `.svelte`
-entry.
+For an SSR entry, svebcomponents checks for an adjacent `.ssr.ts` or `.ssr.js`
+module. The server renderer calls that preparation hook before rendering and
+serializes properties the hook sets for hydration.
 
-A dynamic tag or Svelte's bare `customElement` shorthand cannot appear in the
-manifest or generated types. A component re-exported through a `.ts` entry is
-also invisible to the analyzer. Export the `.svelte` file as the entrypoint.
+Read [Async components and server data](/server-rendering/async/) for the hook
+signature and host support.
 
-## What ends up in the browser bundle
+## Configuration
 
-Apps load `dist/client` from a URL or a bundle that resolved its imports. The
-browser builds inline each bare specifier, whatever `package.json` calls it. It
-leaves Node builtins, relative and absolute paths, and protocol imports alone.
-The build fails if it cannot resolve a specifier selected for inlining.
-
-Declare dependencies that consumers must install. The browser build includes
-their code. Declare the package whose types your element types name, or
-`svelte` to
-[register your Svelte template types](/publishing/#ship-the-svelte-template-types),
-and the browser output carries its code either way.
-
-List a dependency in `neverBundle` when the host must provide it:
-
-```json
-{
-  "svebcomponents": { "neverBundle": ["@acme/design-system"] }
-}
-```
-
-Entries match the whole specifier, so cover subpaths too if the package has
-them. Server output keeps standard externalization. Node resolves declared
-dependencies at runtime. See the
-[`@svebcomponents/build` reference](/packages/build/#what-ends-up-in-the-browser-bundle).
-
-## Manual configuration
-
-When export inference cannot express your layout, a
-[`svebcomponents.config.ts`](/guides/manual-configuration/) file replaces it
-and exposes each build option.
-
-For installation, the generated outputs and the full pipeline, see the
-[`@svebcomponents/build` reference](/packages/build/).
+Create `svebcomponents.config.ts` when export inference cannot represent your
+source paths or output directories. [Configuration](/guides/manual-configuration/)
+lists the options.

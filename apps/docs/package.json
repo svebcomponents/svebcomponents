@@ -11,6 +11,7 @@
     "lint": "pnpm /^lint:.*/",
     "lint:eslint": "eslint .",
     "lint:format": "prettier --check .",
+    "lint:links": "node --test ./scripts/check-links.test.mjs && node ./scripts/check-links.mjs",
     "fix": "pnpm /^fix:.*/",
     "fix:eslint": "eslint . --fix",
     "fix:format": "prettier --write --ignore-unknown ."

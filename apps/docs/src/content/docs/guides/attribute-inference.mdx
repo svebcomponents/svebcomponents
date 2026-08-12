@@ -1,84 +1,100 @@
 ---
-title: Attribute inference
-description: Generate customElement.props metadata from TypeScript types.
+title: Attribute metadata
+description: Derive Svelte custom-element prop options from TypeScript types.
 ---
 
 Svelte's
 [`customElement.props`](https://svelte.dev/docs/svelte/custom-elements#Component-options)
-option tells its custom-element wrapper how to convert attributes and reflect
-properties. `@svebcomponents/auto-options` generates that Svelte option from
-the TypeScript types in `$props()`.
+option controls attribute names, conversion, and property reflection.
+`@svebcomponents/auto-options` derives that option from `$props()` types.
 
-## Input
+## Source
 
 ```svelte
+<svelte:options customElement="filter-panel" />
+
 <script lang="ts">
+  import type { RemoteData } from "./data.js";
+
   interface Props {
     label: string;
-    value: number;
-    featured: boolean;
+    pageSize: number;
+    active: boolean;
+    tags: string[];
+    settings: { compact: boolean };
+    data: RemoteData;
   }
 
-  let { label, value, featured }: Props = $props();
+  let { label, pageSize, active, tags, settings, data }: Props = $props();
 </script>
 ```
 
-Before Svelte compiles the component, `auto-options` turns that declaration
-into:
+## Inferred Svelte options
+
+Before Svelte compiles the component, `auto-options` expands the string tag and
+adds metadata for each prop it can map to an attribute:
 
 ```svelte
 <svelte:options
   customElement={{
+    tag: "filter-panel",
     props: {
       label: { attribute: "label", reflect: true, type: "String" },
-      value: { attribute: "value", reflect: true, type: "Number" },
-      featured: { attribute: "featured", reflect: true, type: "Boolean" },
+      pageSize: {
+        attribute: "page-size",
+        reflect: true,
+        type: "Number",
+      },
+      active: { attribute: "active", reflect: true, type: "Boolean" },
+      tags: { attribute: "tags", reflect: false, type: "Array" },
+      settings: { attribute: "settings", reflect: false, type: "Object" },
+      data: { attribute: "data", reflect: false, type: "String" },
     },
   }}
 />
 ```
 
-Svelte then converts `value="42"` to the number `42`. The
-`@svebcomponents/build` pipeline runs this transform for you.
+Svelte converts `page-size="42"` to the number `42`. Svelte reflects a new
+scalar property value to its attribute after component code changes it. Arrays,
+objects, and unresolved references do not reflect because reflection would
+serialize them into markup.
 
-## What it infers
+## Inference rules
 
-| Svelte prop type           | Custom element type                    |
-| -------------------------- | -------------------------------------- |
-| `string`                   | `"String"`                             |
-| `number`                   | `"Number"`                             |
-| `boolean`                  | `"Boolean"`                            |
-| string/number/bool literal | `"String"`, `"Number"`, or `"Boolean"` |
-| `SomeType[]`, `Array<T>`   | `"Array"`                              |
-| object literals, `Record`  | `"Object"`                             |
-| interface references       | `"Object"`                             |
+| Prop declaration                    | Svelte converter | Reflects |
+| ----------------------------------- | ---------------- | -------- |
+| `string` or a string literal        | `"String"`       | Yes      |
+| `number` or a number literal        | `"Number"`       | Yes      |
+| `boolean` or a boolean literal      | `"Boolean"`      | Yes      |
+| `T[]` or `Array<T>`                 | `"Array"`        | No       |
+| Object literal, `Record`, interface | `"Object"`       | No       |
+| Imported or unresolved type         | `"String"`       | No       |
+| Untyped destructured prop           | `"String"`       | Yes      |
+| Function or Svelte snippet          | No attribute     | No       |
 
-Props without type information use Svelte's `"String"` default. Attribute
-names use kebab case, so `favoriteNumber` becomes `favorite-number`.
+`auto-options` converts attribute names to kebab case, so `favoriteNumber`
+becomes `favorite-number`.
 
-The transform expands Svelte's string shorthand and merges the inferred
-`props`:
+## Override a field
 
-```svelte
-<svelte:options customElement="favorite-number" />
-```
-
-## Overriding what it infers
-
-Options you write take precedence. Override an attribute name, type, or
-reflection behavior in `<svelte:options>`:
+Values in `<svelte:options>` take precedence over inferred values:
 
 ```svelte
 <svelte:options
   customElement={{
+    tag: "filter-panel",
     props: {
-      value: { type: "Number", attribute: "data-value", reflect: false },
+      pageSize: {
+        type: "Number",
+        attribute: "data-page-size",
+        reflect: false,
+      },
     },
   }}
 />
 ```
 
-`auto-options` preserves those fields and fills in the rest.
-
-For supported prop shapes, standalone plugin setup and current limitations, see
-the [`@svebcomponents/auto-options` reference](/packages/auto-options/).
+`auto-options` keeps the fields you supply and fills the missing prop entries.
+Read the
+[`@svebcomponents/auto-options` reference](/packages/auto-options/) for plugin
+setup and supported TypeScript shapes.
