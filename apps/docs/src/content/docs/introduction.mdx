@@ -3,11 +3,8 @@ title: What is svebcomponents?
 description: Tools for building, packaging, and server-rendering Svelte custom elements.
 ---
 
-Svelte compiles components into custom elements. A component library also needs
-attribute metadata, package outputs, consumer types, and a server-rendering
-path. svebcomponents supplies those pieces.
-
-## What you get over `customElement: true`
+While svelte already allows for compiling components into custom elements, building a web-component library with this is boilerplate-heavy, requires you to set up a complex build pipeline & lacks features such as server-side rendering via declarative shadow dom or generation of custom element manifests.
+`svebcomponents` is a battery-included toolkit for building **boilerplate-free, type-safe, server-renderable web components with Svelte:**
 
 |                             | Svelte `customElement: true`                        | With svebcomponents                              |
 | --------------------------- | --------------------------------------------------- | ------------------------------------------------ |

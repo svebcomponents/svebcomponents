@@ -1,9 +1,7 @@
 # svebcomponents
 
-Build, package, type, and server-render web components with Svelte.
-
-Svelte compiles components into custom elements. svebcomponents packages those
-elements, generates consumer types, and renders them on the server.
+While svelte already allows for compiling components into custom elements, building a web-component library with this is boilerplate-heavy, requires you to set up a complex build pipeline & lacks features such as server-side rendering via declarative shadow dom or generation of custom element manifests.
+`svebcomponents` is a battery-included toolkit for building **boilerplate-free, type-safe, server-renderable web components with Svelte:**
 
 |                             | Svelte `customElement: true`                        | With svebcomponents                              |
 | --------------------------- | --------------------------------------------------- | ------------------------------------------------ |
@@ -42,8 +40,7 @@ Read the docs at [svebcomponents.dev](https://svebcomponents.dev/).
 | [`@svebcomponents/ssr-react`](https://svebcomponents.dev/packages/ssr-react/)       | Beta   | The same server rendering, inside a React app.                                                   |
 | [`@svebcomponents/ssr-astro`](https://svebcomponents.dev/packages/ssr-astro/)       | Beta   | The same server rendering, inside an Astro app.                                                  |
 
-The SSR pipeline renders any custom element with a registered Lit
-`ElementRenderer`, including Lit elements.
+The SSR pipeline renders any custom element with a registered `ElementRenderer`, including web components built with other frameworks.
 
 ## Contributing
 

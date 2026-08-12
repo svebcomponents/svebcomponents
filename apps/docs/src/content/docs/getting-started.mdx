@@ -9,7 +9,7 @@ You need Node 20.19 or later.
 
 ## Scaffold the project
 
-Create a project from the
+The quickest way to get started is scaffolding your project from the
 [svebcomponents template](https://github.com/svebcomponents/template):
 
 <Tabs syncKey="pkg">
@@ -80,14 +80,13 @@ A svebcomponent declares its custom element tag in a Svelte component. Open
 ```
 
 The component uses Svelte 5 runes, typed props, and `<svelte:options>` for the
-tag. Auto-options reads this type annotation:
+tag. [Auto-options](/guides/attribute-inference/) reads this type annotation:
 
 ```ts
 increments: number;
 ```
 
-[Auto-options](/guides/attribute-inference/) uses it to generate the prop
-metadata that converts `increments` from a string to a number.
+and uses it to generate the prop metadata that converts `increments` from a string to a number.
 
 ## Declare the exports
 
@@ -106,14 +105,10 @@ configures the build:
 }
 ```
 
-The `svebcomponents` command maps `dist/client/FavoriteNumber.js` back to the
+The `svebcomponents` cli command maps `dist/client/FavoriteNumber.js` back to the
 same-basename `src/FavoriteNumber.svelte` and builds that entrypoint. The
 `svelte` condition asks for a second, lighter build that Svelte tooling can
 select to share the host application's Svelte runtime.
-
-The component file _is_ the entrypoint. Do not add an `index.ts` that
-re-exports it: the build would treat that as an ordinary module and skip the
-custom-element pipeline entirely.
 
 ## Build it
 
@@ -176,9 +171,6 @@ it alongside the exports:
 }
 ```
 
-The build prints a hint if you forget. See
-[Publishing your package](/publishing/#ship-the-manifest).
-
 ## Use it
 
 Import the package, then use its custom element:
@@ -190,12 +182,6 @@ Import the package, then use its custom element:
 
 <favorite-number increments={5}></favorite-number>
 ```
-
-The build also emitted TypeScript declarations for the element. If the package
-declares `svelte` as a dependency of its consumers, those are registered with
-Svelte's template types automatically, making unknown attributes and
-`increments={"nope"}` type errors. See
-[Publishing your package](/publishing/#ship-the-svelte-template-types).
 
 :::caution[Pass non-string values as expressions]
 Svelte 5 sets attributes as JavaScript properties under certain conditions, so
