@@ -51,10 +51,6 @@ interface SvebcomponentsSsrOptions {
    */
   outDir: string;
   /**
-   * Whether Svelte runtime imports should be left for Svelte-aware tooling to resolve.
-   */
-  externalSvelte?: boolean;
-  /**
    * Import path from the generated SSR renderer entrypoint to the server component module.
    */
   serverImportPath?: string;
@@ -85,18 +81,20 @@ interface SvebcomponentsSsrOptions {
 const entryName = (entry: string) =>
   path.posix.basename(entry, path.posix.extname(entry));
 
-const createSsrTsdownConfig = ({
-  entry,
-  outDir,
-  externalSvelte = false,
-  serverImportPath,
-  clientImportPath,
-  ssrEntryFileName,
-  hydrationHostImportPath,
-  prepareEntry,
-  prepareImportPath,
-  svelteConfig,
-}: SvebcomponentsSsrOptions): UserConfig => {
+const createSsrTsdownConfig = (
+  options: SvebcomponentsSsrOptions,
+): UserConfig => {
+  const {
+    entry,
+    outDir,
+    serverImportPath,
+    clientImportPath,
+    ssrEntryFileName,
+    hydrationHostImportPath,
+    prepareEntry,
+    prepareImportPath,
+    svelteConfig,
+  } = options;
   const tagName = readEntryTagName(entry);
   return {
     entry: prepareEntry
@@ -114,7 +112,6 @@ const createSsrTsdownConfig = ({
     // in parallel by the svebcomponents CLI; tsdown's per-build clean would
     // race and delete other builds' output. The CLI cleans once up front.
     clean: false,
-    ...(externalSvelte ? { deps: { neverBundle: [/^svelte(\/.*)?$/] } } : {}),
     plugins: [
       pluginStripCustomElementOptions(),
       pluginOverrideSvelteSsrSlotImplementation(),
@@ -156,10 +153,6 @@ interface HydrationHostTsdownOptions {
   outDir: string;
   /** Output basename (without extension), e.g. "ssr-hydration-host". */
   entryName: string;
-  /**
-   * Whether Svelte runtime imports should be left for Svelte-aware tooling to resolve.
-   */
-  externalSvelte?: boolean;
   svelteConfig?: SvelteBuildConfig | undefined;
 }
 
@@ -170,20 +163,17 @@ interface HydrationHostTsdownOptions {
  * separate tsdown config because dts generation must be disabled for a
  * .svelte entry.
  */
-export const createHydrationHostTsdownConfig = ({
-  outDir,
-  entryName,
-  externalSvelte = false,
-  svelteConfig,
-}: HydrationHostTsdownOptions): UserConfig =>
-  ({
+export const createHydrationHostTsdownConfig = (
+  options: HydrationHostTsdownOptions,
+): UserConfig => {
+  const { outDir, entryName, svelteConfig } = options;
+  return {
     entry: { [entryName]: HYDRATION_HOST_SVELTE_PATH },
     outDir,
     dts: false,
     fixedExtension: false,
     // shared output directories are cleaned once by the svebcomponents CLI
     clean: false,
-    ...(externalSvelte ? { deps: { neverBundle: [/^svelte(\/.*)?$/] } } : {}),
     plugins: [
       svelte({
         emitCss: false,
@@ -200,6 +190,7 @@ export const createHydrationHostTsdownConfig = ({
         }),
       }),
     ],
-  }) satisfies UserConfig;
+  } satisfies UserConfig;
+};
 
 export default createSsrTsdownConfig;

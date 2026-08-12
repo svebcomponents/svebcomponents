@@ -88,17 +88,12 @@ const ssrPackageJson = {
   },
 };
 
-const svelteConditionPackageJson = {
+const alternateRuntimeTargetPackageJson = {
   exports: {
     ".": {
       types: "./dist/client/index.d.ts",
-      svelte: "./dist/client-svelte/index.js",
+      alternate: "./dist/alternate/index.js",
       default: "./dist/client/index.js",
-    },
-    "./ssr": {
-      types: "./dist/server/ssr.d.ts",
-      svelte: "./dist/server-svelte/ssr.js",
-      default: "./dist/server/ssr.js",
     },
   },
 };
@@ -122,8 +117,19 @@ const mixedPackageJson = {
     ".": { import: "./dist/client/index.js" },
     "./helpers": {
       types: "./dist/client/helpers.d.ts",
-      svelte: "./dist/client-svelte/helpers.js",
       default: "./dist/client/helpers.js",
+    },
+  },
+};
+
+const typeOnlySvelteSubpathPackageJson = {
+  exports: {
+    ".": {
+      types: "./dist/client/index.d.ts",
+      default: "./dist/client/index.js",
+    },
+    "./svelte": {
+      types: "./dist/svelte-types/index.d.ts",
     },
   },
 };
@@ -138,15 +144,6 @@ const manualSSRConfig = defineConfig({
   entry: "src/index.svelte",
   outDir: "dist/client",
   ssr: true,
-});
-
-const manualSvelteConditionConfig = defineConfig({
-  entry: "src/index.svelte",
-  outDir: "dist/client",
-  svelteOutDir: "dist/client-svelte",
-  ssr: true,
-  ssrOutDir: "dist/server",
-  ssrSvelteOutDir: "dist/server-svelte",
 });
 
 const manualMultipleComponentsConfig = [
@@ -190,12 +187,6 @@ const pluginNames = (options: UserConfig): string[] => {
 
 const clientPipeline = [
   "svebcomponents:dedupe",
-  "svebcomponents:auto-options",
-  "svelte",
-  "svebcomponents:guard-custom-element-define",
-];
-// the svelte-aware variant externalizes svelte, so it needs no dedupe
-const svelteAwareClientPipeline = [
   "svebcomponents:auto-options",
   "svelte",
   "svebcomponents:guard-custom-element-define",
@@ -245,17 +236,18 @@ describe("infer components", () => {
       hydrationHostPipeline,
     ]);
   });
-  it("parses Svelte conditional exports from package.json", () => {
+  it("rejects alternate runtime build targets", () => {
     mockComponentEntriesOnly();
-    const inferredComponents = inferComponents(svelteConditionPackageJson);
-    expectConfigsToMatch(inferredComponents, manualSvelteConditionConfig, [
-      clientPipeline,
-      svelteAwareClientPipeline,
-      ssrPipeline,
-      hydrationHostPipeline,
-      ssrPipeline,
-      hydrationHostPipeline,
-    ]);
+    expect(() => inferComponents(alternateRuntimeTargetPackageJson)).toThrow(
+      /export "\." declares the unsupported runtime condition "alternate"/,
+    );
+  });
+  it("keeps the type-only ./svelte subpath out of the build graph", () => {
+    mockComponentEntriesOnly();
+    const inferredComponents = inferComponents(
+      typeOnlySvelteSubpathPackageJson,
+    );
+    expectConfigsToMatch(inferredComponents, manualConfig, [clientPipeline]);
   });
   it("parses multiple components from package.json", () => {
     mockComponentEntriesOnly();
@@ -270,21 +262,13 @@ describe("infer components", () => {
   it("builds non-component exports with the ordinary module pipeline", () => {
     mockSources("./src/index.svelte", "./src/helpers.ts");
     const inferred = inferComponents(mixedPackageJson);
-    expect(inferred).toHaveLength(3);
+    expect(inferred).toHaveLength(2);
     expect(pluginNames(inferred[0]!)).toEqual(clientPipeline);
     expectSameModuleConfig(
       inferred[1],
       createModuleConfig({
         entry: "src/helpers.ts",
         outDir: "dist/client",
-      }),
-    );
-    expectSameModuleConfig(
-      inferred[2],
-      createModuleConfig({
-        entry: "src/helpers.ts",
-        outDir: "dist/client-svelte",
-        externalSvelte: true,
       }),
     );
     expect(inferred[1]?.plugins).toBeUndefined();
@@ -348,7 +332,7 @@ describe("infer components", () => {
   it("reads svebcomponents.neverBundle from package.json into the browser builds", () => {
     mockComponentEntriesOnly();
     const inferred = inferComponents({
-      ...svelteConditionPackageJson,
+      ...ssrPackageJson,
       svebcomponents: { neverBundle: ["host-provided"] },
     });
 
@@ -374,7 +358,7 @@ describe("infer components", () => {
       { neverBundle: [1, "host-provided"] },
     ]) {
       const inferred = inferComponents({
-        ...svelteConditionPackageJson,
+        ...packageJson,
         svebcomponents,
       });
       const client = inferred.find((config) => config.outDir === "dist/client");
@@ -400,13 +384,11 @@ describe("infer components", () => {
     // even when this code runs on Windows (guards against a regression where
     // `path.normalize` re-introduces platform-native separators).
     mockComponentEntriesOnly();
-    const inferredComponents = inferComponents(svelteConditionPackageJson);
+    const inferredComponents = inferComponents(ssrPackageJson);
     // stringify the whole config graph so every path-bearing field is checked
     const serialized = JSON.stringify(inferredComponents);
     expect(serialized).not.toContain("\\");
     expect(serialized).toContain("dist/client");
     expect(serialized).toContain("dist/server");
-    expect(serialized).toContain("dist/client-svelte");
-    expect(serialized).toContain("dist/server-svelte");
   });
 });

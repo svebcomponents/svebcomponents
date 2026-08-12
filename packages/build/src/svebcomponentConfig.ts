@@ -20,10 +20,6 @@ interface SvebcomponentsOptions {
    */
   outDir: string;
   /**
-   * Whether Svelte runtime imports should be left for Svelte-aware tooling to resolve.
-   */
-  externalSvelte?: boolean;
-  /**
    * Whether to make the compiled custom element hydrate server-rendered
    * declarative shadow DOM (injects `extend: hydratable` via auto-options).
    */
@@ -55,7 +51,6 @@ export const createTsdownConfig = (
   const {
     entry,
     outDir,
-    externalSvelte = false,
     hydratable = false,
     installsSsrShimGuard = false,
     neverBundle = [],
@@ -71,11 +66,9 @@ export const createTsdownConfig = (
     // root export otherwise resolves to its server entry, whose `hydrate`
     // and `mount` are unavailable-on-the-server stubs)
     platform: "browser",
-    // The self-contained build (svelte bundled in) is a final-form browser
-    // artifact — the CDN drop-in — so ship it minified (sourcemaps cover
-    // debugging). The svelte-aware variant is compiled into the consuming
-    // app's build and stays readable.
-    minify: !externalSvelte,
+    // This is a final-form browser artifact, so ship it minified. Sourcemaps
+    // cover debugging.
+    minify: true,
     // Several component configs may share an output directory and are built
     // in parallel by the svebcomponents CLI; tsdown's per-build clean would
     // race and delete other builds' output. The CLI cleans once up front.
@@ -128,13 +121,7 @@ export const createTsdownConfig = (
         }
       : {}),
     deps: {
-      // The Svelte-aware build is the one output that deliberately does not
-      // carry its dependencies: sharing the host application's Svelte runtime
-      // is its entire purpose.
-      ...(externalSvelte ? { neverBundle: [/^svelte(\/.*)?$/] } : {}),
-      alwaysBundle: createBrowserBundlingRule(
-        externalSvelte ? [/^svelte(\/.*)?$/, ...neverBundle] : neverBundle,
-      ),
+      alwaysBundle: createBrowserBundlingRule(neverBundle),
     },
     // A hydratable component's client build imports the `hydratable` wrapper
     // and the HydrationHost from `@svebcomponents/ssr` (see auto-options'
@@ -148,7 +135,7 @@ export const createTsdownConfig = (
     // `createHydrationHostTsdownConfig`), so hydration markers match by
     // construction.
     plugins: [
-      ...(externalSvelte ? [] : [pluginDedupe(["svelte", "esm-env"])]),
+      pluginDedupe(["svelte", "esm-env"]),
       autoOptions({ hydratable }),
       svelte({
         emitCss: false,

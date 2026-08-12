@@ -664,11 +664,10 @@ export const emitElementTypes = async (
   // duplicate-identifier error wherever both are loaded, so the mapping has to
   // be per entry rather than package-wide.
   // Only the file an export's `types` condition points at is ever loaded as
-  // the package's types. A component is usually built several times (the
-  // standalone browser bundle, the svelte-aware one, ssr) into different
-  // output directories, and attaching global declarations to each would be
-  // both wasteful and — if two were ever loaded together — a duplicate
-  // `HTMLElementTagNameMap` entry.
+  // the package's types. A component can produce browser and server output in
+  // different directories, and attaching global declarations to both would be
+  // wasteful and, if both were loaded together, create duplicate
+  // `HTMLElementTagNameMap` entries.
   const typesTargets = await readTypesTargets(cwd);
 
   // Svelte template types are always written, but to their own file. They are

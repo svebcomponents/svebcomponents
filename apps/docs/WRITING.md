@@ -32,15 +32,14 @@ documentation when a workflow starts with its custom-element compiler mode.
 
 ## Terms
 
-| Term                     | Meaning                                                       |
-| ------------------------ | ------------------------------------------------------------- |
-| custom element           | the platform element registered with `customElements`         |
-| web component library    | the package that distributes one or more custom elements      |
-| standalone browser build | a browser entry that includes its runtime dependencies        |
-| Svelte build             | a conditional entry that shares Svelte with a Svelte consumer |
-| server renderer          | code that renders one element through the SSR registry        |
-| host adapter             | the SvelteKit, React, Vue, or Astro integration               |
-| entrypoint               | a source file and its matching package export                 |
+| Term                     | Meaning                                                  |
+| ------------------------ | -------------------------------------------------------- |
+| custom element           | the platform element registered with `customElements`    |
+| web component library    | the package that distributes one or more custom elements |
+| standalone browser build | a browser entry that includes its runtime dependencies   |
+| server renderer          | code that renders one element through the SSR registry   |
+| host adapter             | the SvelteKit, React, Vue, or Astro integration          |
+| entrypoint               | a source file and its matching package export            |
 
 ## Prose
 

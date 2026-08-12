@@ -7,7 +7,6 @@ import { createModuleConfig } from "./moduleConfig.js";
 
 type ExportValue = {
   types?: string;
-  svelte?: string;
   import?: string;
   default?: string;
 };
@@ -54,6 +53,19 @@ const readNeverBundle = (packageJson: object): string[] => {
     );
   }
   return valid;
+};
+
+const assertNoAlternateRuntimeTargets = (
+  exportName: string,
+  value: ExportValue,
+): void => {
+  for (const [condition, target] of Object.entries(value)) {
+    if (["types", "import", "default"].includes(condition)) continue;
+    if (typeof target !== "string") continue;
+    throw new Error(
+      `[svebcomponents]: package.json export "${exportName}" declares the unsupported runtime condition "${condition}". Keep one "default" or "import" build target.`,
+    );
+  }
 };
 
 const resolveSourceEntry = (entryPath: string): SourceEntry => {
@@ -110,28 +122,16 @@ export const inferComponents = (
     if (typeof esmPath !== "string" || !esmPath.startsWith("./dist/client/")) {
       return [];
     }
+    assertNoAlternateRuntimeTargets(key, value);
     // All values below are derived from posix `exports` paths and flow into
     // generated import specifiers, so we must keep them posix (forward slashes)
     // on every platform, including Windows.
     const outDir = path.posix.normalize(path.posix.dirname(esmPath));
     const source = resolveSourceEntry(esmPath);
     const entry = path.posix.normalize(source.entry);
-    const sveltePath = value["svelte"];
 
     if (source.kind === "module") {
-      return [
-        createModuleConfig({ entry, outDir, neverBundle }),
-        ...(typeof sveltePath === "string"
-          ? [
-              createModuleConfig({
-                entry,
-                outDir: path.posix.normalize(path.posix.dirname(sveltePath)),
-                externalSvelte: true,
-                neverBundle,
-              }),
-            ]
-          : []),
-      ];
+      return [createModuleConfig({ entry, outDir, neverBundle })];
     }
 
     const config: DefineConfigOptions = {
@@ -140,22 +140,23 @@ export const inferComponents = (
       neverBundle,
       svelteConfig,
     };
-    if (typeof sveltePath === "string") {
-      config.svelteOutDir = path.posix.normalize(
-        path.posix.dirname(sveltePath),
-      );
-    }
     const ssrExportDeclaration = `${key}/ssr`;
     const ssr = ssrExportDeclaration in exports;
     config.ssr = ssr;
     if (ssr) {
       const ssrExport = exports[ssrExportDeclaration];
-      const ssrPath = ssrExport?.["default"] ?? ssrExport?.["import"];
+      if (ssrExport === undefined) {
+        throw new Error(
+          "[svebcomponents]: could not find expected ESM ssr export.",
+        );
+      }
+      const ssrPath = ssrExport["default"] ?? ssrExport["import"];
       if (typeof ssrPath !== "string") {
         throw new Error(
           "[svebcomponents]: could not find expected ESM ssr export.",
         );
       }
+      assertNoAlternateRuntimeTargets(ssrExportDeclaration, ssrExport);
       const ssrOutDir = path.posix.dirname(ssrPath);
       config.ssrOutDir = path.posix.normalize(ssrOutDir);
       // The declared ssr export (e.g. "./dist/server/button-ssr.js") dictates the
@@ -166,13 +167,6 @@ export const inferComponents = (
         ssrPath,
         path.posix.extname(ssrPath),
       );
-
-      const ssrSveltePath = ssrExport?.["svelte"];
-      if (typeof ssrSveltePath === "string") {
-        config.ssrSvelteOutDir = path.posix.normalize(
-          path.posix.dirname(ssrSveltePath),
-        );
-      }
     }
     return defineConfig(config);
   });

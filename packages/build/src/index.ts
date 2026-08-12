@@ -29,17 +29,9 @@ export interface DefineConfigOptions {
    */
   outDir?: string;
   /**
-   * The output directory for the Svelte-aware browser custom element build.
-   */
-  svelteOutDir?: string;
-  /**
    * The output directory for the SSR build files.
    */
   ssrOutDir?: string;
-  /**
-   * The output directory for the Svelte-aware SSR build files.
-   */
-  ssrSvelteOutDir?: string;
   /**
    * The basename (without extension) of the generated SSR renderer entry file.
    * Defaults to "ssr", producing `<ssrOutDir>/ssr.js`. When several SSR
@@ -106,9 +98,7 @@ export const defineConfig = (
     svelteConfig,
   } = options;
   const outDir = options.outDir ?? "dist/client";
-  const svelteOutDir = options.svelteOutDir;
   const ssrOutDir = options.ssrOutDir ?? "dist/server";
-  const ssrSvelteOutDir = options.ssrSvelteOutDir;
   const ssrEntryFileName = options.ssrEntryFileName ?? "ssr";
   const prepareEntry = ssr ? inferSsrPrepareEntry(entry) : undefined;
   const prepareImportPath = prepareEntry
@@ -128,20 +118,6 @@ export const defineConfig = (
       svelteConfig,
     }),
   ];
-
-  if (svelteOutDir) {
-    tsdownOptions.push(
-      createTsdownConfig({
-        entry,
-        outDir: svelteOutDir,
-        externalSvelte: true,
-        hydratable,
-        installsSsrShimGuard: ssr,
-        neverBundle,
-        svelteConfig,
-      }),
-    );
-  }
 
   if (ssr) {
     tsdownOptions.push(
@@ -172,42 +148,6 @@ export const defineConfig = (
           svelteConfig,
         }),
       );
-    }
-
-    if (ssrSvelteOutDir) {
-      tsdownOptions.push(
-        svebcomponentsSsr({
-          entry,
-          outDir: ssrSvelteOutDir,
-          externalSvelte: true,
-          ssrEntryFileName,
-          svelteConfig,
-          serverImportPath: `./${path.posix.basename(
-            entryOutputFile(ssrSvelteOutDir, entry),
-          )}`,
-          clientImportPath: toImportPath(
-            ssrSvelteOutDir,
-            entryOutputFile(svelteOutDir ?? outDir, entry),
-          ),
-          ...(hydratable
-            ? { hydrationHostImportPath: `./${hydrationHostEntryName}.js` }
-            : {}),
-          ...(prepareEntry && prepareImportPath
-            ? { prepareEntry, prepareImportPath }
-            : {}),
-        }),
-      );
-
-      if (hydratable) {
-        tsdownOptions.push(
-          createHydrationHostTsdownConfig({
-            outDir: ssrSvelteOutDir,
-            entryName: hydrationHostEntryName,
-            externalSvelte: true,
-            svelteConfig,
-          }),
-        );
-      }
     }
   }
 
