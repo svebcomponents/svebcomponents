@@ -35,7 +35,12 @@ export const createBrowserBundlingRule =
       return false;
     }
     if (/^[a-z][a-z0-9+.-]*:/i.test(id)) return false;
-    return !neverBundle.some((pattern) =>
-      typeof pattern === "string" ? pattern === id : pattern.test(id),
-    );
+    return !neverBundle.some((pattern) => {
+      if (typeof pattern === "string") return pattern === id;
+
+      // RegExp.prototype.test mutates lastIndex for global and sticky patterns.
+      // Test a fresh instance so a bundler asking about the same id repeatedly
+      // always receives the same answer, without modifying the caller's regex.
+      return new RegExp(pattern.source, pattern.flags).test(id);
+    });
   };

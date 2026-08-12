@@ -364,8 +364,9 @@ describe("infer components", () => {
     }
   });
 
-  it("ignores a malformed svebcomponents.neverBundle rather than failing the build", () => {
+  it("warns about and ignores a malformed svebcomponents.neverBundle", () => {
     mockComponentEntriesOnly();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     for (const svebcomponents of [
       null,
       "host-provided",
@@ -385,6 +386,12 @@ describe("infer components", () => {
       );
       expect(rule("host-provided")).toBe(!optedOut);
     }
+    expect(warn).toHaveBeenCalledTimes(4);
+    for (const [message] of warn.mock.calls) {
+      expect(message).toContain("[svebcomponents]:");
+      expect(message).toContain("ignoring");
+    }
+    warn.mockRestore();
   });
 
   it("emits posix (forward slash) paths for outDir and entry", () => {

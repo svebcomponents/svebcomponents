@@ -25,17 +25,35 @@ type SourceEntry = {
  * without a module resolver. This is the opt-out for the rare dependency a
  * package genuinely wants the host to provide.
  *
- * Malformed values are ignored rather than failing the build: a typo in
- * `package.json` should not stop a component compiling.
+ * Malformed values are ignored rather than failing the build, but warned about:
+ * a typo should not stop a component compiling or silently change its bundle.
  */
 const readNeverBundle = (packageJson: object): string[] => {
   const config = (packageJson as { svebcomponents?: unknown }).svebcomponents;
-  if (typeof config !== "object" || config === null) return [];
+  if (config === undefined) return [];
+  if (typeof config !== "object" || config === null) {
+    console.warn(
+      '[svebcomponents]: package.json "svebcomponents" must be an object; ignoring it.',
+    );
+    return [];
+  }
   const patterns = (config as { neverBundle?: unknown }).neverBundle;
-  if (!Array.isArray(patterns)) return [];
-  return patterns.filter(
+  if (patterns === undefined) return [];
+  if (!Array.isArray(patterns)) {
+    console.warn(
+      '[svebcomponents]: package.json "svebcomponents.neverBundle" must be an array of strings; ignoring it.',
+    );
+    return [];
+  }
+  const valid = patterns.filter(
     (pattern): pattern is string => typeof pattern === "string",
   );
+  if (valid.length !== patterns.length) {
+    console.warn(
+      '[svebcomponents]: package.json "svebcomponents.neverBundle" must contain only strings; ignoring invalid entries.',
+    );
+  }
+  return valid;
 };
 
 const resolveSourceEntry = (entryPath: string): SourceEntry => {
