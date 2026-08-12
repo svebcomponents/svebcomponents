@@ -61,7 +61,7 @@ export default defineConfig({
         {
           label: "Start here",
           items: [
-            { label: "What is svebcomponents?", slug: "introduction" },
+            { label: "Svelte custom elements", slug: "introduction" },
             { label: "Getting Started", slug: "getting-started" },
             { label: "Authoring components", slug: "authoring" },
             { label: "Publishing your package", slug: "publishing" },
@@ -82,9 +82,9 @@ export default defineConfig({
           label: "Guides",
           collapsed: true,
           items: [
-            { label: "How the build works", slug: "guides/build" },
+            { label: "Build pipeline", slug: "guides/build" },
             {
-              label: "How attribute inference works",
+              label: "Attribute inference",
               slug: "guides/attribute-inference",
             },
             {

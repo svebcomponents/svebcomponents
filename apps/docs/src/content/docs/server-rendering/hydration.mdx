@@ -3,17 +3,18 @@ title: Hydration
 description: How server-rendered declarative shadow DOM is adopted instead of re-rendered when a Svelte-built custom element upgrades.
 ---
 
-Svelte's generated custom elements mount from scratch when they upgrade. The
-constructor attaches a shadow root, which clears the declarative shadow root
-from the server. The browser then creates each node again.
+Svelte's custom-element wrapper mounts the component when the element upgrades.
+Its constructor attaches a shadow root, replacing a declarative shadow root
+from the server.
 
-Components built with `@svebcomponents/build` adopt the server-rendered shadow
-DOM. Svelte keeps the nodes and styles, then connects its reactivity.
+For SSR builds, svebcomponents changes that wrapper through Svelte's public
+`customElement.extend` option. The replacement claims the server-rendered
+shadow root and calls Svelte's `hydrate()` function.
 
 The build enables hydration for each SSR component. Set `hydratable: false` to
 disable it.
 
-## Hydration flow
+## How the wrapper works
 
 svebcomponents uses Svelte's public extension points:
 

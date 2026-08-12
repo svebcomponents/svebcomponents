@@ -8,10 +8,10 @@ The Vue, React, and Astro integrations are in beta. Their APIs may change before
 1.0.
 :::
 
-The same custom element runs in Svelte, Vue, React, Astro, or a plain HTML page.
-Each server framework needs an integration that routes `<my-component>` to its
-`ElementRenderer` and emits markup the framework can hydrate. The element
-[hydrates](/server-rendering/hydration/) its shadow root in the browser.
+The browser runs the same custom element in Svelte, Vue, React, Astro, or plain
+HTML. Each server framework needs an adapter that calls the registered
+`ElementRenderer` and emits declarative shadow DOM. The element
+[hydrates](/server-rendering/hydration/) its own shadow root in the browser.
 
 ## Server output
 
@@ -91,15 +91,6 @@ needs nothing extra here beyond the
 [`enable-async` opt-in](/server-rendering/#async-rendering-outside-svelte)
 every non-Svelte host needs.
 
-### Vite transform
-
-Vue runs user `compilerOptions.nodeTransforms` after its built-in transforms.
-By then, `@vue/compiler-ssr` has resolved the component identity and ignores a
-renamed tag on the server.
-
-Rewriting the single-file component's source before `@vitejs/plugin-vue` sees
-it means the client and server compiles observe the same template.
-
 ## React
 
 Install `@svebcomponents/ssr-react` and point the JSX transform at it:
@@ -137,8 +128,7 @@ React's `renderToString` cannot await, so an
 cannot be server-rendered by the default `CustomElement`.
 
 For an async element, the default wrapper emits the host tag without shadow
-content and logs one warning. The browser renders the component. Configuration
-errors, such as a missing renderer, still throw.
+content. The browser renders the component.
 
 Apps on a React Server Components framework can server-render these elements
 instead, from a Server Component:
@@ -149,15 +139,9 @@ import { CustomElement } from "@svebcomponents/ssr-react/rsc";
 <CustomElement tag="my-component" title="Hello" count={5} />;
 ```
 
-An RSC async function component can await the renderer before it emits markup.
-It accepts
-[asynchronous components](/server-rendering/#asynchronous-components)
-in either form (given the
-[`enable-async` opt-in](/server-rendering/#async-rendering-outside-svelte)
-every non-Svelte host needs for that).
-
-The RSC wrapper works from Server Components. Client Components cannot import
-an async function component, so they use the default browser-rendered fallback.
+The RSC wrapper can await the renderer. Import it from Server Components and
+enable [Svelte's async server mode](/server-rendering/#async-rendering-outside-svelte).
+Client Components use the default wrapper.
 
 ## Astro
 
@@ -180,14 +164,9 @@ Custom elements then work in any `.astro` template:
 </my-component>
 ```
 
-### Browser behavior
-
-Astro ships no host JavaScript for these elements. The parser attaches the
-shadow root, then the element upgrades and hydrates when its bundle loads.
-
-The exception is islands. A custom element inside a `client:*` React, Vue or
-Svelte island belongs to that framework, and the corresponding integration
-applies there instead.
+Astro ships no host JavaScript for these elements. The element upgrades and
+hydrates when its bundle loads. Inside a `client:*` island, use that island's
+framework integration.
 
 ### Async rendering
 
@@ -215,11 +194,9 @@ const { attributes, shadowTemplate, shadowContent } = await renderCustomElement(
 ```
 
 Use `renderCustomElementSync` when the host cannot await. It throws
-`AsyncRendererError` for an async element, allowing the host to choose a
-fallback. Use `renderCustomElement` when the host can await. `shadowTemplate` is the complete
-`<template shadowrootmode="open">…</template>` string for hosts that emit raw
-markup; `shadowContent` is its inner markup, for hosts that build the template
-element themselves.
+`AsyncRendererError` for an async element. `shadowTemplate` contains the full
+`<template shadowrootmode="open">…</template>` string; `shadowContent` contains
+its inner markup.
 
 The pipeline renders [any custom element with a registered
 renderer](/server-rendering/#other-custom-elements) through Lit's

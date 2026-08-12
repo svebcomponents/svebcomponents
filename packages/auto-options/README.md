@@ -1,11 +1,10 @@
-Infer Svelte custom element prop options from `$props()`.
+Generate Svelte's custom-element prop options from `$props()` types.
 
-Svelte custom elements need prop metadata to expose component props as HTML
-attributes. TypeScript props contain the same information.
+Svelte uses the `customElement.props` option to convert attributes and reflect
+properties. TypeScript props contain the information that option needs.
 
-`@svebcomponents/auto-options` reads a Svelte component's instance script,
-infers prop names and primitive types from `$props()`, and updates
-`<svelte:options customElement={...} />`.
+`@svebcomponents/auto-options` reads a component's instance script and writes
+the inferred metadata into Svelte's `<svelte:options customElement={...} />`.
 
 ## Example
 

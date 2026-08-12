@@ -3,22 +3,24 @@ title: SSR
 description: How server rendering works for Svelte-built custom elements.
 ---
 
+Svelte can render a component on the server. Its custom-element wrapper runs in
+the browser, where it creates the shadow root and mounts that component after
+the element upgrades.
+
+`@svebcomponents/ssr` connects those paths. The build generates a server
+renderer for the Svelte component. A host integration calls it and writes the
+shadow root as declarative shadow DOM. The browser then
+[hydrates that shadow root](/server-rendering/hydration/).
+
+The renderer implements Lit's `ElementRenderer` contract, which lets the same
+registry support elements built with Svelte, Lit, or another framework.
+
 :::caution[Beta]
-SSR is in beta. Its APIs and generated output may change before 1.0. Svelte's
-SSR serializer validates and escapes attribute names, attribute values, and tag
-names; XSS regression tests cover those paths. The package has not had an
-independent security audit. Your renderer must escape untrusted shadow-root
-content passed through `{@html}`.
+SSR APIs and generated output may change before 1.0. The package has not had an
+independent security audit. Escape untrusted content passed through `{@html}`.
 :::
 
-Browsers instantiate custom elements from registered classes. A server renderer
-sees an HTML tag without that class.
-
-svebcomponents gives each custom element a server renderer based on Lit's
-`ElementRenderer` model. It serializes the shadow root as declarative shadow
-DOM.
-
-## Package-author Flow
+## Add server output to a package
 
 A component package exposes its browser entrypoint and a matching SSR
 entrypoint:
@@ -40,9 +42,8 @@ entrypoint:
 }
 ```
 
-The browser entrypoint defines the custom element. During the build, the SSR
-entrypoint is generated as an `ElementRenderer` subclass that knows how to
-render the Svelte component on the server.
+The browser entrypoint defines Svelte's custom element. The generated SSR
+entrypoint renders its inner Svelte component through `ElementRenderer`.
 
 The optional `svelte` conditions create renderer and browser builds that share
 the consuming application's Svelte runtime, with the
@@ -52,11 +53,9 @@ that carries.
 See [Publishing your package](/publishing/#optional-server-renderable-output)
 for how matching `/ssr` exports enable this output.
 
-## App-author Flow
+## Register it in a Svelte app
 
-The consuming application needs two pieces of setup.
-
-First, add the svebcomponents transform before the Svelte plugin:
+Add the svebcomponents transform before the Svelte plugin:
 
 ```ts
 import { sveltekit } from "@sveltejs/kit/vite";
@@ -82,10 +81,8 @@ Load the component's server renderer once, for example from `hooks.server.ts`:
 import "my-component-package/ssr";
 ```
 
-The build reads the tag from `<svelte:options customElement>` and writes it into
-the renderer. Importing that renderer registers it with
-`ElementRendererRegistry`. The registry installs the DOM shim before the
-renderer, regardless of import order or bundler chunks.
+The build reads the tag from Svelte's `<svelte:options customElement>` and puts
+it in the renderer. Importing the server entry registers that renderer.
 
 :::note
 If the component's tag could not be read at build time (see
@@ -177,7 +174,7 @@ Without this import, `render()` uses synchronous mode and an async component
 throws `await_invalid`. SvelteKit apps compiled with `experimental.async` do
 not need the import.
 
-## Render flow
+## SvelteKit render flow
 
 On the server, the Vite plugin finds custom element tags in Svelte templates
 and rewrites them to a wrapper component. The wrapper:

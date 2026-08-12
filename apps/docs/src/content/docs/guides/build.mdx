@@ -1,32 +1,18 @@
 ---
-title: How the build works
-description: How svebcomponents turns Svelte components into distributable custom element packages.
+title: Build pipeline
+description: Package Svelte custom elements for browsers, TypeScript, and server rendering.
 ---
 
-`@svebcomponents/build` provides the pipeline around a Svelte custom element
-package. It compiles Svelte for the browser, runs
-[auto-options](/guides/attribute-inference/), emits TypeScript declarations,
-and describes every element it built.
+`@svebcomponents/build` configures the Svelte compiler and tsdown. It runs
+[attribute inference](/guides/attribute-inference/), writes browser bundles and
+declarations, generates a custom elements manifest, and creates server output
+when the package exports it.
 
-This page describes how the CLI selects inputs and outputs. For package fields,
-see
-[Publishing your package](/publishing/).
+Svelte compiles the component and generates the custom element class.
+The build packages that output and guards Svelte's registration call so an
+entrypoint can run more than once.
 
-## Component entrypoints
-
-Each custom element is its own entrypoint, and its PascalCase source filename
-matches the JavaScript output basename declared in `package.json`. The
-component declares its own tag:
-
-```svelte
-<svelte:options customElement="favorite-number" />
-```
-
-Consumers import the entrypoint to define `<favorite-number>`. The build guards
-Svelte's generated `customElements.define()` call against duplicate
-registration.
-
-## Zero-config builds
+## Entrypoints from package exports
 
 The CLI infers entrypoints from the `exports` field:
 
@@ -42,22 +28,19 @@ The CLI infers entrypoints from the `exports` field:
 }
 ```
 
-The inference follows these rules:
+The CLI maps each browser export to a source file:
 
 1. The export's `default` or `import` condition must start with
    `./dist/client/`.
 2. The output path is mapped from `dist/client` to `src`.
 3. A same-basename `.svelte` source is a svebcomponent.
-4. A same-basename `.ts` or `.js` source is an ordinary module and receives a
-   plain tsdown build, without the custom-element, hydration or SSR pipeline.
-5. Exactly one matching source must exist. Ambiguous basenames fail with an
-   error instead of silently choosing one.
+4. A same-basename `.ts` or `.js` source receives a standard tsdown build.
+5. Exactly one matching source must exist.
 6. Subpath patterns (`"./*"`) are not inferred. Give each entry its own export
    key, or use [manual configuration](/guides/manual-configuration/).
 
-Here `./dist/client/FavoriteNumber.js` resolves to `src/FavoriteNumber.svelte`.
-Rule 4 is what lets one package ship components and ordinary helpers without
-running the helpers through custom-element compilation.
+In this example, `./dist/client/FavoriteNumber.js` resolves to
+`src/FavoriteNumber.svelte`.
 
 A `svelte` condition adds a second, lighter build, and a matching `/ssr` export
 adds a server renderer. Both are covered in
@@ -73,55 +56,31 @@ See the
 [`SsrPrepare` signature](/packages/build/#server-preparation) and
 [asynchronous components](/server-rendering/#asynchronous-components).
 
-## Element types & manifest
+## Element types and manifest
 
-Every build describes the elements your package declares, in two forms:
+The build describes each direct `.svelte` entry in two forms:
 
-- `custom-elements.json`, a
-  [custom elements manifest](https://github.com/webcomponents/custom-elements-manifest)
-  (schema 2.1.0). Editors read it for HTML completions, and the wider custom
-  elements tooling ecosystem consumes it. It reaches consumers only if
-  `package.json` declares it. See
-  [Ship the manifest](/publishing/#ship-the-manifest).
-- TypeScript declarations at the path the entry's `types` condition points at.
-  Direct `.svelte` entries receive a complete declaration for their custom
-  element constructor as well as their tag, props and events.
-
-Nothing extra is needed for the TypeScript half:
+- `custom-elements.json` for editors and custom-element tooling
+- TypeScript declarations for the element, tag, props, and events
 
 ```ts
-// defines <simple-component> and types it
 import "my-components";
 
 const el = document.querySelector("simple-component");
 el?.count; // number | undefined
 ```
 
-What ends up in both is decided by what you wrote in the component:
-props become attributes, `$host()` events become a typed event map, `<slot>`
-elements and consumed CSS custom properties become documented members. See
-[Authoring components](/authoring/) for each of them, and
-[typing elements in React & Vue](/guides/framework-types/) for the four
-exported types and how to register them with a host framework.
+The analyzer reads props, `$host()` events, slots, CSS custom properties, and
+component comments. See [Authoring components](/authoring/).
 
 ### Static tags only
 
-Both forms are produced by reading your `.svelte` sources at build time, so an
-element is only describable when its tag is a literal in `<svelte:options>` and
-the component is a direct entry.
+The analyzer needs a literal tag in `<svelte:options>` and a direct `.svelte`
+entry.
 
-Two consequences:
-
-- A dynamically interpolated tag, or the bare `customElement` boolean
-  shorthand, cannot be read. auto-options warns and leaves `<svelte:options>`
-  untouched, which also means no inferred props and no hydration wrapper.
-- A component reached only through a script entry is not described. If
-  `src/index.ts` imports `Button.svelte` and re-exports it, the build treats
-  `src/index.ts` as an ordinary module: no manifest declaration, no element
-  types. Make the component the entry instead.
-
-A tag that is not knowable at build time cannot be typed, cannot be put in
-`HTMLElementTagNameMap`, and cannot be self-registered by the SSR renderer.
+A dynamic tag or Svelte's bare `customElement` shorthand cannot appear in the
+manifest or generated types. A component re-exported through a `.ts` entry is
+also invisible to the analyzer. Export the `.svelte` file as the entrypoint.
 
 ## What ends up in the browser bundle
 
@@ -130,11 +89,11 @@ browser builds inline each bare specifier, whatever `package.json` calls it. It
 leaves Node builtins, relative and absolute paths, and protocol imports alone.
 The build fails if it cannot resolve a specifier selected for inlining.
 
-Declare dependencies that consumers must install. The browser build still
-includes their code. Declare the package whose types
-your element types name, or `svelte` to
+Declare dependencies that consumers must install. The browser build includes
+their code. Declare the package whose types your element types name, or
+`svelte` to
 [register your Svelte template types](/publishing/#ship-the-svelte-template-types),
-and the browser output still carries the code either way.
+and the browser output carries its code either way.
 
 List a dependency in `neverBundle` when the host must provide it:
 

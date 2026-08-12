@@ -1,8 +1,8 @@
-Build Svelte custom element packages with the `svebcomponents` command.
+Package Svelte custom elements with the `svebcomponents` command. Svelte
+compiles each component and generates its custom element class. This package
+configures the build around that output:
 
-It configures `tsdown` for Svelte custom elements:
-
-- Svelte compiles files as custom elements for the browser build.
+- browser and server Svelte compiler targets
 - `@svebcomponents/auto-options` adds inferred props to
   `<svelte:options customElement={...} />` before compilation.
 - The browser build prevents duplicate custom element registration.
