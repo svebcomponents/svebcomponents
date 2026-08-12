@@ -1,5 +1,29 @@
 # @svebcomponents/build
 
+## 0.7.0
+
+### Minor Changes
+
+- c45de74: Remove the runtime-sharing browser and server targets selected by `svelte`
+  export conditions and the `svelteOutDir` and `ssrSvelteOutDir` configuration
+  options. Each generated component now uses one standalone browser target and
+  one server target.
+
+  Remove the `externalSvelte` option from the `@svebcomponents/ssr/tsdown`
+  configuration helpers. The helpers now produce the single server build used by
+  `@svebcomponents/build`.
+
+  Remove runtime `svelte` conditions from component package exports. The
+  type-only `./svelte` subpath for `*.svelte-types.d.ts` remains supported, as do
+  the raw `.svelte` conditions published by `@svebcomponents/ssr`.
+
+### Patch Changes
+
+- a13a7b7: Make `neverBundle` regular-expression matching deterministic and warn when an
+  inferred package configuration contains malformed bundling options.
+- Updated dependencies [c45de74]
+  - @svebcomponents/ssr@0.7.0
+
 ## 0.6.0
 
 ### Minor Changes

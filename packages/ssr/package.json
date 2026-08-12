@@ -1,6 +1,6 @@
 {
   "name": "@svebcomponents/ssr",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Server-render Svelte-built custom elements to declarative shadow DOM, with hydration.",
   "license": "MIT",
   "homepage": "https://svebcomponents.dev/packages/ssr/",
