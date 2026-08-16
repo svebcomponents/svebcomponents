@@ -3,24 +3,16 @@ title: Authoring components
 description: Declare the props, events, slots, and styles that consumers use.
 ---
 
-Write a Svelte component and declare its custom-element tag. Svelte defines the
-component behavior; svebcomponents reads the source to generate attribute
-options, element types, and a custom elements manifest.
-
-Read the
-[Svelte custom elements guide](https://svelte.dev/docs/svelte/custom-elements)
-for the compiler rules behind these components.
-
 ## Declare the tag
 
-Give each published component a literal tag name:
+As you would with vanilla svelte, set the tag name as the customElement property on `<svelte:options/>`
 
 ```svelte
 <svelte:options customElement="favorite-number" />
 ```
 
 svebcomponents uses this string in the generated types and manifest. It cannot
-name a computed tag during the build.
+be dynamically computed during build.
 
 ## Props and attributes
 
@@ -38,8 +30,8 @@ Declare typed props with Svelte's `$props()` rune:
 </script>
 ```
 
-Svelte exposes each prop as a property on the custom element.
-`@svebcomponents/auto-options` derives its attribute name, converter, and
+By default, Svelte exposes each prop as a property on the custom element.
+`svebcomponents` additionally derives its attribute name, converter, and
 reflection setting from the TypeScript declaration.
 
 | Property   | Attribute   |
@@ -54,7 +46,7 @@ overrides.
 
 ## Events
 
-Dispatch events from Svelte's
+Dispatch events using Svelte's
 [`$host()`](https://svelte.dev/docs/svelte/$host) rune. Add an explicit type
 argument when the event carries detail:
 
@@ -94,13 +86,16 @@ Use `<slot>` for light DOM content:
 </my-card>
 ```
 
-svebcomponents records static slot names. Read
-[Hydration](/server-rendering/hydration/#slots) before you server-render a
+svebcomponents records static slot names. 
+
+:::note[Beta]
+Read [Hydration](/server-rendering/hydration/#slots) before you server-render a
 component with slots.
+:::
 
 ## Styles
 
-Svelte puts component styles in the shadow root. Use `:host` for the custom
+Svelte puts component styles in the shadow root. As with all custom elements, use `:host` for the custom
 element and CSS custom properties for values consumers can set:
 
 ```svelte

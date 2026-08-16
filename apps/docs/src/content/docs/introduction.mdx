@@ -3,26 +3,50 @@ title: Build a web component library with Svelte
 description: Turn Svelte custom elements into typed packages with browser builds and server rendering.
 ---
 
-[Svelte has a compiler mode for custom elements](https://svelte.dev/docs/svelte/custom-elements).
-Building a library with it takes more work: you have to supply attribute
-metadata, configure several build targets, generate consumer types, and handle
-server rendering.
+:::note[Beta]
+svebcomponents is in beta. APIs may change before 1.0.
+:::
+
+Out of the box, [Svelte.js comes with a compiler mode for custom elements](https://svelte.dev/docs/svelte/custom-elements).
+However, building a library with it is very involved: you have to supply attribute
+metadata, configure a build pipeline with no straight-forward way to generate consumer types, or rendering the component on the server.
 
 svebcomponents is a toolkit for boilerplate-free, type-safe, server-renderable
-web components with Svelte. It adds:
+web components with Svelte.
 
-- `customElement.props` metadata inferred from your `$props()` types
-- browser and server builds derived from package exports
-- TypeScript declarations and a custom elements manifest
-- host adapters that emit declarative shadow DOM, plus a custom-element
-  extension that hydrates it
+- boilerplate-free:
+	- automatically infered metadata for the svelte compiler from the type system
+- type-safe:
+	- TypeScript declarations and a custom elements manifest
+- server-renderable:
+	- an SSR implementation based on svelte's server-rendering & declarative shadow dom
+	- framework integrations for rendering custom elements in svelte, react & astro (based on lit's `ElementRenderer` API)
 
-You declare each component API once in Svelte. svebcomponents configures the
-compiler and generates the package around it.
+## How Svelte custom elements work
 
-## One component, complete package
+`svebcomponents` builds on svelte's compiler mode for generating custom elements - extending it only where needed.
+This Svelte Summit 2025 talk explores the available options, lifecycle, and mechanics behind svelte built custom elements.
 
-Start with a Svelte component and a custom-element tag:
+<iframe
+  width="100%"
+  style="aspect-ratio: 16 / 9"
+  src="https://www.youtube-nocookie.com/embed/lDWfdfTH3e8"
+  title="Ultimate Guide to Building Web Components with Svelte"
+  loading="lazy"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  allowfullscreen
+></iframe>
+
+#### TL;DR
+
+Svelte compiles the component and an `HTMLElement` wrapper. The wrapper creates
+a shadow root, maps element properties and attributes to component props, and
+mounts the component after the browser connects the element.
+the `<svelte:options>`' customElement metadata is used to add names and type converters for attributes. 
+
+## `component + svebcomponents = package`
+
+A regular TypeScript svelte component with `<svelte:options customElement="element-name">` is all you need to create a full featured component package with `svebcomponents`:
 
 ```svelte
 <svelte:options customElement="favorite-number" />
@@ -39,66 +63,12 @@ Start with a Svelte component and a custom-element tag:
 <button onclick={increment}>{value}</button>
 ```
 
-svebcomponents reads your package exports to choose build entries. From this
+the `svebcomponent` cli reads your package exports to choose build entries. From this
 source, svebcomponents can generate:
 
 | Output                         | Consumer                                  |
 | ------------------------------ | ----------------------------------------- |
 | standalone browser bundle      | HTML and framework apps                   |
-| element and event declarations | TypeScript and editors                    |
+| element and event declarations | TypeScript and LSPs                       |
 | `custom-elements.json`         | web-component tooling                     |
 | server renderer                | SvelteKit, React, Vue, and Astro adapters |
-
-The generated declarations extend `HTMLElementTagNameMap`, so DOM queries know
-the element's props and events:
-
-```ts
-const favorite = document.querySelector("favorite-number");
-favorite?.value;
-//         ^? number | undefined
-```
-
-Add the generated server export to a host app and the adapter emits a
-declarative shadow template. The browser turns that template into a shadow root
-and can paint its contents before it downloads the component bundle. After the
-bundle registers the element, the generated extension passes the existing
-nodes to Svelte's `hydrate` function.
-
-[Create a package](/getting-started/) or inspect the
-[build pipeline](/guides/build/).
-
-## How Svelte custom elements work
-
-This Svelte Summit 2025 talk follows the generated class, the custom-element
-lifecycle, and the server-rendering work behind svebcomponents.
-
-<iframe
-  width="100%"
-  style="aspect-ratio: 16 / 9"
-  src="https://www.youtube-nocookie.com/embed/lDWfdfTH3e8"
-  title="Ultimate Guide to Building Web Components with Svelte"
-  loading="lazy"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-  allowfullscreen
-></iframe>
-
-### TL;DR
-
-Svelte compiles the component and an `HTMLElement` wrapper. The wrapper creates
-a shadow root, maps element properties and attributes to component props, and
-mounts the component after the browser connects the element.
-
-For server rendering, svebcomponents generates an entry that calls Svelte's
-server renderer. A host adapter writes the result into a declarative shadow
-template. The browser turns that template into a shadow root before JavaScript
-runs.
-
-During upgrade, Svelte's wrapper calls `attachShadow()`. A browser would clear
-an existing declarative shadow root before returning it. The svebcomponents
-wrapper intercepts that call, preserves the server nodes, and passes them to
-Svelte for hydration. Read the [hydration contract](/server-rendering/hydration/)
-for fallbacks and limits.
-
-:::note[Beta]
-svebcomponents is in beta. APIs may change before 1.0.
-:::

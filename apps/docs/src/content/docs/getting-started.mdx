@@ -3,18 +3,11 @@ title: Getting Started
 description: Build and run your first component package.
 ---
 
-You need Node 20.19 or later.
+`svebcomponents` can be retrofitted onto any project - the [starter template](https://github.com/svebcomponents/template) is the quickest way to get everything set up.
 
 ## Start from the template
 
-Clone the [starter template](https://github.com/svebcomponents/template) with
-its Git history:
-
-```bash
-git clone https://github.com/svebcomponents/template.git my-component-library
-```
-
-Copy it without Git history with degit:
+Clone the [starter template](https://github.com/svebcomponents/template) without Git history with degit:
 
 ```bash
 pnpm dlx degit svebcomponents/template my-component-library
@@ -25,26 +18,22 @@ Install its dependencies and start Vite:
 ```bash
 cd my-component-library
 pnpm install
-pnpm dev
 ```
 
-If you used the template, keep working in `my-component-library`. To assemble
-the same package yourself, start the next section from a fresh directory.
-
-## Create the package
+### Create the package
 
 Create a directory with a `src` folder:
 
 ```bash
-mkdir -p favorite-number/src
-cd favorite-number
+mkdir -p cool-counter/src
+cd cool-counter
 ```
 
 Add `package.json`:
 
 ```json
 {
-  "name": "favorite-number",
+  "name": "cool-counter",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -56,11 +45,11 @@ Add `package.json`:
   },
   "exports": {
     ".": {
-      "types": "./dist/client/FavoriteNumber.d.ts",
-      "default": "./dist/client/FavoriteNumber.js"
+      "types": "./dist/client/CoolCounter.d.ts",
+      "default": "./dist/client/CoolCounter.js"
     },
     "./svelte": {
-      "types": "./dist/client/FavoriteNumber.svelte-types.d.ts"
+      "types": "./dist/client/CoolCounter.svelte-types.d.ts"
     }
   },
   "devDependencies": {
@@ -71,18 +60,14 @@ Add `package.json`:
 }
 ```
 
-Install the dependencies:
+svebcomponents maps an export such as `./dist/client/CoolCounter.js` to `src/CoolCounter.svelte`.
 
-```bash
-pnpm install
-```
+### Write the component
 
-## Write the component
-
-Create `src/FavoriteNumber.svelte`:
+Create `src/CoolCounter.svelte`:
 
 ```svelte
-<svelte:options customElement="favorite-number" />
+<svelte:options customElement="cool-counter" />
 
 <script lang="ts">
   let { increments = 1 }: { increments?: number } = $props();
@@ -94,27 +79,38 @@ Create `src/FavoriteNumber.svelte`:
 </button>
 ```
 
-Svelte compiles the file in custom-element mode.
-`@svebcomponents/auto-options` reads the `$props()` type and supplies the
-metadata Svelte uses to convert `increments="5"` to a number.
+`<svelte:options>` is only used to declare the tag name - attribute types will be inferred automatically.
 
-## Build it
+### Build it
 
 ```bash
 pnpm build
 ```
 
-svebcomponents writes the browser bundle and declarations to `dist/client`.
-It writes `custom-elements.json` at the package root.
+This invokes the `svebcomponents` cli, which reads the `$props()` type and supplies the metadata Svelte's custom element wrapper uses to convert `increments="5"` to a number.
+The build produces browser bundle and declarations at `dist/client` - it also writes `custom-elements.json` at the package root.
 
-## Run it
+### Use it
 
-Create `index.html`:
+The bundle can be distributed as a package on npm. All consumers have to do is `import "cool-counter";`, then the element is registered as a side effect and becomes available to use in the dom. 
+`document.createElement('cool-counter')`
 
-```html
-<script type="module" src="/dist/client/FavoriteNumber.js"></script>
+With the svebcomponents/template we can add the package as a dependency to `apps/svelte-kit/package.json` to preview what consumers get:
 
-<favorite-number increments="5"></favorite-number>
+```json
+"dependencies": {
+	"cool-counter": "workspace:*",
+}
+```
+
+Then use it in the app:
+
+```svelte
+<script lang="ts">
+  import "cool-counter";
+</script>
+
+<cool-counter increments={5}></cool-counter>
 ```
 
 Start the development server:
@@ -123,28 +119,4 @@ Start the development server:
 pnpm dev
 ```
 
-Open the local URL printed in the terminal. Click the button and confirm that
-the count rises by five.
-
-## Add svebcomponents to an existing package
-
-Install the build tool and add its command to `package.json`:
-
-```bash
-pnpm add -D @svebcomponents/build
-```
-
-```json
-{
-  "scripts": {
-    "build": "svebcomponents"
-  }
-}
-```
-
-Add a literal custom-element tag to each Svelte component. Then declare its
-browser output in `package.json`. svebcomponents maps an export such as
-`./dist/client/FavoriteNumber.js` to `src/FavoriteNumber.svelte`.
-
-Continue with [Authoring components](/authoring/) and
-[Configure package outputs](/publishing/).
+Open the local URL printed in the terminal & check out your web component!
