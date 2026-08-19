@@ -7,25 +7,32 @@ description: Turn Svelte custom elements into typed packages with browser builds
 svebcomponents is in beta. APIs may change before 1.0.
 :::
 
-Out of the box, [Svelte.js comes with a compiler mode for custom elements](https://svelte.dev/docs/svelte/custom-elements).
-However, building a library with it is very involved: you have to supply attribute
-metadata, configure a build pipeline with no straight-forward way to generate consumer types, or rendering the component on the server.
+Out of the box,
+[Svelte comes with a compiler mode for custom elements](https://svelte.dev/docs/svelte/custom-elements).
+However, building a library with it is extremely involved: you have to supply attribute
+metadata and configure a build pipeline, with no straightforward way to
+generate consumer types or render the component on the server.
 
 svebcomponents is a toolkit for boilerplate-free, type-safe, server-renderable
 web components with Svelte.
 
 - boilerplate-free:
-	- automatically infered metadata for the svelte compiler from the type system
+  - automatically inferred metadata for the Svelte compiler from the type
+    system
 - type-safe:
-	- TypeScript declarations and a custom elements manifest
+  - TypeScript declarations and a custom elements manifest
 - server-renderable:
-	- an SSR implementation based on svelte's server-rendering & declarative shadow dom
-	- framework integrations for rendering custom elements in svelte, react & astro (based on lit's `ElementRenderer` API)
+  - an SSR implementation based on Svelte's server rendering and declarative
+    shadow DOM
+  - framework integrations for rendering custom elements in Svelte, React,
+    Vue, and Astro (based on Lit's `ElementRenderer` API)
 
 ## How Svelte custom elements work
 
-`svebcomponents` builds on svelte's compiler mode for generating custom elements - extending it only where needed.
-This Svelte Summit 2025 talk explores the available options, lifecycle, and mechanics behind svelte built custom elements.
+`svebcomponents` builds on Svelte's compiler mode for generating custom
+elements, extending it only where needed. This Svelte Summit 2025 talk explores
+the available options, lifecycle, and mechanics behind Svelte-built custom
+elements.
 
 <iframe
   width="100%"
@@ -37,16 +44,19 @@ This Svelte Summit 2025 talk explores the available options, lifecycle, and mech
   allowfullscreen
 ></iframe>
 
-#### TL;DR
+### TL;DR
 
 Svelte compiles the component and an `HTMLElement` wrapper. The wrapper creates
 a shadow root, maps element properties and attributes to component props, and
 mounts the component after the browser connects the element.
-the `<svelte:options>`' customElement metadata is used to add names and type converters for attributes. 
+The `customElement` metadata in `<svelte:options>` is used to add names and type
+converters for attributes.
 
 ## `component + svebcomponents = package`
 
-A regular TypeScript svelte component with `<svelte:options customElement="element-name">` is all you need to create a full featured component package with `svebcomponents`:
+A regular TypeScript Svelte component with
+`<svelte:options customElement="element-name">` is all you need to create a
+full-featured component package with `svebcomponents`:
 
 ```svelte
 <svelte:options customElement="favorite-number" />
@@ -63,8 +73,8 @@ A regular TypeScript svelte component with `<svelte:options customElement="eleme
 <button onclick={increment}>{value}</button>
 ```
 
-the `svebcomponent` cli reads your package exports to choose build entries. From this
-source, svebcomponents can generate:
+The `svebcomponents` CLI reads your package exports to choose build entries.
+From this source, svebcomponents can generate:
 
 | Output                         | Consumer                                  |
 | ------------------------------ | ----------------------------------------- |

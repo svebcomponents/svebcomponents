@@ -3,7 +3,9 @@ title: Getting Started
 description: Build and run your first component package.
 ---
 
-`svebcomponents` can be retrofitted onto any project - the [starter template](https://github.com/svebcomponents/template) is the quickest way to get everything set up.
+`svebcomponents` can be retrofitted onto any project. The
+[starter template](https://github.com/svebcomponents/template) is the quickest
+way to get everything set up.
 
 ## Start from the template
 
@@ -13,7 +15,7 @@ Clone the [starter template](https://github.com/svebcomponents/template) without
 pnpm dlx degit svebcomponents/template my-component-library
 ```
 
-Install its dependencies and start Vite:
+Install its dependencies:
 
 ```bash
 cd my-component-library
@@ -22,11 +24,11 @@ pnpm install
 
 ### Create the package
 
-Create a directory with a `src` folder:
+Create the component package inside the template's `components` workspace:
 
 ```bash
-mkdir -p cool-counter/src
-cd cool-counter
+mkdir -p components/cool-counter/src
+cd components/cool-counter
 ```
 
 Add `package.json`:
@@ -35,7 +37,6 @@ Add `package.json`:
 {
   "name": "cool-counter",
   "version": "0.0.1",
-  "private": true,
   "type": "module",
   "files": ["dist", "custom-elements.json"],
   "customElements": "custom-elements.json",
@@ -60,7 +61,8 @@ Add `package.json`:
 }
 ```
 
-svebcomponents maps an export such as `./dist/client/CoolCounter.js` to `src/CoolCounter.svelte`.
+svebcomponents maps an export such as `./dist/client/CoolCounter.js` to
+`src/CoolCounter.svelte`.
 
 ### Write the component
 
@@ -79,27 +81,35 @@ Create `src/CoolCounter.svelte`:
 </button>
 ```
 
-`<svelte:options>` is only used to declare the tag name - attribute types will be inferred automatically.
+`<svelte:options>` is only used to declare the tag name. Attribute types are
+inferred automatically.
 
 ### Build it
 
 ```bash
+pnpm install
 pnpm build
 ```
 
-This invokes the `svebcomponents` cli, which reads the `$props()` type and supplies the metadata Svelte's custom element wrapper uses to convert `increments="5"` to a number.
-The build produces browser bundle and declarations at `dist/client` - it also writes `custom-elements.json` at the package root.
+This invokes the `svebcomponents` CLI, which reads the `$props()` type and
+supplies the metadata Svelte's custom element wrapper uses to convert
+`increments="5"` to a number. The build produces the browser bundle and
+declarations at `dist/client`. It also writes `custom-elements.json` at the
+package root.
 
 ### Use it
 
-The bundle can be distributed as a package on npm. All consumers have to do is `import "cool-counter";`, then the element is registered as a side effect and becomes available to use in the dom. 
-`document.createElement('cool-counter')`
+The bundle can be distributed as a package on npm. Consumers only need to
+`import "cool-counter"`; the element is registered as a side effect and becomes
+available in the DOM, including through
+`document.createElement("cool-counter")`.
 
-With the svebcomponents/template we can add the package as a dependency to `apps/svelte-kit/package.json` to preview what consumers get:
+With the svebcomponents template, add the package as a dependency in
+`apps/svelte-kit/package.json` to preview what consumers get:
 
 ```json
 "dependencies": {
-	"cool-counter": "workspace:*",
+  "cool-counter": "workspace:*"
 }
 ```
 
@@ -113,10 +123,13 @@ Then use it in the app:
 <cool-counter increments={5}></cool-counter>
 ```
 
-Start the development server:
+Return to the template root, install the new workspace dependency, and start
+the development server:
 
 ```bash
+cd ../..
+pnpm install
 pnpm dev
 ```
 
-Open the local URL printed in the terminal & check out your web component!
+Open the local URL printed in the terminal and check out your web component!

@@ -3,9 +3,10 @@ title: Configure package outputs
 description: Declare browser, type, manifest, and server exports for a component package.
 ---
 
-For most use cases, svebcomponents needs no explicit config, instead it reads your `package.json` exports to find source entries and select
-build targets. 
-Let's walk through this with the simplest case - a standalone web component users can drop into their sites:
+For most use cases, svebcomponents needs no explicit config. Instead, it reads
+your `package.json` exports to find source entries and select build targets.
+Let's walk through this with the simplest case: a standalone web component
+users can drop into their sites.
 
 ```json
 {
@@ -33,11 +34,13 @@ Let's walk through this with the simplest case - a standalone web component user
 }
 ```
 
-svebcomponents maps the `default` path of `src/FavoriteNumber.js` to `src/FavoriteNumber.svelte` under the hood.
-Consumers import this entry to register the element. The standalone browser output includes the Svelte runtime, so hosts do not need Svelte as a dependency.
+svebcomponents maps the `default` output path
+`./dist/client/FavoriteNumber.js` to `src/FavoriteNumber.svelte` under the hood.
+Consumers import this entry to register the element. The standalone browser
+output includes the Svelte runtime, so hosts do not need Svelte as a dependency.
 
-Editors use `customElements` to find the generated manifest. `files` is for npm to
-include the build output and manifest in the published package.
+Editors use `customElements` to find the generated manifest. `files` is for npm
+to include the build output and manifest in the published package.
 
 When you run the build:
 
@@ -56,13 +59,19 @@ dist/
     └── FavoriteNumber.svelte-types.d.ts
 ```
 
-Consumers load the component's `default` entry that resolves to `dist/client/FavoriteNumber.js` - this module contains the web component constructor and a side effect for registering it under the tag name. 
-The `./svelte` subpath resolving to `dist/client/FavoriteNumber.svelte-types.d.ts` is a type export giving svelte consumers template typing for their custom elements out of the box.
-Read [framework types](/guides/framework-types/) for how to set up React and Vue project declarations.
+Consumers load the component's `default` entry, which resolves to
+`dist/client/FavoriteNumber.js`. This module contains the web component
+constructor and a side effect for registering it under the tag name. The
+`./svelte` subpath resolves to
+`dist/client/FavoriteNumber.svelte-types.d.ts`, a type export that gives Svelte
+consumers template typing for their custom elements out of the box. Read
+[framework types](/guides/framework-types/) to set up React and Vue project
+declarations.
 
 ## Add component entries
 
-Give each public component a "default" export. That matches the output basename of one `.svelte` component in `src`:
+Give each public component a browser export. That matches the output basename
+of one `.svelte` component in `src`:
 
 ```json
 {
@@ -110,8 +119,8 @@ Pair a component export with a `/ssr` subpath:
 }
 ```
 
-svebcomponents generates an `ElementRenderer` at the server path. 
-For how to use it inside, continue with [Server-side rendering](/server-rendering/).
+svebcomponents generates an `ElementRenderer` at the server path. Continue
+with [Server-side rendering](/server-rendering/) to use it in a host app.
 
 ## Check the package
 

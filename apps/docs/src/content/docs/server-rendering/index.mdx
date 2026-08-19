@@ -3,7 +3,8 @@ title: Server rendering
 description: Render Svelte-built custom elements on the server and hydrate their shadow roots in the browser.
 ---
 
-To render custom elements on the server, your package needs to declare a server entry and the host app needs an adapter.
+To render custom elements on the server, your package needs to declare a server
+entry and the host app needs an adapter.
 
 1. Your component package exports both a browser entry and a matching `/ssr` entry.
 2. The host app imports both entries and installs its framework-specific adapter.
@@ -18,9 +19,12 @@ Package authors add matching browser and server exports, then build both from
 the same Svelte source. Start with
 [Configure package outputs](/publishing/).
 
-First users need to install and import the correct adapter for their framework. This sets up the `ElementRendererRegistry` and a mechanism for intercepting custom-element tags during server side rendering.
-Then use the component package in the browser as you always would - in addition to importing its `/ssr` entry on the server.
-This `/ssr` import registers an ElementRenderer for that custom-element tag with the ElementRendererRegistry.
+First, users need to install and import the correct adapter for their framework.
+This sets up the `ElementRendererRegistry` and a mechanism for intercepting
+custom-element tags during server-side rendering. Then use the component
+package in the browser as you always would, in addition to importing its `/ssr`
+entry on the server. This `/ssr` import registers an `ElementRenderer` for that
+custom-element tag with the `ElementRendererRegistry`.
 
 | Host      | Setup                                                     |
 | --------- | --------------------------------------------------------- |
@@ -30,7 +34,8 @@ This `/ssr` import registers an ElementRenderer for that custom-element tag with
 | Astro     | [Use the Astro adapter](/server-rendering/astro/)         |
 
 :::caution[Beta]
-SSR APIs and generated output may change before 1.0. Sanitize untrusted content before passing it through `{@html}`.
+SSR APIs and generated output may change before 1.0. Sanitize untrusted content
+before passing it through `{@html}`.
 :::
 
 :::info
@@ -40,4 +45,4 @@ async-capable host path. See
 :::
 
 To learn about the renderer registry and direct rendering functions, use the
-[`@svebcomponents/ssr` reference](/packages/ssr/)
+[`@svebcomponents/ssr` reference](/packages/ssr/).

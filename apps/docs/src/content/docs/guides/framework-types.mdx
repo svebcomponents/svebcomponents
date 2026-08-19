@@ -4,8 +4,9 @@ description: Use generated element types in the DOM, Svelte, React, and Vue.
 ---
 
 svebcomponents writes framework-neutral declarations beside each browser
-entry. In addition, template augmentation for svelte projects is provided out of the box, while React and Vue
-projects manually compose the exported interfaces in one project declaration file.
+entry. In addition, template augmentation for Svelte projects is provided out
+of the box, while React and Vue projects manually compose the exported
+interfaces in one project declaration file.
 
 ## Generated interfaces
 
@@ -39,7 +40,8 @@ element?.addEventListener("change", (event) => {
 
 ## Svelte
 
-svebcomponents outputs a `svelte/elements` augmentation beside the main declaration:
+svebcomponents outputs a `svelte/elements` augmentation beside the main
+declaration:
 
 ```text
 dist/client/SimpleComponent.svelte-types.d.ts
@@ -131,3 +133,11 @@ declare module "vue" {
   }
 }
 ```
+
+## Important limitations
+
+- HTML attributes carry strings. Pass arrays and objects through their
+  camel-case property names instead of kebab-case attributes.
+- Function and `Snippet` props are property-only. Assign them through a DOM
+  reference when template syntax treats the prop name as an event handler.
+- React custom-element properties and events require React 19.

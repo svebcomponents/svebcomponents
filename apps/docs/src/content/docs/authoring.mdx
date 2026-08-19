@@ -5,7 +5,8 @@ description: Declare the props, events, slots, and styles that consumers use.
 
 ## Declare the tag
 
-As you would with vanilla svelte, set the tag name as the customElement property on `<svelte:options/>`
+As with a regular Svelte-built custom element, set the tag name through
+`customElement` on `<svelte:options>`:
 
 ```svelte
 <svelte:options customElement="favorite-number" />
@@ -39,8 +40,7 @@ reflection setting from the TypeScript declaration.
 | `pageSize` | `page-size` |
 | `featured` | `featured`  |
 
-Scalar (primitive type) props reflect to attributes. `auto-options` disables reflection for
-arrays, objects, and unresolved type references. Read
+String, number, and boolean props reflect to attributes, but arrays, objects, and unresolved type references do not. Read
 [Attribute metadata](/guides/attribute-inference/) for the inference rules and
 overrides.
 
@@ -86,17 +86,18 @@ Use `<slot>` for light DOM content:
 </my-card>
 ```
 
-svebcomponents records static slot names. 
+svebcomponents records static slot names.
 
-:::note[Beta]
+:::note[SSR beta]
 Read [Hydration](/server-rendering/hydration/#slots) before you server-render a
 component with slots.
 :::
 
 ## Styles
 
-Svelte's custom element compiler puts component styles in the shadow root. As with all custom elements, use `:host` for the custom
-element and CSS custom properties for values consumers can set:
+Svelte's custom-element compiler puts component styles in the shadow root. Use
+`:host` for the custom element and CSS custom properties for values consumers
+can set:
 
 ```svelte
 <style>
