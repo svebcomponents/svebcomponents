@@ -79,11 +79,17 @@ export default defineConfig({
         {
           label: "Server rendering",
           items: [
-            { label: "Overview", slug: "server-rendering" },
-            { label: "SvelteKit", slug: "server-rendering/sveltekit" },
-            { label: "React", slug: "server-rendering/react" },
-            { label: "Vue", slug: "server-rendering/vue" },
-            { label: "Astro", slug: "server-rendering/astro" },
+            { label: "SSR Overview", slug: "server-rendering" },
+            {
+              label: "Framework Integrations",
+              collapsed: false,
+              items: [
+                { label: "SvelteKit", slug: "server-rendering/sveltekit" },
+                { label: "React", slug: "server-rendering/react" },
+                { label: "Vue", slug: "server-rendering/vue" },
+                { label: "Astro", slug: "server-rendering/astro" },
+              ],
+            },
             { label: "Async components", slug: "server-rendering/async" },
           ],
         },

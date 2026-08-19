@@ -12,7 +12,7 @@ As you would with vanilla svelte, set the tag name as the customElement property
 ```
 
 svebcomponents uses this string in the generated types and manifest. It cannot
-be dynamically computed during build.
+be dynamically computed.
 
 ## Props and attributes
 
@@ -31,7 +31,7 @@ Declare typed props with Svelte's `$props()` rune:
 ```
 
 By default, Svelte exposes each prop as a property on the custom element.
-`svebcomponents` additionally derives its attribute name, converter, and
+`svebcomponents` additionally derives its attribute name, type converter, and
 reflection setting from the TypeScript declaration.
 
 | Property   | Attribute   |
@@ -39,7 +39,7 @@ reflection setting from the TypeScript declaration.
 | `pageSize` | `page-size` |
 | `featured` | `featured`  |
 
-Scalar props reflect to attributes. `auto-options` disables reflection for
+Scalar (primitive type) props reflect to attributes. `auto-options` disables reflection for
 arrays, objects, and unresolved type references. Read
 [Attribute metadata](/guides/attribute-inference/) for the inference rules and
 overrides.
@@ -65,7 +65,7 @@ argument when the event carries detail:
 ```
 
 svebcomponents records the literal event name and the `CustomEvent` type
-argument. It cannot derive a name from a variable or a detail type from the
+argument. It cannot derive a name from a variable or infer a detail type from the
 value passed to `detail`.
 
 ## Slots
@@ -95,7 +95,7 @@ component with slots.
 
 ## Styles
 
-Svelte puts component styles in the shadow root. As with all custom elements, use `:host` for the custom
+Svelte's custom element compiler puts component styles in the shadow root. As with all custom elements, use `:host` for the custom
 element and CSS custom properties for values consumers can set:
 
 ```svelte
