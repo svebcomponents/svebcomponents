@@ -4,13 +4,13 @@ description: Use generated element types in the DOM, Svelte, React, and Vue.
 ---
 
 svebcomponents writes framework-neutral declarations beside each browser
-entry. It writes a separate Svelte template augmentation. React and Vue
-projects compose the exported interfaces in one project declaration file.
+entry. In addition, template augmentation for Svelte projects is provided out
+of the box, while React and Vue projects manually compose the exported
+interfaces in one project declaration file.
 
 ## Generated interfaces
 
-A component declaration can contain five public interfaces. svebcomponents
-omits empty interfaces.
+A component declaration can contain five public interfaces.
 
 | Interface                      | Surface                                               |
 | ------------------------------ | ----------------------------------------------------- |
@@ -36,11 +36,12 @@ element?.addEventListener("change", (event) => {
 });
 ```
 
-`document.createElement("simple-component")` returns the same element type.
+`document.createElement("simple-component")` returns the correct element type.
 
 ## Svelte
 
-The build writes a `svelte/elements` augmentation beside the main declaration:
+svebcomponents outputs a `svelte/elements` augmentation beside the main
+declaration:
 
 ```text
 dist/client/SimpleComponent.svelte-types.d.ts
@@ -133,34 +134,10 @@ declare module "vue" {
 }
 ```
 
-## Value and template limits
+## Important limitations
 
-An HTML attribute carries a string. Svelte, React 19, and Vue can assign a
-JavaScript value to a property that shares the attribute name.
-`SimpleComponentAttributes` accepts that property type and its string form.
-
-Kebab-case attributes cannot preserve objects or arrays. Pass those values with
-the camelCase property name from `SimpleComponentProps`:
-
-```svelte
-<simple-component preloadedData={value}></simple-component>
-```
-
-Function and snippet props stay on `SimpleComponentElement`. Template syntax
-interprets `onSelect={fn}` as an event handler, so set a function prop through a
-DOM reference:
-
-```ts
-const element = document.querySelector("simple-component");
-if (element) element.onSelect = handleSelect;
-```
-
-React 18 stringifies custom-element props and does not attach listeners for
-custom event names. Use React 19 with the augmentation above.
-
-Svelte's `SvelteHTMLElements` interface contains a catch-all index signature.
-Svelte checks attributes on declared elements. Its index signature accepts
-arbitrary attributes on an undeclared tag.
-
-Put each augmentation in a `.d.ts` file or another module that the project's
-`tsconfig.json` includes.
+- HTML attributes carry strings. Pass arrays and objects through their
+  camel-case property names instead of kebab-case attributes.
+- Function and `Snippet` props are property-only. Assign them through a DOM
+  reference when template syntax treats the prop name as an event handler.
+- React custom-element properties and events require React 19.

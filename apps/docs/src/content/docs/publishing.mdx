@@ -3,8 +3,10 @@ title: Configure package outputs
 description: Declare browser, type, manifest, and server exports for a component package.
 ---
 
-svebcomponents reads `package.json` exports to find source entries and select
-build targets. Start with one browser entry:
+For most use cases, svebcomponents needs no explicit config. Instead, it reads
+your `package.json` exports to find source entries and select build targets.
+Let's walk through this with the simplest case: a standalone web component
+users can drop into their sites.
 
 ```json
 {
@@ -32,14 +34,15 @@ build targets. Start with one browser entry:
 }
 ```
 
-svebcomponents maps the `default` path to `src/FavoriteNumber.svelte`.
-Consumers import the same entry to register the element. The standalone browser
+svebcomponents maps the `default` output path
+`./dist/client/FavoriteNumber.js` to `src/FavoriteNumber.svelte` under the hood.
+Consumers import this entry to register the element. The standalone browser
 output includes the Svelte runtime, so hosts do not need Svelte as a dependency.
 
-Editors use `customElements` to find the generated manifest. npm uses `files` to
-include the build output and manifest in the published package.
+Editors use `customElements` to find the generated manifest. `files` is for npm
+to include the build output and manifest in the published package.
 
-Run the build:
+When you run the build:
 
 ```bash
 pnpm build
@@ -56,15 +59,19 @@ dist/
     └── FavoriteNumber.svelte-types.d.ts
 ```
 
-The `./svelte` subpath is a type export. Svelte consumers import it to add
-template types. Browser consumers load the component's `default` entry; SSR
-integrations load `/ssr`. Read [Consumer types](/guides/framework-types/) for
-the import and the React and Vue project declarations.
+Consumers load the component's `default` entry, which resolves to
+`dist/client/FavoriteNumber.js`. This module contains the web component
+constructor and a side effect for registering it under the tag name. The
+`./svelte` subpath resolves to
+`dist/client/FavoriteNumber.svelte-types.d.ts`, a type export that gives Svelte
+consumers template typing for their custom elements out of the box. Read
+[framework types](/guides/framework-types/) to set up React and Vue project
+declarations.
 
 ## Add component entries
 
-Give each public component a browser export. Match the output basename to one
-`.svelte`, `.ts`, or `.js` source in `src`:
+Give each public component a browser export. That matches the output basename
+of one `.svelte` component in `src`:
 
 ```json
 {
@@ -81,11 +88,11 @@ Give each public component a browser export. Match the output basename to one
 }
 ```
 
-svebcomponents maps the second export to `src/ColorPicker.svelte`. Read
-[Build pipeline](/guides/build/#entry-discovery) for source mapping and module
+svebcomponents maps the new export to `src/ColorPicker.svelte`.
+Read [Build pipeline](/guides/build/#entry-discovery) for source mapping and module
 entries.
 
-## Add server output
+## Add server-side rendering
 
 Pair a component export with a `/ssr` subpath:
 
@@ -112,11 +119,8 @@ Pair a component export with a `/ssr` subpath:
 }
 ```
 
-svebcomponents generates an `ElementRenderer` at the server path. Give each
-renderer a distinct filename when several components share `dist/server`. The
-optional peer keeps browser-only consumers from installing the SSR runtime;
-apps that import `/ssr` install it with their host adapter.
-Continue with [Server rendering](/server-rendering/).
+svebcomponents generates an `ElementRenderer` at the server path. Continue
+with [Server-side rendering](/server-rendering/) to use it in a host app.
 
 ## Check the package
 
@@ -127,4 +131,4 @@ Before publishing:
    files and `custom-elements.json`.
 3. Import each browser entry in an example app and render its custom-element
    tag.
-4. Test each framework integration and server entry that you publish.
+4. Test server-side rendering.

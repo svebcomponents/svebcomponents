@@ -3,19 +3,15 @@ title: Server rendering
 description: Render Svelte-built custom elements on the server and hydrate their shadow roots in the browser.
 ---
 
-Svelte compiles your component into a custom element for the browser. To render
-that element on a server, your component package also needs a server entry and
-the host app needs an adapter.
+To render custom elements on the server, your package needs to declare a server
+entry and the host app needs an adapter.
 
-`@svebcomponents/ssr` connects the two builds:
-
-1. Your component package exports a browser entry and a matching `/ssr` entry.
-2. The host app imports both entries and installs its svebcomponents adapter.
+1. Your component package exports both a browser entry and a matching `/ssr` entry.
+2. The host app imports both entries and installs its framework-specific adapter.
 3. The adapter calls the registered renderer and emits
    [declarative shadow DOM](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM#declaratively_with_html).
 4. The browser creates the shadow root while it parses the HTML. The generated
-   custom-element extension calls Svelte's `hydrate()` with that root. Read the
-   [hydration contract](/server-rendering/hydration/).
+   custom-element extension calls Svelte's `hydrate()` with that root.
 
 ## Package and app setup
 
@@ -23,9 +19,12 @@ Package authors add matching browser and server exports, then build both from
 the same Svelte source. Start with
 [Configure package outputs](/publishing/).
 
-App authors install the shared SSR runtime and one host adapter, import the
-component package in the browser, and import its `/ssr` entry on the server.
-The `/ssr` import registers the renderer for that custom-element tag.
+First, users need to install and import the correct adapter for their framework.
+This sets up the `ElementRendererRegistry` and a mechanism for intercepting
+custom-element tags during server-side rendering. Then use the component
+package in the browser as you always would, in addition to importing its `/ssr`
+entry on the server. This `/ssr` import registers an `ElementRenderer` for that
+custom-element tag with the `ElementRendererRegistry`.
 
 | Host      | Setup                                                     |
 | --------- | --------------------------------------------------------- |
@@ -35,18 +34,15 @@ The `/ssr` import registers the renderer for that custom-element tag.
 | Astro     | [Use the Astro adapter](/server-rendering/astro/)         |
 
 :::caution[Beta]
-SSR APIs and generated output may change before 1.0. The maintainers have not
-commissioned an independent security audit of the generated HTML or shadow
-DOM. Sanitize untrusted content before passing it through `{@html}`.
+SSR APIs and generated output may change before 1.0. Sanitize untrusted content
+before passing it through `{@html}`.
 :::
 
-Install `svelte` in the host app. The generated renderer calls Svelte's server
-runtime even when the host app does not contain Svelte files.
-See [Compatibility](/reference/compatibility/) for supported versions.
-
+:::info
 Components that await during rendering or prepare data on the server need an
 async-capable host path. See
 [Async components and server data](/server-rendering/async/).
+:::
 
-For the renderer registry and direct rendering functions, use the
+To learn about the renderer registry and direct rendering functions, use the
 [`@svebcomponents/ssr` reference](/packages/ssr/).

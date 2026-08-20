@@ -3,24 +3,17 @@ title: Authoring components
 description: Declare the props, events, slots, and styles that consumers use.
 ---
 
-Write a Svelte component and declare its custom-element tag. Svelte defines the
-component behavior; svebcomponents reads the source to generate attribute
-options, element types, and a custom elements manifest.
-
-Read the
-[Svelte custom elements guide](https://svelte.dev/docs/svelte/custom-elements)
-for the compiler rules behind these components.
-
 ## Declare the tag
 
-Give each published component a literal tag name:
+As with a regular Svelte-built custom element, set the tag name through
+`customElement` on `<svelte:options>`:
 
 ```svelte
 <svelte:options customElement="favorite-number" />
 ```
 
 svebcomponents uses this string in the generated types and manifest. It cannot
-name a computed tag during the build.
+be dynamically computed.
 
 ## Props and attributes
 
@@ -38,8 +31,8 @@ Declare typed props with Svelte's `$props()` rune:
 </script>
 ```
 
-Svelte exposes each prop as a property on the custom element.
-`@svebcomponents/auto-options` derives its attribute name, converter, and
+By default, Svelte exposes each prop as a property on the custom element.
+`svebcomponents` additionally derives its attribute name, type converter, and
 reflection setting from the TypeScript declaration.
 
 | Property   | Attribute   |
@@ -47,14 +40,13 @@ reflection setting from the TypeScript declaration.
 | `pageSize` | `page-size` |
 | `featured` | `featured`  |
 
-Scalar props reflect to attributes. `auto-options` disables reflection for
-arrays, objects, and unresolved type references. Read
+String, number, and boolean props reflect to attributes, but arrays, objects, and unresolved type references do not. Read
 [Attribute metadata](/guides/attribute-inference/) for the inference rules and
 overrides.
 
 ## Events
 
-Dispatch events from Svelte's
+Dispatch events using Svelte's
 [`$host()`](https://svelte.dev/docs/svelte/$host) rune. Add an explicit type
 argument when the event carries detail:
 
@@ -73,7 +65,7 @@ argument when the event carries detail:
 ```
 
 svebcomponents records the literal event name and the `CustomEvent` type
-argument. It cannot derive a name from a variable or a detail type from the
+argument. It cannot derive a name from a variable or infer a detail type from the
 value passed to `detail`.
 
 ## Slots
@@ -94,14 +86,18 @@ Use `<slot>` for light DOM content:
 </my-card>
 ```
 
-svebcomponents records static slot names. Read
-[Hydration](/server-rendering/hydration/#slots) before you server-render a
+svebcomponents records static slot names.
+
+:::note[SSR beta]
+Read [Hydration](/server-rendering/hydration/#slots) before you server-render a
 component with slots.
+:::
 
 ## Styles
 
-Svelte puts component styles in the shadow root. Use `:host` for the custom
-element and CSS custom properties for values consumers can set:
+Svelte's custom-element compiler puts component styles in the shadow root. Use
+`:host` for the custom element and CSS custom properties for values consumers
+can set:
 
 ```svelte
 <style>
