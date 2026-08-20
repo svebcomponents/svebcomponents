@@ -5,10 +5,6 @@ import { fileURLToPath } from "node:url";
 import { createSSRApp } from "vue";
 import { renderToString } from "vue/server-renderer";
 
-// asynchronous element renderers need Svelte's async SSR mode enabled;
-// a non-Svelte host has to opt in explicitly
-import "@svebcomponents/ssr/enable-async";
-
 import { svebcomponents } from "@svebcomponents/ssr-vue";
 
 import "@svebcomponents/e2e.ssr/sync";

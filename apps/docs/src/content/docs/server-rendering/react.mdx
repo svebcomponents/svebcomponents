@@ -79,14 +79,11 @@ import { CustomElement } from "@svebcomponents/ssr-react/rsc";
 ```
 
 Use the `/rsc` export from Server Components. Client Components and plain React
-SSR use the default wrapper. If the Svelte component awaits during its render,
-load Svelte's async server flag from the server bootstrap:
+SSR use the default wrapper. Enable `compilerOptions.experimental.async` in the
+component package when the Svelte component itself awaits during rendering.
 
-```ts
-import "@svebcomponents/ssr/enable-async";
-```
-
-An async preparation hook needs the `/rsc` wrapper but does not need this flag.
+An async preparation hook needs the `/rsc` wrapper but does not require
+Svelte's async compiler mode.
 
 Read [Async components and server data](/server-rendering/async/) for the
 package-side choices.

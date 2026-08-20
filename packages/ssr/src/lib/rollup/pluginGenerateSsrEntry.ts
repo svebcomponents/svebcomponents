@@ -27,6 +27,15 @@ interface GenerateSsrEntryPluginOptions {
    */
   prepareImportPath?: string;
   /**
+   * Enable Svelte's experimental async SSR runtime in the generated entry.
+   * This must match the compiler's `experimental.async` setting.
+   *
+   * Svelte 6 TODO (#8): remove this option and the generated call it emits
+   * once async rendering is the stable default.
+   * https://github.com/svebcomponents/svebcomponents/issues/8
+   */
+  enableAsyncMode?: boolean;
+  /**
    * The component's custom element tag name, when it could be determined at
    * build time (see `resolveComponentTag`). When set, the generated entry
    * self-registers with `ElementRendererRegistry` on load, so consuming apps
@@ -52,6 +61,7 @@ export function pluginGenerateSsrEntry(
     entryFileName = DEFAULT_ENTRY_FILE_NAME,
     hydrationHostImportPath,
     prepareImportPath,
+    enableAsyncMode = false,
     tagName,
   } = options;
 
@@ -82,13 +92,25 @@ export function pluginGenerateSsrEntry(
 // evaluates: the compiled custom element (and svelte's client runtime it
 // bundles) captures \`HTMLElement\` at module-evaluation time.
 import '@svebcomponents/ssr/shim';
-import { SvelteCustomElementRenderer${tagName ? ", ElementRendererRegistry" : ""} } from '@svebcomponents/ssr';
+import { SvelteCustomElementRenderer${tagName ? ", ElementRendererRegistry" : ""}${enableAsyncMode ? ", enableAsyncMode" : ""} } from '@svebcomponents/ssr';
 import ServerSvelteComponent from '${serverImportPath}';
 ${
   hydrationHostImportPath
     ? `import HydrationHostComponent from '${hydrationHostImportPath}';\n`
     : ""
-}${prepareImportPath ? `import prepare from '${prepareImportPath}';\n` : ""}
+}${prepareImportPath ? `import prepare from '${prepareImportPath}';\n` : ""}${
+        enableAsyncMode
+          ? `
+// This component package compiles with \`experimental.async\`, so svelte's
+// async server mode has to be on before anything renders. The flag lives in
+// the copy of svelte that '@svebcomponents/ssr' imports, which is why this
+// goes through that package instead of loading svelte's flag module here.
+// Svelte 6 TODO (#8): remove once async SSR is stable by default.
+// https://github.com/svebcomponents/svebcomponents/issues/8
+await enableAsyncMode();
+`
+          : ""
+      }
 // Import the client bundle dynamically instead of statically: bundlers that
 // code-split (e.g. rollup in a SvelteKit server build) may hoist a statically
 // imported module into a shared chunk that executes before this module's own

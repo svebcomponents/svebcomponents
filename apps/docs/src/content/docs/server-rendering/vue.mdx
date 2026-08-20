@@ -68,12 +68,9 @@ extension asks Svelte to hydrate it when the browser entry loads.
 
 ## Async components
 
-Vue's server renderer awaits the adapter's setup function. Enable Svelte's
-async server mode once in the server entry when a component awaits:
-
-```ts
-import "@svebcomponents/ssr/enable-async";
-```
+Vue's server renderer awaits the adapter's setup function. Enable
+`compilerOptions.experimental.async` in the component package when the Svelte
+component itself awaits during rendering.
 
 The same Vue wrapper handles synchronous and asynchronous renderers. See
 [Async components and server data](/server-rendering/async/) for component

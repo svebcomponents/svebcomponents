@@ -46,12 +46,8 @@ for a complete server and client entry.
 ## Async components
 
 Vue's server renderer can await the wrapper and promise-returning preparation
-hooks. Enable Svelte's async server mode once in the Vue server entry when the
-Svelte component itself awaits during rendering:
-
-```ts
-import "@svebcomponents/ssr/enable-async";
-```
+hooks. Enable `compilerOptions.experimental.async` in the component package
+when the Svelte component itself awaits during rendering.
 
 The same wrapper handles synchronous and async renderers.
 

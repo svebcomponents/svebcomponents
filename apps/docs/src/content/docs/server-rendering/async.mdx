@@ -18,8 +18,7 @@ browser runs that work again during hydration because svebcomponents cannot
 serialize component-local state.
 
 Enable `compilerOptions.experimental.async` in the component package's Svelte
-configuration and in a Svelte host. Non-Svelte hosts enable Svelte's server
-flag through `@svebcomponents/ssr/enable-async`.
+configuration. Enable the same setting in a SvelteKit host.
 
 ## Prepare data on the server
 
@@ -54,21 +53,3 @@ path.
 
 `@svebcomponents/build` includes the adjacent hook in the server output and
 keeps its dependencies out of the browser bundle.
-
-## Enable the host path
-
-| Host      | Async preparation hook                                                                  | Component await                                                                        |
-| --------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| SvelteKit | Enable `compilerOptions.experimental.async`; the Vite plugin selects its async wrapper. | Use the same setting.                                                                  |
-| Vue       | The default adapter awaits the hook.                                                    | Import `@svebcomponents/ssr/enable-async` in the server entry.                         |
-| Astro     | The default adapter awaits the hook.                                                    | Import `@svebcomponents/ssr/enable-async` before the component renderer.               |
-| React     | Use `@svebcomponents/ssr-react/rsc` from a Server Component.                            | Use the RSC wrapper and import `@svebcomponents/ssr/enable-async` in the server entry. |
-
-The [SvelteKit](/server-rendering/sveltekit/),
-[Vue](/server-rendering/vue/), [Astro](/server-rendering/astro/), and
-[React](/server-rendering/react/) guides show each setup.
-
-Svelte throws `await_invalid` if a non-Svelte host skips the opt-in and the
-component reaches an await. React's default wrapper catches the adapter's async-renderer
-signal and leaves the element for the browser; it does not hide component
-render errors.

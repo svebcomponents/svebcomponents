@@ -64,15 +64,9 @@ that island's renderer. Configure the adapter for the island framework.
 
 ## Async components
 
-Astro can await its element wrapper. Enable Svelte's async server mode in
-frontmatter that runs before the renderer import:
-
-```astro
----
-import "@svebcomponents/ssr/enable-async";
-import "my-component-package/ssr";
----
-```
+Astro can await its element wrapper. Enable
+`compilerOptions.experimental.async` in the component package when the Svelte
+component itself awaits during rendering.
 
 The same Astro wrapper handles synchronous and asynchronous renderers. See
 [Async components and server data](/server-rendering/async/) for package

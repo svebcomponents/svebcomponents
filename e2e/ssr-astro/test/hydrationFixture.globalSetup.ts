@@ -4,7 +4,6 @@ import { fileURLToPath } from "node:url";
 
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
 
-import "@svebcomponents/ssr/enable-async";
 import "@svebcomponents/e2e.ssr/sync";
 import "@svebcomponents/e2e.ssr/sync/ssr";
 

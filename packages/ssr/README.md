@@ -68,7 +68,6 @@ for import placement, `noExternal`, and async mode.
 | ----------------------------------- | ----------------------------------------------------------------- |
 | `@svebcomponents/ssr`               | Registry, renderer base class, render functions, and SSR DOM shim |
 | `@svebcomponents/ssr/vite`          | Svelte template transform and wrapper selection                   |
-| `@svebcomponents/ssr/enable-async`  | Enables async Svelte component rendering in hosts outside Svelte  |
 | `@svebcomponents/ssr/tsdown`        | Server build configuration used by `@svebcomponents/build`        |
 | `@svebcomponents/ssr/svelte-config` | Svelte config type and compiler-option merge helper               |
 | `@svebcomponents/ssr/hydration`     | Client extension used by generated hydratable elements            |
