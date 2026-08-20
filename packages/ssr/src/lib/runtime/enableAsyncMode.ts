@@ -9,21 +9,19 @@
  *
  * A non-Svelte host has no such app, and a component package's own server
  * bundle cannot flip it either — the bundle carries its own copy of Svelte,
- * while `render()` is called from the copy this package imports. So a Vue or
- * React app that renders asynchronous custom elements has to opt in
- * explicitly:
+ * while `render()` is called from the copy this package imports. Generated
+ * `/ssr` entries therefore import this compatibility module when their
+ * component package enables `experimental.async`.
  *
- * ```ts
- * // server entry, before rendering
- * import "@svebcomponents/ssr/enable-async";
- * ```
- *
- * This is the non-Svelte counterpart to the Svelte integration's
+ * This is the runtime counterpart to the Svelte integration's
  * `svebcomponentsSsr({ async: true })` option, and like that option it is a
- * process-wide switch rather than a per-component one.
+ * process-wide switch rather than a per-component one. It remains publicly
+ * exported for manually generated renderer entries; ordinary consumers do
+ * not import it themselves.
  *
- * Svelte 6 TODO: revisit once async rendering is no longer gated behind an
- * experimental global flag.
+ * Svelte 6 TODO (#8): remove this entry point and the generated imports of it
+ * once async rendering is no longer gated behind an experimental global flag.
+ * https://github.com/svebcomponents/svebcomponents/issues/8
  */
 // eslint-disable-next-line svelte/no-svelte-internal -- this flag has no public API; it is the same module vite-plugin-svelte injects for an async-compiled app.
 import "svelte/internal/flags/async";

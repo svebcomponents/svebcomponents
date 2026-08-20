@@ -46,11 +46,9 @@ Astro supplies Vite through its build pipeline.
 ## Async server rendering
 
 A component that awaits during Svelte's server render needs
-`compilerOptions.experimental.async` in SvelteKit. React Server Components,
-Vue, and Astro use Svelte's server renderer outside a Svelte app, so their
-server entry must import `@svebcomponents/ssr/enable-async` before it renders
-such a component. An async server-preparation hook needs an await-capable host
-but does not need Svelte's async compiler mode.
+`compilerOptions.experimental.async` in the component package and, for
+SvelteKit, in the app. An async server-preparation hook needs an await-capable
+host but does not need Svelte's async compiler mode.
 
 Read [Async components](/server-rendering/async/) for each host path.
 

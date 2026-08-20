@@ -1,10 +1,6 @@
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import { test, expect } from "vitest";
 
-// asynchronous element renderers need Svelte's async SSR mode enabled; a
-// non-Svelte host has to opt in explicitly
-import "@svebcomponents/ssr/enable-async";
-
 // the real build artifacts of the shared e2e component package: the browser
 // entry defines the custom elements, the /ssr entries register their renderers
 import "@svebcomponents/e2e.ssr";

@@ -1,10 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { test, expect } from "vitest";
 
-// asynchronous element renderers need Svelte's async SSR mode enabled;
-// a non-Svelte host has to opt in explicitly
-import "@svebcomponents/ssr/enable-async";
-
 import { CustomElement } from "@svebcomponents/ssr-react/rsc";
 
 // the real build artifacts of the shared e2e component package: the browser

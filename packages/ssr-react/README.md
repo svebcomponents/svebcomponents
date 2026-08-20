@@ -65,8 +65,8 @@ export default async function Page() {
 
 Import `/rsc` from a Server Component. Client Components and plain React SSR
 use the synchronous wrapper. A promise-returning preparation hook needs `/rsc`.
-Import `@svebcomponents/ssr/enable-async` in server setup when the Svelte
-component itself awaits during rendering.
+Enable `compilerOptions.experimental.async` in the component package when the
+Svelte component itself awaits during rendering.
 
 ## Exports
 

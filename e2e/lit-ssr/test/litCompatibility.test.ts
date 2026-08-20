@@ -3,10 +3,6 @@ import { collectResult } from "@lit-labs/ssr/lib/render-result.js";
 import { html } from "lit";
 import { test, expect } from "vitest";
 
-// asynchronous element renderers need svelte's async SSR mode enabled; a
-// non-svelte host has to opt in explicitly
-import "@svebcomponents/ssr/enable-async";
-
 // the real build artifacts of the shared e2e component package
 import "@svebcomponents/e2e.ssr";
 import "@svebcomponents/e2e.ssr/sync";

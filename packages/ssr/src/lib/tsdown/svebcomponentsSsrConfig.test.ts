@@ -1,7 +1,20 @@
-import { expect, test, describe } from "vitest";
+import { beforeEach, expect, test, describe, vi } from "vitest";
+import { pluginGenerateSsrEntry } from "../rollup/pluginGenerateSsrEntry.js";
 import svebcomponentsSsrConfig from "./svebcomponentsSsrConfig";
 
+vi.mock("../rollup/pluginGenerateSsrEntry.js", () => ({
+  pluginGenerateSsrEntry: vi.fn(() => ({
+    name: "svebcomponents:generate-ssr-entry",
+  })),
+}));
+
+const mockGenerateSsrEntry = vi.mocked(pluginGenerateSsrEntry);
+
 describe("svebcomponentsSsrConfig", () => {
+  beforeEach(() => {
+    mockGenerateSsrEntry.mockClear();
+  });
+
   test("returns valid rollup config with required properties", () => {
     const config = svebcomponentsSsrConfig({
       entry: "src/test.ts",
@@ -45,5 +58,30 @@ describe("svebcomponentsSsrConfig", () => {
       index: "src/index.ts",
       "index.ssr": "src/index.ssr.ts",
     });
+  });
+
+  test("enables async mode in the generated entry when the compiler does", () => {
+    svebcomponentsSsrConfig({
+      entry: "src/index.ts",
+      outDir: "dist/server",
+      svelteConfig: {
+        compilerOptions: { experimental: { async: true } },
+      },
+    });
+
+    expect(mockGenerateSsrEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ enableAsyncMode: true }),
+    );
+  });
+
+  test("keeps async mode out of generated entries by default", () => {
+    svebcomponentsSsrConfig({
+      entry: "src/index.ts",
+      outDir: "dist/server",
+    });
+
+    expect(mockGenerateSsrEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ enableAsyncMode: false }),
+    );
   });
 });

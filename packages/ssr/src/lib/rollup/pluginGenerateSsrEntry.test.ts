@@ -60,6 +60,10 @@ describe("pluginGenerateSsrEntry", () => {
       expect.stringContaining("dist/server/ssr.js"),
       expect.stringContaining("import '@svebcomponents/ssr/shim'"),
     );
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/ssr.js"),
+      expect.not.stringContaining("@svebcomponents/ssr/enable-async"),
+    );
     // The client bundle must be imported dynamically (chunk-order safety)
     expect(mockFs.writeFile).toHaveBeenCalledWith(
       expect.stringContaining("dist/server/ssr.js"),
@@ -82,6 +86,32 @@ describe("pluginGenerateSsrEntry", () => {
     expect(mockFs.writeFile).toHaveBeenCalledWith(
       expect.stringContaining("dist/server/ssr.d.ts"),
       expect.stringContaining("constructor(tagName?: string)"),
+    );
+  });
+
+  test("enables Svelte async mode in an async component's generated entry", async () => {
+    const plugin = pluginGenerateSsrEntry({
+      enableAsyncMode: true,
+    }) as {
+      writeBundle: FunctionPluginHooks["writeBundle"];
+    };
+    const mockContext = { error: vi.fn() } as unknown as PluginContext;
+
+    await plugin.writeBundle.call(
+      mockContext,
+      { dir: "dist/server" } as NormalizedOutputOptions,
+      outputBundle,
+    );
+
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/ssr.js"),
+      expect.stringContaining("import '@svebcomponents/ssr/enable-async'"),
+    );
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/ssr.js"),
+      expect.stringContaining(
+        "https://github.com/svebcomponents/svebcomponents/issues/8",
+      ),
     );
   });
 

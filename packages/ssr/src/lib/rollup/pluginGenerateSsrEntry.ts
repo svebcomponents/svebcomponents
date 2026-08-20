@@ -27,6 +27,15 @@ interface GenerateSsrEntryPluginOptions {
    */
   prepareImportPath?: string;
   /**
+   * Enable Svelte's experimental async SSR runtime in the generated entry.
+   * This must match the compiler's `experimental.async` setting.
+   *
+   * Svelte 6 TODO (#8): remove this option and generated side-effect import
+   * once async rendering is the stable default.
+   * https://github.com/svebcomponents/svebcomponents/issues/8
+   */
+  enableAsyncMode?: boolean;
+  /**
    * The component's custom element tag name, when it could be determined at
    * build time (see `resolveComponentTag`). When set, the generated entry
    * self-registers with `ElementRendererRegistry` on load, so consuming apps
@@ -52,6 +61,7 @@ export function pluginGenerateSsrEntry(
     entryFileName = DEFAULT_ENTRY_FILE_NAME,
     hydrationHostImportPath,
     prepareImportPath,
+    enableAsyncMode = false,
     tagName,
   } = options;
 
@@ -82,6 +92,13 @@ export function pluginGenerateSsrEntry(
 // evaluates: the compiled custom element (and svelte's client runtime it
 // bundles) captures \`HTMLElement\` at module-evaluation time.
 import '@svebcomponents/ssr/shim';
+${
+  enableAsyncMode
+    ? `// Svelte 6 TODO (#8): remove this compatibility import once async SSR is stable by default.
+// https://github.com/svebcomponents/svebcomponents/issues/8
+import '@svebcomponents/ssr/enable-async';`
+    : ""
+}
 import { SvelteCustomElementRenderer${tagName ? ", ElementRendererRegistry" : ""} } from '@svebcomponents/ssr';
 import ServerSvelteComponent from '${serverImportPath}';
 ${

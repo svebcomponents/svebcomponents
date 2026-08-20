@@ -81,6 +81,27 @@ interface SvebcomponentsSsrOptions {
 const entryName = (entry: string) =>
   path.posix.basename(entry, path.posix.extname(entry));
 
+/**
+ * Whether the component package opted into Svelte 5's experimental async
+ * compiler mode. Its generated renderer must enable the same mode in the
+ * `svelte/server` runtime imported by `@svebcomponents/ssr`.
+ *
+ * Svelte 6 TODO (#8): remove this detection and the generated runtime import
+ * once async rendering is the stable default.
+ * https://github.com/svebcomponents/svebcomponents/issues/8
+ */
+const usesExperimentalAsync = (
+  svelteConfig: SvelteBuildConfig | undefined,
+): boolean => {
+  const experimental = svelteConfig?.compilerOptions?.["experimental"];
+  return (
+    typeof experimental === "object" &&
+    experimental !== null &&
+    !Array.isArray(experimental) &&
+    (experimental as Record<string, unknown>)["async"] === true
+  );
+};
+
 const createSsrTsdownConfig = (
   options: SvebcomponentsSsrOptions,
 ): UserConfig => {
@@ -139,6 +160,7 @@ const createSsrTsdownConfig = (
           ? { hydrationHostImportPath }
           : {}),
         ...(prepareImportPath !== undefined ? { prepareImportPath } : {}),
+        enableAsyncMode: usesExperimentalAsync(svelteConfig),
         ...(tagName !== undefined ? { tagName } : {}),
       }),
     ],

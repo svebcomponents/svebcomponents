@@ -2,10 +2,6 @@ import { createSSRApp } from "vue";
 import { renderToString } from "vue/server-renderer";
 import { test, expect } from "vitest";
 
-// asynchronous element renderers need Svelte's async SSR mode enabled;
-// a non-Svelte host has to opt in explicitly
-import "@svebcomponents/ssr/enable-async";
-
 import { svebcomponents } from "@svebcomponents/ssr-vue";
 
 // the real build artifacts of the shared e2e component package: the browser

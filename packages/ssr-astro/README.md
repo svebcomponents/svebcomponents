@@ -45,12 +45,8 @@ for project layout and island behavior.
 ## Async components
 
 Astro can await the wrapper and promise-returning preparation hooks. Enable
-Svelte's async server mode in server code when the Svelte component itself
-awaits during rendering:
-
-```ts
-import "@svebcomponents/ssr/enable-async";
-```
+`compilerOptions.experimental.async` in the component package when the Svelte
+component itself awaits during rendering.
 
 ## Exports and options
 
