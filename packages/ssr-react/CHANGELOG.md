@@ -1,5 +1,12 @@
 # @svebcomponents/ssr-react
 
+## 0.3.3
+
+### Patch Changes
+
+- Updated dependencies [2e0aa3e]
+  - @svebcomponents/ssr@0.8.0
+
 ## 0.3.2
 
 ### Patch Changes
