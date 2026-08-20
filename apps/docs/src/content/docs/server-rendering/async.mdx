@@ -53,19 +53,3 @@ path.
 
 `@svebcomponents/build` includes the adjacent hook in the server output and
 keeps its dependencies out of the browser bundle.
-
-## Enable the host path
-
-| Host      | Async preparation hook                                                                  | Component await       |
-| --------- | --------------------------------------------------------------------------------------- | --------------------- |
-| SvelteKit | Enable `compilerOptions.experimental.async`; the Vite plugin selects its async wrapper. | Use the same setting. |
-| Vue       | The default adapter awaits the hook.                                                    | Supported.            |
-| Astro     | The default adapter awaits the hook.                                                    | Supported.            |
-| React     | Use `@svebcomponents/ssr-react/rsc` from a Server Component.                            | Use the RSC wrapper.  |
-
-The [SvelteKit](/server-rendering/sveltekit/),
-[Vue](/server-rendering/vue/), [Astro](/server-rendering/astro/), and
-[React](/server-rendering/react/) guides show each setup.
-
-React's default wrapper catches the adapter's async-renderer signal and leaves
-the element for the browser; it does not hide component render errors.
