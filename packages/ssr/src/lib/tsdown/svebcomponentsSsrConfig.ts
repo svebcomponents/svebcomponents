@@ -10,6 +10,7 @@ import { pluginOverrideSvelteSsrSlotImplementation } from "../rollup/pluginOverr
 import { pluginStripCustomElementOptions } from "../rollup/pluginStripCustomElementOptions.js";
 import { extractComponentTag } from "../shared/resolveComponentTag.js";
 import {
+  getExperimentalOptions,
   mergeCompilerOptions,
   type SvelteBuildConfig,
 } from "./svelteConfig.js";
@@ -86,21 +87,15 @@ const entryName = (entry: string) =>
  * compiler mode. Its generated renderer must enable the same mode in the
  * `svelte/server` runtime imported by `@svebcomponents/ssr`.
  *
- * Svelte 6 TODO (#8): remove this detection and the generated runtime import
+ * Svelte 6 TODO (#8): remove this detection and the generated runtime call
  * once async rendering is the stable default.
  * https://github.com/svebcomponents/svebcomponents/issues/8
  */
 const usesExperimentalAsync = (
   svelteConfig: SvelteBuildConfig | undefined,
-): boolean => {
-  const experimental = svelteConfig?.compilerOptions?.["experimental"];
-  return (
-    typeof experimental === "object" &&
-    experimental !== null &&
-    !Array.isArray(experimental) &&
-    (experimental as Record<string, unknown>)["async"] === true
-  );
-};
+): boolean =>
+  getExperimentalOptions(svelteConfig?.compilerOptions ?? {})?.["async"] ===
+  true;
 
 const createSsrTsdownConfig = (
   options: SvebcomponentsSsrOptions,

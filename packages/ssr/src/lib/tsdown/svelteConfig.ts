@@ -4,7 +4,7 @@ export interface SvelteBuildConfig {
   preprocess?: unknown;
 }
 
-const getExperimentalOptions = (
+export const getExperimentalOptions = (
   compilerOptions: Record<string, unknown>,
 ): Record<string, unknown> | undefined => {
   // Svelte 6 TODO: remove this experimental option merge once async rendering

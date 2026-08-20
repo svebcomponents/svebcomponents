@@ -62,7 +62,7 @@ describe("pluginGenerateSsrEntry", () => {
     );
     expect(mockFs.writeFile).toHaveBeenCalledWith(
       expect.stringContaining("dist/server/ssr.js"),
-      expect.not.stringContaining("@svebcomponents/ssr/enable-async"),
+      expect.not.stringContaining("enableAsyncMode"),
     );
     // The client bundle must be imported dynamically (chunk-order safety)
     expect(mockFs.writeFile).toHaveBeenCalledWith(
@@ -103,9 +103,24 @@ describe("pluginGenerateSsrEntry", () => {
       outputBundle,
     );
 
+    // The flag must be flipped through the package that owns the copy of
+    // svelte `render()` runs on, not by loading svelte's flag module here
     expect(mockFs.writeFile).toHaveBeenCalledWith(
       expect.stringContaining("dist/server/ssr.js"),
-      expect.stringContaining("import '@svebcomponents/ssr/enable-async'"),
+      expect.stringContaining(
+        "import { SvelteCustomElementRenderer, enableAsyncMode } from '@svebcomponents/ssr'",
+      ),
+    );
+    expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("dist/server/ssr.js"),
+      expect.stringContaining("await enableAsyncMode();"),
+    );
+    // ...and before the client bundle the renderer goes on to construct
+    const [, asyncEntry] = mockFs.writeFile.mock.calls.find(([file]) =>
+      String(file).endsWith("dist/server/ssr.js"),
+    )!;
+    expect(String(asyncEntry).indexOf("await enableAsyncMode();")).toBeLessThan(
+      String(asyncEntry).indexOf("const ClientSvelteComponent"),
     );
     expect(mockFs.writeFile).toHaveBeenCalledWith(
       expect.stringContaining("dist/server/ssr.js"),
