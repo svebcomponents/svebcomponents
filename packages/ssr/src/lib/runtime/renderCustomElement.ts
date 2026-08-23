@@ -68,8 +68,22 @@ export class AsyncRendererError extends Error {
  * custom element. Excluded defensively: every current wrapper already strips
  * these before calling, but a wrapper that forwards a raw prop bag should not
  * be able to leak them into the rendered element.
+ *
+ * `__proto__`, `constructor` and `prototype` join them for a different reason:
+ * assigning one of those keys does not store a prop. `__proto__` goes through
+ * the inherited accessor and *reparents* the props object; the other two
+ * shadow names the object already inherits. The blast radius is that one
+ * object — `Object.prototype` is untouched, so this is prop injection rather
+ * than prototype pollution — but a prop that silently isn't a prop is worth
+ * refusing outright.
  */
-const RESERVED_PROP_NAMES = new Set(["_tagName", "children"]);
+const RESERVED_PROP_NAMES = new Set([
+  "_tagName",
+  "children",
+  "__proto__",
+  "constructor",
+  "prototype",
+]);
 
 /**
  * Looks up the registered renderer for `tagName`, applies `props` to it, and

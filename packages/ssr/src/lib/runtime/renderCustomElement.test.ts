@@ -117,6 +117,23 @@ describe("renderCustomElement", () => {
     expect(renderOptions?.props).toEqual({ real: 1 });
   });
 
+  test("drops prototype-confusing prop names instead of assigning them", () => {
+    // a plain assignment with an own "__proto__" key would swap the
+    // [[Prototype]] of the renderer's props object rather than set a prop
+    const tagName = registerElement({});
+
+    renderCustomElementSync(tagName, {
+      ["__proto__"]: { injected: true },
+      constructor: "forged",
+      prototype: "forged",
+      real: 1,
+    });
+
+    const renderOptions = mockRender.mock.calls[0]?.[1] as
+      { props?: Record<string, unknown> } | undefined;
+    expect(renderOptions?.props).toEqual({ real: 1 });
+  });
+
   test("rejects an invalid custom element tag name", () => {
     expect(() => renderCustomElementSync("notcustom", {})).toThrow(
       /Invalid custom element tag name/,

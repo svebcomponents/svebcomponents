@@ -58,7 +58,14 @@
    * spread below reactive.
    */
   export function setProps(next: Record<string, unknown>): void {
-    Object.assign(componentProps, next);
+    // skip prototype-confusing keys: plain assignment would hit the inherited
+    // `__proto__` accessor on componentProps instead of setting a prop
+    for (const key of Object.keys(next)) {
+      if (key === "__proto__" || key === "constructor" || key === "prototype") {
+        continue;
+      }
+      componentProps[key] = next[key];
+    }
   }
 
   // Reflect configured props back to host attributes. This replaces the
