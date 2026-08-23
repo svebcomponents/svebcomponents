@@ -8,9 +8,21 @@
     // a rich prop with no attribute representation — exercises the
     // serialized-props channel for hydratable SSR
     meta?: { note: string } | undefined;
+    // camelCase props: the attribute surface kebab-cases them (`show-label`,
+    // `rich-detail`), so a host wrapper that lowercased the prop name instead
+    // would silently deliver neither
+    showLabel?: boolean;
+    richDetail?: { note: string } | undefined;
   }
 
-  let { title, count = 0, enabled = true, meta = undefined }: Props = $props();
+  let {
+    title,
+    count = 0,
+    enabled = true,
+    meta = undefined,
+    showLabel = false,
+    richDetail = undefined,
+  }: Props = $props();
 </script>
 
 <div>
@@ -19,6 +31,12 @@
   <p id="enabled">Enabled: {typeof enabled}-{enabled}</p>
   {#if meta}
     <p id="note">{meta.note}</p>
+  {/if}
+  {#if showLabel}
+    <p id="label">Label shown</p>
+  {/if}
+  {#if richDetail}
+    <p id="detail">{richDetail.note}</p>
   {/if}
   <!-- exercises $host(): must reach the upgraded custom element on the
        client (hydrated AND fresh-mounted) and compile away during SSR -->

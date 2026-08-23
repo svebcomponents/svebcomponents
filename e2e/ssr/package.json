@@ -35,6 +35,7 @@
     "@svebcomponents/vitest-config": "workspace:*",
     "@lit-labs/ssr": "catalog:",
     "@vitest/browser": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
     "vitest": "catalog:",
     "playwright": "catalog:",
     "typescript": "catalog:"
