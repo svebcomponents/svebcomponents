@@ -1,5 +1,87 @@
 # @svebcomponents/ssr
 
+## 0.8.1
+
+### Patch Changes
+
+- 81bc599: Deliver camelCase props to client-rendered custom elements, instead of
+  silently dropping them.
+
+  A host that passed `<my-element showRoot threadData={tree}>` got both props on
+  a server render but neither on a client render, so the same page rendered
+  differently depending on how a visitor arrived — a SvelteKit client navigation
+  back to the page would quietly lose them, and a reload would bring them back.
+
+  The client wrapper renders the element as `<svelte:element this={tag}
+{...props}>`. Svelte compiles that spread to `set_attributes`, which runs every
+  key through `normalize_attribute` — whose first step is `name.toLowerCase()` —
+  for elements in the HTML namespace. That is right for real HTML elements, whose
+  attribute names are case-insensitive, but a custom element's props are
+  case-sensitive: `showRoot` arrived as the attribute `showroot`, matching neither
+  the observed attribute `show-root` nor the element's `showRoot` setter, and
+  `threadData` arrived as `threaddata="[object Object]"`. `<svelte:element>`
+  cannot avoid that path — its tag name is only known at runtime, so Svelte
+  compiles even statically-named attributes on it to the spread path rather than
+  to the case-preserving `set_custom_element_data` it uses for a
+  compile-time-known custom element.
+
+  The wrapper now assigns any prop whose name contains an uppercase letter as a
+  JavaScript property, and spreads the rest as before. That matches what the
+  server wrapper already did (`startRender` routes every non-kebab-case key to
+  `setProperty`), so a server-rendered element and a client-rendered one finally
+  receive the same props. Props that do have an attribute representation — `class`,
+  `style`, `id`, `slot`, `part`, `data-*`, `aria-*`, `on*` handlers and every
+  kebab-case attribute — keep travelling as attributes, so Svelte's class/style
+  handling, event delegation and hydration are unaffected.
+
+  The underlying inconsistency is Svelte's own — two code paths disagree about
+  whether a custom element's prop names are case-sensitive — and is tracked
+  upstream as sveltejs/svelte#16590. The workaround is marked `Svelte 6 TODO
+(#8)` so it can be removed if that ever lands.
+
+- 7201911: Stop a malformed typed attribute from silently killing a component, and tighten
+  two smaller gaps around prop delivery.
+
+  **Malformed typed attributes.** An `Object`/`Array` typed attribute carrying
+  invalid JSON threw out of Svelte's own attribute-to-prop conversion. When such
+  an attribute was present in the server markup, the throw escaped the element's
+  async `connectedCallback` as an unhandled rejection, leaving the component
+  **permanently inert**: its server-rendered content stayed on screen and looked
+  correct, but it never hydrated, never mounted, ignored later attribute writes
+  and dispatched no events — with no visible error to explain why. On a write
+  after hydration the same throw escaped a custom element reaction as a
+  page-level error and skipped the update.
+
+  Both paths now skip the unparseable value and warn in dev. The guard is
+  deliberately narrow: an error that is _not_ Svelte's JSON conversion keeps
+  propagating, so a component's own failure is never hidden behind a silent
+  no-op. This is really a gap in Svelte's generated code, so it is marked
+  `Svelte 6 TODO (#8)`.
+
+  **Forged transport scripts.** `hydratable` located the server's serialized
+  rich-prop payload with a `querySelector`, which returns the _first_ match. The
+  server appends its payload as the last child of the shadow root, so anything
+  matching earlier is page-controlled markup — component content rendered through
+  `{@html ...}`, for instance — and could impersonate the payload and override
+  server-serialized props on upgrade. The last match is now the authoritative
+  one, and every match is removed so no stale or forged payload lingers in the
+  DOM. Defense in depth rather than a fix for a reachable vulnerability: putting
+  untrusted markup through `{@html}` is the more serious problem in any scenario
+  where this mattered.
+
+  **Prototype-confusing prop names.** `startRender` and the renderer's
+  `setProperty` assigned incoming prop names straight onto an object, so a
+  wrapper forwarding a raw prop bag containing `__proto__` would have reparented
+  that object — set its `[[Prototype]]` — instead of storing a prop, and
+  `constructor`/`prototype` would have shadowed those names. The blast radius was
+  one element's props bag; `Object.prototype` and other objects were never
+  affected, so this is prop injection rather than prototype pollution, and it
+  needed a host to spread an attacker-controlled parsed object as props. Those
+  names are now rejected on the way in, and `HydrationHost.setProps` skips them
+  when merging. (The two `hydratable` loops that write to `$$d` were already
+  covered by their `!(name in this.$$d)` guard, which is true for every name on
+  `Object.prototype`.)
+
 ## 0.8.0
 
 ### Minor Changes
