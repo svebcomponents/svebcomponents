@@ -4,6 +4,7 @@ import { hydrate, unmount, type Component } from "svelte";
 import {
   attributeValueToPropValue,
   propValueToAttributeValue,
+  SvelteCustomElementPropType,
   type SvelteCustomElementPropDefinition,
 } from "../shared/propConversion.js";
 
@@ -45,6 +46,11 @@ interface SvelteGeneratedElement extends HTMLElement {
   /** listener unsubscribe functions */
   $$l_u: Map<EventListener, () => void>;
   connectedCallback?(): Promise<void> | void;
+  attributeChangedCallback?(
+    name: string,
+    oldValue: string | null,
+    newValue: string | null,
+  ): void;
 }
 
 type SvelteGeneratedElementConstructor = new () => SvelteGeneratedElement;
@@ -115,6 +121,45 @@ export const hydratable = <T extends CustomElementConstructor>(
       return super.attachShadow(init);
     }
 
+    /**
+     * Svelte's generated `attributeChangedCallback` runs the incoming value
+     * through its own attribute-to-prop conversion, which `JSON.parse`s
+     * `Object`/`Array` typed attributes without guarding. A malformed value
+     * therefore throws out of a custom-element reaction — surfacing as a
+     * page-level unhandled error, having skipped the update anyway.
+     *
+     * Only that conversion is swallowed. Any other error is a real one (a
+     * component's own update, say) and keeps propagating, so this cannot hide
+     * a genuine failure behind a silent no-op.
+     *
+     * Svelte 6 TODO (#8): delete this override, and the matching try/catch in
+     * the attribute-porting loop below, once svelte's own conversion stops
+     * throwing on an unparseable `Object`/`Array` attribute. Not filed
+     * upstream yet — worth filing independently of svelte 6.
+     */
+    override attributeChangedCallback(
+      name: string,
+      oldValue: string | null,
+      newValue: string | null,
+    ): void {
+      try {
+        super.attributeChangedCallback?.(name, oldValue, newValue);
+      } catch (error) {
+        const type = this.$$p_d[attributeToPropName(name, this.$$p_d)]?.type;
+        if (
+          type !== SvelteCustomElementPropType.Array &&
+          type !== SvelteCustomElementPropType.Object
+        ) {
+          throw error;
+        }
+        if (DEV) {
+          console.warn(
+            `[svebcomponents] <${this.tagName.toLowerCase()}>: ignoring unparseable value for attribute "${name}"`,
+          );
+        }
+      }
+    }
+
     override async connectedCallback(): Promise<void> {
       const ssrRoot = this.$$svebClaimedSsrShadowRoot;
       const canHydrate =
@@ -162,18 +207,46 @@ export const hydratable = <T extends CustomElementConstructor>(
       for (const attribute of this.attributes) {
         const name = attributeToPropName(attribute.name, this.$$p_d);
         if (!(name in this.$$d)) {
-          this.$$d[name] = this.$$p_d[name]
-            ? attributeValueToPropValue(attribute.value, this.$$p_d[name])
-            : attribute.value;
+          if (!this.$$p_d[name]) {
+            this.$$d[name] = attribute.value;
+            continue;
+          }
+          try {
+            this.$$d[name] = attributeValueToPropValue(
+              attribute.value,
+              this.$$p_d[name],
+            );
+          } catch {
+            // malformed typed attribute (e.g. invalid JSON): skip the prop
+            // rather than let the throw escape this async callback as an
+            // unhandled rejection. There is no recovery from that — the
+            // element is left permanently inert, its server content still on
+            // screen and looking correct while it never hydrates, never
+            // mounts, ignores later attribute writes and dispatches nothing.
+            // The override above covers the live attribute-write half of the
+            // same svelte gap.
+            if (DEV) {
+              console.warn(
+                `[svebcomponents] <${this.tagName.toLowerCase()}>: skipping unparseable value for prop "${name}"`,
+              );
+            }
+          }
         }
       }
       // port rich props the server serialized into the shadow DOM: host
       // frameworks re-supply them only after their own (async) hydration,
       // which would be too late — hydrating without them would mismatch the
       // server markup
-      const serializedProps = ssrRoot.querySelector(
+      //
+      // the server renderer appends its payload as the *last* child of the
+      // shadow root, so only the last matching script is genuine. Anything
+      // earlier is page-controlled markup (e.g. from {@html ...} content)
+      // and must not be able to forge server-serialized props.
+      const serializedPropsScripts = ssrRoot.querySelectorAll(
         'script[type="application/json"][data-svebcomponents-ssr-props]',
       );
+      const serializedProps =
+        serializedPropsScripts[serializedPropsScripts.length - 1];
       if (serializedProps) {
         try {
           const richProps = JSON.parse(
@@ -187,7 +260,9 @@ export const hydratable = <T extends CustomElementConstructor>(
         } catch {
           // malformed payload: hydrate without it (worst case: re-mount)
         }
-        serializedProps.remove();
+        // remove every match so stale/forged payloads can't linger or be
+        // picked up by other upgrade paths
+        for (const script of serializedPropsScripts) script.remove();
       }
       // port properties set programmatically before the element upgraded
       for (const key in this.$$p_d) {

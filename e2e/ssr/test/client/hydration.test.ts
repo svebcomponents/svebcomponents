@@ -99,3 +99,162 @@ test("falls back to a fresh mount when there is no server-rendered content", asy
   expect(events).toHaveLength(1);
   expect(events[0]?.target).toBe(component);
 });
+
+/**
+ * Builds a variant of the SSR fixture with attacker-style markup injected
+ * inside the declarative shadow root, before the genuine transport script.
+ */
+const poisonedFixture = (injectedShadowMarkup: string) => {
+  const marker = '<template shadowrootmode="open">';
+  assert(ssrFixture.includes(marker), "fixture must contain a shadow root");
+  return ssrFixture.replace(marker, `${marker}${injectedShadowMarkup}`);
+};
+
+test("ignores forged transport scripts planted before the server payload", async () => {
+  // simulate markup that reached the shadow root ahead of the real payload
+  // (e.g. via {@html ...} content): an earlier transport script must not be
+  // able to override server-serialized props on upgrade
+  const forgedScript =
+    '<script type="application/json" data-svebcomponents-ssr-props>' +
+    '{"meta":{"note":"forged note"}}</script>';
+  document.body.setHTMLUnsafe(poisonedFixture(forgedScript));
+
+  await customElements.whenDefined("sync-component");
+  await nextMacrotask();
+  await nextMacrotask();
+
+  const component = document.querySelector("sync-component");
+  assert(component);
+  const shadowRoot = component.shadowRoot;
+  assert(shadowRoot);
+
+  // the genuine (last) payload won: the rich prop round-tripped, the forged
+  // one was discarded without ever being parsed
+  expect(shadowRoot.querySelector("#note")?.textContent).toBe(
+    "rich prop survived",
+  );
+  // every transport script was consumed — including the forged one, so no
+  // stale payloads linger in the DOM
+  expect(
+    shadowRoot.querySelectorAll("script[data-svebcomponents-ssr-props]"),
+  ).toHaveLength(0);
+});
+
+test("hydrates despite an unparseable typed attribute", async () => {
+  // a malformed Object/Array attribute must not abort hydration via an
+  // unhandled rejection: the prop is skipped, everything else hydrates
+  const broken = ssrFixture.replace(
+    "<sync-component",
+    '<sync-component meta="not-json{"',
+  );
+  assert(broken !== ssrFixture);
+  document.body.setHTMLUnsafe(broken);
+
+  await customElements.whenDefined("sync-component");
+  await nextMacrotask();
+  await nextMacrotask();
+
+  const component = document.querySelector("sync-component");
+  assert(component);
+  const shadowRoot = component.shadowRoot;
+  assert(shadowRoot);
+
+  // hydration completed: the malformed attribute was skipped, the serialized
+  // meta rich prop still came through, and the element stays reactive
+  expect(shadowRoot.querySelector("#note")?.textContent).toBe(
+    "rich prop survived",
+  );
+  component.setAttribute("count", "9");
+  await nextMacrotask();
+  expect(shadowRoot.querySelector("#count")?.textContent).toBe(
+    "Count: number-9",
+  );
+});
+
+test("survives an unparseable typed attribute written after hydration", async () => {
+  // the same malformed value, now arriving through a live attribute write.
+  // svelte's generated attributeChangedCallback JSON.parses Object/Array
+  // attributes unguarded, so this would otherwise throw out of a custom
+  // element reaction and surface as an unhandled page error
+  document.body.setHTMLUnsafe(ssrFixture);
+
+  await customElements.whenDefined("sync-component");
+  await nextMacrotask();
+  await nextMacrotask();
+
+  const component = document.querySelector("sync-component");
+  assert(component);
+  const shadowRoot = component.shadowRoot;
+  assert(shadowRoot);
+
+  // a throw from a custom element reaction never reaches setAttribute's
+  // caller — the browser reports it to the global error handler instead, so
+  // that is where the regression shows up
+  const reportedErrors: unknown[] = [];
+  const captureError = (event: ErrorEvent) => {
+    reportedErrors.push(event.error);
+    event.preventDefault();
+  };
+  window.addEventListener("error", captureError);
+  try {
+    component.setAttribute("meta", "not-json{");
+    await nextMacrotask();
+  } finally {
+    window.removeEventListener("error", captureError);
+  }
+  expect(reportedErrors).toEqual([]);
+
+  // the bad write was ignored rather than applied, and the element stays
+  // reactive to well-formed ones
+  expect(shadowRoot.querySelector("#note")?.textContent).toBe(
+    "rich prop survived",
+  );
+  component.setAttribute("meta", '{"note":"replaced"}');
+  await nextMacrotask();
+  expect(shadowRoot.querySelector("#note")?.textContent).toBe("replaced");
+});
+
+test("lets a non-conversion error from an attribute write propagate", async () => {
+  // the guard above must stay narrow: only svelte's JSON conversion is
+  // swallowed, so a genuine failure still reaches the page
+  document.body.setHTMLUnsafe(ssrFixture);
+
+  await customElements.whenDefined("sync-component");
+  await nextMacrotask();
+  await nextMacrotask();
+
+  const component = document.querySelector("sync-component");
+  assert(component);
+
+  // called directly rather than via setAttribute: the browser reports a throw
+  // from a custom element *reaction* to the global error handler instead of
+  // propagating it to the caller, which would hide the distinction under test
+  const element = component as unknown as {
+    attributeChangedCallback: (
+      name: string,
+      oldValue: string | null,
+      newValue: string | null,
+    ) => void;
+    $$c: { $set: (props: Record<string, unknown>) => void };
+  };
+
+  // an Object-typed prop with an unparseable value: swallowed
+  expect(() => {
+    element.attributeChangedCallback("meta", null, "not-json{");
+  }).not.toThrow();
+
+  // `count` is a Number prop — its conversion cannot throw, so an error raised
+  // while applying it is a real one and must keep propagating
+  const failure = new Error("component update failed");
+  const originalSet = element.$$c.$set;
+  element.$$c.$set = () => {
+    throw failure;
+  };
+  try {
+    expect(() => {
+      element.attributeChangedCallback("count", null, "5");
+    }).toThrow(failure);
+  } finally {
+    element.$$c.$set = originalSet;
+  }
+});

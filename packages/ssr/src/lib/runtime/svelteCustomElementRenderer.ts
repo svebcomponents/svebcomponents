@@ -209,6 +209,16 @@ export class SvelteCustomElementRenderer
   private readonly richPropNames = new Set<string>();
 
   override setProperty(name: string, value: unknown) {
+    // defense-in-depth: a plain assignment on $$d would trigger the inherited
+    // `__proto__` accessor instead of creating a data property. startRender
+    // already filters these; this guards direct renderer API users too.
+    if (
+      name === "__proto__" ||
+      name === "constructor" ||
+      name === "prototype"
+    ) {
+      return;
+    }
     this.svelteClientCustomElement.$$d[name] = value;
     this.richPropNames.add(name);
     this.reflectPropertyToAttribute(name, value);
