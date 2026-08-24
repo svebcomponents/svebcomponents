@@ -60,6 +60,18 @@ catalog:
 
 catalogMode: strict
 
+# pnpm 11 reads these from pnpm-workspace.yaml, not .npmrc
+autoInstallPeers: true
+engineStrict: true
+saveExact: true
+
+# never resolve deps younger than 24h, to limit exposure to freshly published
+# malicious versions. strict prompts locally (and hard-fails in CI) instead of
+# quietly resolving back to an older mature version; approving at the prompt
+# appends the version to minimumReleaseAgeExclude below.
+minimumReleaseAge: 1440
+minimumReleaseAgeStrict: true
+
 minimumReleaseAgeExclude:
   - "@turbo/darwin-64@2.10.7"
   - "@turbo/darwin-arm64@2.10.7"

@@ -16,16 +16,20 @@ jobs:
     name: Create Release Pull Request
     runs-on: ubuntu-latest
     steps:
+      # changesets/action needs the token, but only via its own `env:` input —
+      # do not leave credentials on disk for the dependency-code steps below
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
         with:
           run_install: false
 
       - name: install node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
           cache: "pnpm"
@@ -40,6 +44,6 @@ jobs:
         run: pnpm test
 
       - name: Create Release Pull Request
-        uses: changesets/action@v1
+        uses: changesets/action@06245a4e0a36c064a573d4150030f5ec548e4fcc # v1.4.10
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
