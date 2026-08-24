@@ -19,6 +19,9 @@
   // spread attribute name on an HTML-namespace element, and a lowercased
   // `showRoot` matches neither the observed attribute `show-root` nor the
   // element's `showRoot` setter. See ../shared/customElementProps.ts.
+  //
+  // Svelte 6 TODO (#8): drop the partition and the attachment for a plain
+  // `{...props}` once sveltejs/svelte#16590 lands.
   const partitioned = $derived(partitionProps(props));
 
   /**

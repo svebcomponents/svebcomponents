@@ -31,6 +31,13 @@
  * This mirrors what the server wrapper already does: `startRender` routes
  * every non-kebab-case key to `setProperty`, so a server-rendered element and
  * a client-rendered one now receive the same props.
+ *
+ * Svelte 6 TODO (#8): delete this module and go back to a plain `{...props}`
+ * spread in Client.svelte once `set_attributes` stops lowercasing prop names
+ * on custom elements — filed upstream as sveltejs/svelte#16590, whose
+ * suggested fix is to consult the element's setters before reaching for
+ * `normalize_attribute`. Nothing else here depends on the partition, so the
+ * revert is the wrapper's two lines plus this file.
  */
 export const mustBeSetAsProperty = (name: string): boolean =>
   /[A-Z]/.test(name) && !name.startsWith("on");

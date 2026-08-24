@@ -31,3 +31,8 @@ receive the same props. Props that do have an attribute representation — `clas
 `style`, `id`, `slot`, `part`, `data-*`, `aria-*`, `on*` handlers and every
 kebab-case attribute — keep travelling as attributes, so Svelte's class/style
 handling, event delegation and hydration are unaffected.
+
+The underlying inconsistency is Svelte's own — two code paths disagree about
+whether a custom element's prop names are case-sensitive — and is tracked
+upstream as sveltejs/svelte#16590. The workaround is marked `Svelte 6 TODO
+(#8)` so it can be removed if that ever lands.
