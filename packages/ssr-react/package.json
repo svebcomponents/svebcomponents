@@ -34,16 +34,19 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "browser": "./dist/index.browser.js",
       "import": "./dist/index.js"
     },
     "./jsx-runtime": {
       "types": "./dist/jsx-runtime.d.ts",
       "react-server": "./dist/jsx-runtime.react-server.js",
+      "browser": "./dist/jsx-runtime.browser.js",
       "import": "./dist/jsx-runtime.js"
     },
     "./jsx-dev-runtime": {
       "types": "./dist/jsx-dev-runtime.d.ts",
       "react-server": "./dist/jsx-dev-runtime.react-server.js",
+      "browser": "./dist/jsx-dev-runtime.browser.js",
       "import": "./dist/jsx-dev-runtime.js"
     },
     "./rsc": {

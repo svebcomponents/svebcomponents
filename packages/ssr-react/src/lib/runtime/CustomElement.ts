@@ -22,6 +22,8 @@ import {
   renderCustomElementSync,
 } from "@svebcomponents/ssr";
 
+import { renderHostElement } from "./hostElement.js";
+
 export interface CustomElementProps {
   /** The custom element's tag name. */
   tag: string;
@@ -61,11 +63,11 @@ export const CustomElement = ({
   ...props
 }: CustomElementProps): ReactElement => {
   if (BROWSER) {
-    // The parser has already adopted the server-rendered
-    // `<template shadowrootmode>` into the element's shadow root and removed
-    // it from the light DOM, so the client tree deliberately omits it: what
-    // React hydrates against is the post-parse child list.
-    return createElement(tag, props, children);
+    // A second line of defence, not the primary one. The package's `browser`
+    // export condition already points browser builds at `CustomElement.browser`
+    // so the server renderer never enters the bundle; this keeps the output
+    // correct in a bundler that does not apply that condition.
+    return renderHostElement(tag, props, children);
   }
 
   let rendered;
@@ -83,7 +85,7 @@ export const CustomElement = ({
           "It was emitted without server-rendered shadow content and will render in the browser only. " +
           "See the package README's 'Async Components' section.",
       );
-      return createElement(tag, props, children);
+      return renderHostElement(tag, props, children);
     }
     throw error;
   }
