@@ -71,6 +71,10 @@ React SSR use the synchronous wrapper.
 Enable `compilerOptions.experimental.async` in the component package when the
 Svelte component itself awaits during rendering.
 
+An RSC client transition mounts the element from its ordinary props rather
+than parsing its server-rendered shadow template. Pass data from the Server
+Component as serializable props when it must survive both navigation modes.
+
 ## Exports
 
 | Export                                      | Use                                       |
@@ -90,6 +94,8 @@ Component routes dashed tags through the async wrapper without importing
 - The JSX runtimes route valid dashed tag names and exclude reserved SVG and
   MathML names.
 - The default wrapper renders async elements in the browser.
+- Values produced only by `SsrPrepare` are document-rendered; client
+  transitions need them passed as ordinary serializable props.
 - The `/rsc` wrapper cannot run inside a Client Component.
 - App code must load the component's browser entry and server renderer.
 

@@ -107,6 +107,30 @@ Client Components use the synchronous wrapper, which cannot await. An
 asynchronous element inside one renders in the browser instead. Move it to a
 Server Component to server-render it.
 
+## Client navigation
+
+A document request parses the declarative shadow template and the element
+hydrates it. A Next `<Link>` or router transition has no document parser: the
+React client boundary renders the bare custom element, which mounts from its
+ordinary props instead.
+
+This distinction matters only for values created inside `SsrPrepare`. Those
+values travel inside the server-rendered shadow template, so they are available
+after a document load but not after a client transition. If the browser needs a
+prepared value in both cases, load it in the Server Component and pass it as a
+serializable prop:
+
+```tsx
+export default async function Page() {
+  const prepared = await loadPreparedData();
+  return <my-component prepared={prepared} />;
+}
+```
+
+The component still works after a client transition; it mounts rather than
+hydrating. This keeps the RSC workaround inside the React adapter and avoids a
+renderer-specific property protocol in the shared SSR package.
+
 ## Streaming
 
 An element inside a `<Suspense>` boundary reaches the browser after the shell.
@@ -139,6 +163,9 @@ Then load it in a browser and confirm `document.querySelector("my-component")
 - The adapter supports React 19, which Next 15 and later use.
 - Props on an element in a Server Component cross a Client Component boundary,
   so they must be serializable.
+- Client transitions mount the custom element from its ordinary props. Values
+  created only inside `SsrPrepare` require a document load unless the Server
+  Component also passes them explicitly.
 - The async wrapper passes rendered shadow markup through the RSC payload as
   well as the HTML. The synchronous wrapper does not.
 - Slotted components mount instead of hydrating. See
