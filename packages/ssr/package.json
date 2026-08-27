@@ -123,5 +123,10 @@
   },
   "keywords": [
     "svelte"
+  ],
+  "sideEffects": [
+    "./dist/index.js",
+    "./dist/runtime/installShim.js",
+    "./dist/runtime/rendererRegistry.js"
   ]
 }

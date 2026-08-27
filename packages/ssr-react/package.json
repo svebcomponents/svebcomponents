@@ -82,5 +82,6 @@
     "svelte",
     "web-components",
     "ssr"
-  ]
+  ],
+  "sideEffects": false
 }
