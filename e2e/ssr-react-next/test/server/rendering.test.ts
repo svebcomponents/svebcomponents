@@ -8,6 +8,17 @@ const fetchRoute = async (route: string): Promise<string> => {
   return response.text();
 };
 
+/**
+ * The markup React's Flight payload is replayed from, as it appears inside the
+ * `self.__next_f.push([1, "..."])` calls Next inlines. Reading it as text is
+ * enough for what these assertions need: whether a given element is *in* the
+ * payload at all.
+ */
+const flightPayload = (html: string): string =>
+  [...html.matchAll(/self\.__next_f\.push\(\[1,\s*"((?:[^"\\]|\\.)*)"\]\)/g)]
+    .map((match) => match[1] ?? "")
+    .join("");
+
 describe("server component routes", () => {
   test("a plain dashed tag is server-rendered with declarative shadow DOM", async () => {
     const html = await fetchRoute("/rsc-sync");
@@ -54,4 +65,31 @@ describe("server component routes", () => {
     expect(html).toContain('<template shadowrootmode="open">');
     expect(html).toContain("Client Island");
   });
+});
+
+describe("flight payload", () => {
+  /**
+   * The regression this suite was built around. A Server Component's return
+   * value is serialized into the Flight payload and replayed in the browser,
+   * so a `<template shadowrootmode>` emitted from one is replayed too — against
+   * a DOM where the HTML parser has already consumed it into a shadow root.
+   * React reports the missing child as a hydration mismatch, discards the
+   * server DOM, and re-creates the template through DOM APIs, which attaches
+   * no shadow root at all.
+   *
+   * The wrappers avoid this by emitting the template from a Client Component,
+   * which React runs in the SSR pass *and* in the browser. Asserting on the
+   * payload rather than only on the hydrated DOM keeps the reason legible: a
+   * change that moves the template back into a Server Component fails here,
+   * naming the cause, instead of only failing an opaque DOM assertion.
+   */
+  test.each([["/rsc-sync"], ["/rsc-async"]])(
+    "%s does not replay the shadow template to the client",
+    async (route) => {
+      const html = await fetchRoute(route);
+
+      expect(html).toContain('<template shadowrootmode="open">');
+      expect(flightPayload(html)).not.toContain("shadowrootmode");
+    },
+  );
 });

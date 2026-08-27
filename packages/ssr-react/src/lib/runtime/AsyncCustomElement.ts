@@ -2,6 +2,8 @@ import { createElement, type ReactElement } from "react";
 
 import { renderCustomElement } from "@svebcomponents/ssr";
 
+import { CustomElementShell } from "./CustomElementShell.js";
+
 import type { CustomElementProps } from "./CustomElement.js";
 
 export type { CustomElementProps } from "./CustomElement.js";
@@ -17,6 +19,14 @@ export type { CustomElementProps } from "./CustomElement.js";
  * or `renderToPipeableStream` without an RSC runtime) cannot await a
  * component at all, which is why this lives at a separate entry point rather
  * than as a mode of the sync `CustomElement`.
+ *
+ * The awaited result is handed to {@link CustomElementShell}, a Client
+ * Component, rather than emitted here. A Server Component's output is
+ * serialized into the Flight payload and replayed by the browser, so markup
+ * emitted here would be replayed too — including the `<template
+ * shadowrootmode>` that the HTML parser has already consumed into a shadow
+ * root, which is a hydration mismatch. The shell runs on both sides and emits
+ * the template only in the SSR pass.
  *
  * Import this only from a Server Component module. An async function
  * component cannot be rendered from a Client Component (`"use client"`); an
@@ -38,15 +48,13 @@ export const CustomElement = async ({
   const rendered = await renderCustomElement(tag, props);
 
   return createElement(
-    tag,
-    // see the sync CustomElement for why this is a union of incoming props
-    // and the renderer's attributes
-    { ...props, ...rendered.attributes },
-    createElement("template", {
-      key: "svebcomponents-shadow",
-      shadowrootmode: "open",
-      dangerouslySetInnerHTML: { __html: rendered.shadowContent },
-    }),
+    CustomElementShell,
+    {
+      tag,
+      props,
+      attributes: rendered.attributes,
+      shadowContent: rendered.shadowContent,
+    },
     children,
   );
 };
