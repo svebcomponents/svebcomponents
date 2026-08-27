@@ -220,6 +220,14 @@ export const hydratable = <T extends CustomElementConstructor>(
           await new Promise((resolve) => {
             setTimeout(resolve, 0);
           });
+
+          // A host framework can move the element within that task — React
+          // relocates streamed content out of the `<div hidden>` it was parsed
+          // in, which disconnects and reconnects it — and the reconnect runs
+          // this callback again. Bailing out leaves that second run to do the
+          // work, rather than mounting an element no longer in the document.
+          if (!this.isConnected) return;
+
           adopted = this.$$svebAdoptStrandedTemplate();
         }
 
