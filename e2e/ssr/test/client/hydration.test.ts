@@ -266,12 +266,11 @@ test("adopts a declarative template the parser could not attach", async () => {
   // upgrades on its start tag, svelte's constructor calls `attachShadow`, and
   // the template that follows is refused and left in the light DOM.
   //
-  // That is not an edge case: it is what all markup arriving after the initial
-  // document looks like. React streams the contents of a Suspense boundary in
-  // late, and any client-side navigation builds its markup from script — by
-  // then the component bundle has long since run. `innerHTML` reproduces the
-  // same ordering here without needing a framework, because it never attaches
-  // a declarative shadow root either.
+  // That is not an edge case: it is what a host sees whenever it parses
+  // serialized markup after the element definition has loaded. React's
+  // streamed Suspense content is one example. `innerHTML` reproduces the same
+  // ordering here without needing a framework, because it never attaches a
+  // declarative shadow root either.
   await import("../../dist/client/sync.js");
   await customElements.whenDefined("sync-component");
 
@@ -314,3 +313,38 @@ test("adopts a declarative template the parser could not attach", async () => {
   // stray node for everyone else.
   expect(component.querySelector("template")).toBeNull();
 });
+
+test.each(["closed", "invalid"])(
+  "leaves a %s-mode declarative template in the light DOM",
+  async (mode) => {
+    await import("../../dist/client/sync.js");
+    await customElements.whenDefined("sync-component");
+
+    const host = document.createElement("div");
+    document.body.replaceChildren(host);
+    host.innerHTML = ssrFixture.replace(
+      'shadowrootmode="open"',
+      `shadowrootmode="${mode}"`,
+    );
+
+    const component = host.querySelector("sync-component");
+    assert(component);
+
+    await nextMacrotask();
+    await nextMacrotask();
+
+    const shadowRoot = component.shadowRoot;
+    assert(shadowRoot);
+    expect(shadowRoot.mode).toBe("open");
+
+    // A mismatched or invalid template remains user-owned light DOM instead
+    // of being consumed into the component's open shadow root.
+    const template = component.querySelector("template[shadowrootmode]");
+    assert(template);
+    expect(template.getAttribute("shadowrootmode")).toBe(mode);
+    expect(template.content.querySelector("h1")?.textContent).toBe(
+      "Hydration Test",
+    );
+    expect(shadowRoot.querySelector("#note")).toBeNull();
+  },
+);

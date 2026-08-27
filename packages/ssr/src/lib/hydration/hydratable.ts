@@ -170,11 +170,10 @@ export const hydratable = <T extends CustomElementConstructor>(
      * template is even read — so the parser refuses it and leaves it in the
      * light DOM as an inert `<template>` element.
      *
-     * That ordering is not exotic: it is what markup arriving after the
-     * initial document always looks like. React streams the contents of a
-     * Suspense boundary into a `<div hidden>` late in the response, and a
-     * client-side navigation builds markup from script — in both cases the
-     * component bundle has long since run.
+     * That ordering occurs whenever a host parses serialized markup after the
+     * definition has loaded. React's streamed Suspense content is one example:
+     * it arrives in a `<div hidden>` after the component bundle has run, so the
+     * element upgrades before the parser reaches its template.
      *
      * Adopting the template by hand restores server-rendered hydration for
      * those elements. Removing it matters just as much: it is a light-DOM
@@ -188,9 +187,13 @@ export const hydratable = <T extends CustomElementConstructor>(
       if (!root || root.childNodes.length > 0) return undefined;
 
       const template = this.firstElementChild;
+      // Only recover the declarative root this class would have received from
+      // the parser. A mismatched or invalid mode is user light DOM, not our
+      // stranded SSR template; consuming it would silently change both its
+      // tree ownership and encapsulation semantics.
       if (
         !(template instanceof HTMLTemplateElement) ||
-        !template.hasAttribute("shadowrootmode")
+        template.getAttribute("shadowrootmode") !== root.mode
       ) {
         return undefined;
       }

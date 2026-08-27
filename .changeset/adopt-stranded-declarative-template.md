@@ -12,7 +12,7 @@ The component then threw its server-rendered content away and re-rendered from
 scratch, and the leftover template stayed behind as a stray light-DOM child —
 which React reports as a hydration mismatch, discarding the subtree.
 
-This ordering is what all markup arriving after the initial document looks
-like: content streamed into a Suspense boundary, or built by a client-side
-navigation. Such elements now adopt the stranded template themselves, so
-server-rendered hydration works there as it already did on first paint.
+This ordering occurs whenever a host parses serialized markup after the
+element definition has loaded, including content streamed into a Suspense
+boundary. Such elements now adopt the matching stranded template themselves,
+so server-rendered hydration works there as it already did on first paint.
