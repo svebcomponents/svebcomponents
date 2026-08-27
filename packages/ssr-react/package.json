@@ -38,10 +38,12 @@
     },
     "./jsx-runtime": {
       "types": "./dist/jsx-runtime.d.ts",
+      "react-server": "./dist/jsx-runtime.react-server.js",
       "import": "./dist/jsx-runtime.js"
     },
     "./jsx-dev-runtime": {
       "types": "./dist/jsx-dev-runtime.d.ts",
+      "react-server": "./dist/jsx-dev-runtime.react-server.js",
       "import": "./dist/jsx-dev-runtime.js"
     },
     "./rsc": {

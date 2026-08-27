@@ -12,6 +12,11 @@
  *
  * Unlike the Svelte and Vue integrations this needs no bundler plugin, so it
  * works anywhere React does — including hosts that are not Vite-based.
+ *
+ * Under an RSC runtime this is the runtime for the client and SSR module
+ * graphs. The react-server graph resolves `./jsx-runtime.react-server.js`
+ * instead, through the package's `react-server` export condition, and routes
+ * the same tags through the async wrapper.
  */
 import {
   Fragment,
@@ -20,13 +25,14 @@ import {
 } from "react/jsx-runtime";
 import type { ReactElement } from "react";
 
+import { CustomElement } from "./runtime/CustomElement.js";
 import { interceptJsx } from "./shared/interceptJsx.js";
 
 export { Fragment };
 export type { JSX } from "react/jsx-runtime";
 
 export const jsx: typeof reactJsx = (type, props, key) =>
-  interceptJsx(reactJsx, type, props, key) as ReactElement;
+  interceptJsx(reactJsx, CustomElement, type, props, key) as ReactElement;
 
 export const jsxs: typeof reactJsxs = (type, props, key) =>
-  interceptJsx(reactJsxs, type, props, key) as ReactElement;
+  interceptJsx(reactJsxs, CustomElement, type, props, key) as ReactElement;
