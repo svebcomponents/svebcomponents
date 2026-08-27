@@ -87,6 +87,7 @@ describe.each([
   ["/rsc-async", "simple-component", "RSC Async"],
   ["/rsc-async-streamed", "simple-component", "RSC Streamed"],
   ["/sync-streamed", "sync-component", "Sync Streamed"],
+  ["/rsc-async-plain-tag", "simple-component", "Plain Tag Async"],
   ["/client-component", "sync-component", "Client Island"],
 ])("%s", (route, tag, heading) => {
   test("keeps the server-rendered shadow root and hydrates without complaint", async () => {

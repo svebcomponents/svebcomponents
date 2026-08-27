@@ -51,6 +51,17 @@ describe("server component routes", () => {
     expect(html).toContain("RSC Streamed");
   });
 
+  test("a plain dashed tag reaches the async wrapper in the react-server graph", async () => {
+    const html = await fetchRoute("/rsc-async-plain-tag");
+
+    // both of these come from work the synchronous path cannot do: the
+    // component's own await, and its adjacent async SsrPrepare hook
+    expect(html).toContain('<p id="async-label">Async: resolved</p>');
+    expect(html).toContain(
+      '<p id="prepared">Prepared: adjacent server module</p>',
+    );
+  });
+
   test("the sync wrapper server-renders inside a Suspense boundary too", async () => {
     const html = await fetchRoute("/sync-streamed");
 
@@ -83,7 +94,12 @@ describe("flight payload", () => {
    * change that moves the template back into a Server Component fails here,
    * naming the cause, instead of only failing an opaque DOM assertion.
    */
-  test.each([["/rsc-sync"], ["/rsc-async"], ["/rsc-async-streamed"]])(
+  test.each([
+    ["/rsc-sync"],
+    ["/rsc-async"],
+    ["/rsc-async-streamed"],
+    ["/rsc-async-plain-tag"],
+  ])(
     "%s does not replay the shadow template to the client",
     async (route) => {
       const html = await fetchRoute(route);
