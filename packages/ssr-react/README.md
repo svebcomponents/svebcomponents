@@ -27,7 +27,9 @@ entry on the server. Then write the element as JSX:
 ```
 
 See the [React setup guide](https://svebcomponents.dev/server-rendering/react/)
-for import placement in a server-rendered app.
+for import placement in a server-rendered app, or the
+[Next.js guide](https://svebcomponents.dev/server-rendering/nextjs/) for the
+App Router.
 
 ## Wrapper component
 
@@ -63,8 +65,9 @@ export default async function Page() {
 }
 ```
 
-Import `/rsc` from a Server Component. Client Components and plain React SSR
-use the synchronous wrapper. A promise-returning preparation hook needs `/rsc`.
+Under an RSC runtime a plain dashed tag in a Server Component already reaches
+this wrapper. Import `/rsc` to use it explicitly. Client Components and plain
+React SSR use the synchronous wrapper.
 Enable `compilerOptions.experimental.async` in the component package when the
 Svelte component itself awaits during rendering.
 
@@ -76,6 +79,10 @@ Svelte component itself awaits during rendering.
 | `@svebcomponents/ssr-react/jsx-runtime`     | Production JSX runtime                    |
 | `@svebcomponents/ssr-react/jsx-dev-runtime` | Development JSX runtime                   |
 | `@svebcomponents/ssr-react/rsc`             | Async wrapper for React Server Components |
+
+The JSX runtime entries carry a `react-server` export condition, so a Server
+Component routes dashed tags through the async wrapper without importing
+`/rsc`.
 
 ## Limits
 

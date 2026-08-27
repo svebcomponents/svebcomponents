@@ -86,6 +86,7 @@ export default defineConfig({
               items: [
                 { label: "SvelteKit", slug: "server-rendering/sveltekit" },
                 { label: "React", slug: "server-rendering/react" },
+                { label: "Next.js", slug: "server-rendering/nextjs" },
                 { label: "Vue", slug: "server-rendering/vue" },
                 { label: "Astro", slug: "server-rendering/astro" },
               ],

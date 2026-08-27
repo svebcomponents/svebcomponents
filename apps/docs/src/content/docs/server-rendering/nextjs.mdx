@@ -1,0 +1,149 @@
+---
+title: Next.js
+description: Server-render and hydrate svebcomponents custom elements in a Next.js App Router app.
+---
+
+Next.js uses the [React adapter](/server-rendering/react/) without a bundler
+plugin. This page covers the parts that are specific to the App Router: where
+to register elements when there is no server entry, and which module graph each
+wrapper runs in.
+
+## Install
+
+```bash
+pnpm add @svebcomponents/ssr @svebcomponents/ssr-react svelte
+```
+
+## Configure
+
+Point the automatic JSX transform at the adapter:
+
+```jsonc
+// tsconfig.json
+{
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "@svebcomponents/ssr-react",
+  },
+}
+```
+
+Next compiles JSX with SWC and reads `jsxImportSource` from `tsconfig.json`.
+Keep `@svebcomponents/ssr-react` out of `serverExternalPackages`, which would
+resolve React outside the module graph the adapter is compiled into.
+
+## Register elements on the server
+
+Next has no server entry file. Load the component package from
+`instrumentation.ts`, which runs once per server process:
+
+```ts
+// instrumentation.ts
+export async function register() {
+  await import("my-component-package");
+  await import("my-component-package/ssr");
+}
+```
+
+The browser entry registers the elements and the `/ssr` entry registers their
+server renderers. Both attach to `globalThis`, so the two server module graphs
+Next builds share one registration.
+
+## Register elements in the browser
+
+Next has no client entry file either. Import the browser entry from a Client
+Component and render it once, in the root layout:
+
+```tsx
+// app/RegisterElements.tsx
+"use client";
+
+import "my-component-package";
+
+export default function RegisterElements() {
+  return null;
+}
+```
+
+```tsx
+// app/layout.tsx
+import RegisterElements from "./RegisterElements";
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <RegisterElements />
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+Without this the browser never registers the elements. The page still shows
+server-rendered shadow content, and nothing on it becomes interactive.
+
+## Render
+
+Write the element as a plain dashed tag in a Server Component:
+
+```tsx
+export default function Page() {
+  return <my-component title="Hello" count={5} />;
+}
+```
+
+Server Components compile under the `react-server` export condition, which
+selects a JSX runtime that awaits the element renderer. A component that awaits
+while rendering, or an async server preparation hook, server-renders here with
+no extra import.
+
+Client Components use the synchronous wrapper, which cannot await. An
+asynchronous element inside one renders in the browser instead. Move it to a
+Server Component to server-render it.
+
+## Streaming
+
+An element inside a `<Suspense>` boundary reaches the browser after the shell.
+The browser parses that markup with the element already registered, so it
+upgrades the element before it reads the shadow template, and refuses to attach
+a second shadow root. Chrome reports this once per element:
+
+```
+A second declarative shadow root cannot be created on a host.
+```
+
+The element recovers on its own: it adopts the refused template, hydrates from
+it, and removes it from the light DOM. Server-rendered content and serialized
+props survive. Nothing on the page can suppress the console message, because
+the browser writes it before any script runs.
+
+## Result
+
+Fetch a route and confirm the element carries a shadow template:
+
+```bash
+curl -s http://localhost:3000/ | grep 'template shadowrootmode'
+```
+
+Then load it in a browser and confirm `document.querySelector("my-component")
+.shadowRoot` is set and no hydration error appears in the console.
+
+## Limits
+
+- The adapter supports React 19, which Next 15 and later use.
+- Props on an element in a Server Component cross a Client Component boundary,
+  so they must be serializable.
+- The async wrapper passes rendered shadow markup through the RSC payload as
+  well as the HTML. The synchronous wrapper does not.
+- Slotted components mount instead of hydrating. See
+  [Hydration](/server-rendering/hydration/#limitations).
+
+Read [Async components and server data](/server-rendering/async/) for the
+package-side choices, and the
+[`@svebcomponents/ssr-react` reference](/packages/ssr-react/) for exports.

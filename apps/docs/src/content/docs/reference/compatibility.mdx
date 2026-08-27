@@ -37,11 +37,15 @@ it as a dependency.
 - [React 19](/server-rendering/react/) uses a JSX runtime or an explicit
   `CustomElement` component. React 18 cannot pass custom-element properties and
   events with the React 19 behavior.
+- [Next.js](/server-rendering/nextjs/) App Router uses the React adapter. Server
+  Components resolve a JSX runtime that awaits the element renderer; Client
+  Components use the synchronous one.
 - [Vue 3.5](/server-rendering/vue/) and [Astro 5](/server-rendering/astro/) use
   host-specific Vite plugins and wrappers.
 
-The React integration works without Vite. The Vue integration requires Vite.
-Astro supplies Vite through its build pipeline.
+The React integration works without Vite, and the repository tests it against a
+Next.js App Router app. The Vue integration requires Vite. Astro supplies Vite
+through its build pipeline.
 
 ## Async server rendering
 

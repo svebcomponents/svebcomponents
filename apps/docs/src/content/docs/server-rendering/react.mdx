@@ -28,7 +28,8 @@ Point the automatic JSX transform at the adapter:
 }
 ```
 
-This setting works in React builds with or without Vite.
+This setting works in React builds with or without Vite. For the Next.js App
+Router, see the [Next.js guide](/server-rendering/nextjs/).
 
 ## Import browser and server entries
 
@@ -78,8 +79,10 @@ import { CustomElement } from "@svebcomponents/ssr-react/rsc";
 <CustomElement tag="my-component" title="Hello" count={5} />;
 ```
 
-Use the `/rsc` export from Server Components. Client Components and plain React
-SSR use the default wrapper. Enable `compilerOptions.experimental.async` in the
+Under an RSC runtime a plain dashed tag already reaches this wrapper: Server
+Components compile under the `react-server` export condition, which selects a
+JSX runtime that awaits the renderer. Import `/rsc` when you want the wrapper
+explicitly. Client Components and plain React SSR use the default wrapper. Enable `compilerOptions.experimental.async` in the
 component package when the Svelte component itself awaits during rendering.
 
 An async preparation hook needs the `/rsc` wrapper but does not require
