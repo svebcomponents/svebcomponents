@@ -83,7 +83,7 @@ describe("flight payload", () => {
    * change that moves the template back into a Server Component fails here,
    * naming the cause, instead of only failing an opaque DOM assertion.
    */
-  test.each([["/rsc-sync"], ["/rsc-async"]])(
+  test.each([["/rsc-sync"], ["/rsc-async"], ["/rsc-async-streamed"]])(
     "%s does not replay the shadow template to the client",
     async (route) => {
       const html = await fetchRoute(route);
