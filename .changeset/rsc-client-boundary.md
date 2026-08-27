@@ -15,4 +15,8 @@ hydration.
 
 The template is now emitted from a Client Component, which React runs in the
 SSR pass and in the browser, so each side renders what belongs there. This
-affects RSC hosts only; plain React SSR was already correct.
+affects RSC hosts only; plain React SSR was already correct. During a client
+transition there is no document parser, so the boundary renders the bare host
+element and lets it mount from ordinary props. Values produced only inside
+`SsrPrepare` remain document-rendered; pass them from the Server Component as
+serializable props when the browser also needs them after a transition.

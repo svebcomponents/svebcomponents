@@ -26,8 +26,14 @@ export interface CustomElementShellProps {
  *
  * The cost is that `shadowContent` crosses the RSC boundary as a prop and so
  * appears in the Flight payload as well as in the HTML. The browser branch
- * ignores it — a client-side navigation renders the bare host element and lets
- * the element mount itself — but it is still on the wire. The synchronous
+ * ignores it: replaying the template would mismatch during hydration, while a
+ * client-side navigation creates the bare host element and lets it mount.
+ * Values produced only by `SsrPrepare` therefore belong to document rendering;
+ * an app that also needs one after a client transition must pass it from its
+ * Server Component as an ordinary serializable prop. Reconstructing
+ * renderer-specific properties here would couple the React adapter to one
+ * renderer protocol and make every other host pay for an RSC constraint.
+ * The synchronous
  * {@link CustomElement} avoids this by being a client boundary outright, so
  * the renderer runs in the SSR pass and nothing pre-rendered is serialized.
  */

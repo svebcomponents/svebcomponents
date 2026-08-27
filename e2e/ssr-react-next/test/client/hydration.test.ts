@@ -134,3 +134,41 @@ test("the hydrated element stays reactive to attribute updates", async () => {
 
   await page.close();
 });
+
+test("an App Router client transition mounts the element without a hydration error", async () => {
+  const [page, diagnostics] = await open("/", "#to-rsc-async");
+
+  // A value stored on window distinguishes a Next client transition from a
+  // document navigation, which would create a new global object.
+  await page.evaluate(() => {
+    (window as typeof window & { __navigationSentinel?: boolean })
+      .__navigationSentinel = true;
+  });
+  await page.click("#to-rsc-async");
+  await page.waitForURL(`${baseUrl}/rsc-async`);
+  await page.waitForSelector("simple-component", { state: "attached" });
+  await page.waitForTimeout(300);
+
+  expect(
+    await page.evaluate(
+      () =>
+        (window as typeof window & { __navigationSentinel?: boolean })
+          .__navigationSentinel,
+    ),
+  ).toBe(true);
+
+  const result = await inspect(page, "simple-component");
+  expect(result.hasShadowRoot).toBe(true);
+  expect(result.heading).toBe("RSC Async");
+  expect(result.strayTemplate).toBe(false);
+
+  // Client transitions do not parse the server's declarative shadow markup.
+  // The element mounts from its ordinary props, so preparation performed only
+  // by SsrPrepare remains a document-render feature; apps that need the value
+  // here must pass it from their Server Component as a serializable prop.
+  expect(result.prepared).toBe("Prepared: none");
+  expect(diagnostics.pageErrors).toEqual([]);
+  expect(diagnostics.consoleErrors).toEqual([]);
+
+  await page.close();
+});
