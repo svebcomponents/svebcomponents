@@ -258,3 +258,59 @@ test("lets a non-conversion error from an attribute write propagate", async () =
     element.$$c.$set = originalSet;
   }
 });
+
+test("adopts a declarative template the parser could not attach", async () => {
+  // The element is defined *first* here, which inverts the ordering the test
+  // above relies on. The parser only honours `<template shadowrootmode>` while
+  // the host has no shadow root, so once the definition has loaded the element
+  // upgrades on its start tag, svelte's constructor calls `attachShadow`, and
+  // the template that follows is refused and left in the light DOM.
+  //
+  // That is not an edge case: it is what all markup arriving after the initial
+  // document looks like. React streams the contents of a Suspense boundary in
+  // late, and any client-side navigation builds its markup from script — by
+  // then the component bundle has long since run. `innerHTML` reproduces the
+  // same ordering here without needing a framework, because it never attaches
+  // a declarative shadow root either.
+  await import("../../dist/client/sync.js");
+  await customElements.whenDefined("sync-component");
+
+  const host = document.createElement("div");
+  document.body.replaceChildren(host);
+  host.innerHTML = ssrFixture;
+
+  // Establishes the browser behaviour this test turns on, so a future change
+  // in it cannot leave the test quietly passing for the wrong reason: parsing
+  // the same markup on an *undefined* tag leaves the template untouched, which
+  // is why any shadow root on the element below has to have come from the
+  // adoption path rather than from the parser.
+  const control = document.createElement("div");
+  control.innerHTML =
+    '<undefined-control-element><template shadowrootmode="open">x</template></undefined-control-element>';
+  const controlHost = control.firstElementChild;
+  assert(controlHost);
+  expect(controlHost.shadowRoot).toBeNull();
+  expect(controlHost.querySelector("template[shadowrootmode]")).not.toBeNull();
+
+  const component = host.querySelector("sync-component");
+  assert(component);
+
+  await nextMacrotask();
+  await nextMacrotask();
+
+  const shadowRoot = component.shadowRoot;
+  assert(shadowRoot);
+
+  // the server's markup was adopted rather than thrown away and re-rendered
+  expect(shadowRoot.querySelector("h1")?.textContent).toBe("Hydration Test");
+  // the rich prop only exists in the serialized-props payload inside that
+  // template, so a client-side re-render could not have produced it
+  expect(shadowRoot.querySelector("#note")?.textContent).toBe(
+    "rich prop survived",
+  );
+
+  // and the template is gone from the light DOM. A host framework rendered no
+  // such child, so leaving it behind is a hydration mismatch for React and a
+  // stray node for everyone else.
+  expect(component.querySelector("template")).toBeNull();
+});
