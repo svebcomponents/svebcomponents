@@ -13,6 +13,22 @@ afterAll(async () => {
   await browser.close();
 });
 
+/**
+ * Chrome logs this when the parser reaches a `<template shadowrootmode>` on a
+ * host that already has a shadow root — which is what happens to every element
+ * whose definition loaded before its markup was parsed, the normal case for
+ * anything React streams in after the shell.
+ *
+ * The element recovers (it adopts the stranded template itself, and the DOM
+ * assertions below prove the server content survived), but the browser has
+ * already written to the console by then and nothing on the page can prevent
+ * it. Matched on exact text rather than a loose substring so a genuine React
+ * hydration complaint can never slip through with it.
+ */
+const isParserShadowRootNotice = (text: string): boolean =>
+  text.trim() ===
+  "A second declarative shadow root cannot be created on a host.";
+
 interface Diagnostics {
   pageErrors: string[];
   consoleErrors: string[];
@@ -36,7 +52,9 @@ const open = async (
 
   page.on("pageerror", (error) => diagnostics.pageErrors.push(String(error)));
   page.on("console", (message) => {
-    if (message.type() === "error") diagnostics.consoleErrors.push(message.text());
+    if (message.type() !== "error") return;
+    if (isParserShadowRootNotice(message.text())) return;
+    diagnostics.consoleErrors.push(message.text());
   });
 
   await page.goto(`${baseUrl}${route}`, { waitUntil: "networkidle" });
@@ -67,6 +85,8 @@ const inspect = (page: Page, tag: string) =>
 describe.each([
   ["/rsc-sync", "sync-component", "RSC Sync"],
   ["/rsc-async", "simple-component", "RSC Async"],
+  ["/rsc-async-streamed", "simple-component", "RSC Streamed"],
+  ["/sync-streamed", "sync-component", "Sync Streamed"],
   ["/client-component", "sync-component", "Client Island"],
 ])("%s", (route, tag, heading) => {
   test("keeps the server-rendered shadow root and hydrates without complaint", async () => {
@@ -169,6 +189,20 @@ test("an App Router client transition mounts the element without a hydration err
   expect(result.prepared).toBe("Prepared: none");
   expect(diagnostics.pageErrors).toEqual([]);
   expect(diagnostics.consoleErrors).toEqual([]);
+
+  await page.close();
+});
+
+test("a streamed element hydrates the server DOM instead of re-rendering it", async () => {
+  // `prepared` is set by the component's adjacent SsrPrepare hook and reaches
+  // the browser only through the serialized-props payload inside the shadow
+  // template. A client-side re-render has no way to know it, so seeing it here
+  // is what separates real hydration from markup that merely looks right.
+  const [page] = await open("/rsc-async-streamed");
+
+  const result = await inspect(page, "simple-component");
+  expect(result.prepared).toBe("Prepared: adjacent server module");
+  expect(result.strayTemplate).toBe(false);
 
   await page.close();
 });

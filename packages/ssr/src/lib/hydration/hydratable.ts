@@ -160,7 +160,83 @@ export const hydratable = <T extends CustomElementConstructor>(
       }
     }
 
+    /**
+     * Reclaims a declarative shadow root the HTML parser was unable to attach.
+     *
+     * The parser only honours `<template shadowrootmode>` when the host has no
+     * shadow root yet. Whenever the element's definition has *already* loaded
+     * by the time its markup is parsed, the element upgrades on its start tag
+     * and `SvelteElement`'s constructor calls `attachShadow` before the
+     * template is even read — so the parser refuses it and leaves it in the
+     * light DOM as an inert `<template>` element.
+     *
+     * That ordering occurs whenever a host parses serialized markup after the
+     * definition has loaded. React's streamed Suspense content is one example:
+     * it arrives in a `<div hidden>` after the component bundle has run, so the
+     * element upgrades before the parser reaches its template.
+     *
+     * Adopting the template by hand restores server-rendered hydration for
+     * those elements. Removing it matters just as much: it is a light-DOM
+     * child no host framework rendered, and React treats the extra node as a
+     * hydration mismatch and re-creates the entire subtree.
+     */
+    private $$svebAdoptStrandedTemplate(): ShadowRoot | undefined {
+      const root = this.shadowRoot;
+      // a populated root was claimed from the parser already; a missing one
+      // means this element does not use shadow DOM at all
+      if (!root || root.childNodes.length > 0) return undefined;
+
+      const template = this.firstElementChild;
+      // Only recover the declarative root this class would have received from
+      // the parser. A mismatched or invalid mode is user light DOM, not our
+      // stranded SSR template; consuming it would silently change both its
+      // tree ownership and encapsulation semantics.
+      if (
+        !(template instanceof HTMLTemplateElement) ||
+        template.getAttribute("shadowrootmode") !== root.mode
+      ) {
+        return undefined;
+      }
+
+      root.append(template.content);
+      template.remove();
+      return root;
+    }
+
     override async connectedCallback(): Promise<void> {
+      if (this.$$svebClaimedSsrShadowRoot === undefined) {
+        // Markup inserted through `innerHTML` never attaches a declarative
+        // shadow root either, and there the children are already in place, so
+        // this costs nothing and resolves that case immediately.
+        let adopted = this.$$svebAdoptStrandedTemplate();
+
+        if (adopted === undefined && document.readyState === "loading") {
+          // The parser runs an element's upgrade reactions on its *start* tag
+          // and appends the children afterwards, so a stranded template is not
+          // observable yet. Yielding a task lets the parser get past the
+          // element's end tag first.
+          //
+          // Gated on the document still parsing so this never delays an
+          // element created after load, and it is only reached at all by
+          // elements with no server-rendered shadow content — the ones about
+          // to client-render regardless.
+          await new Promise((resolve) => {
+            setTimeout(resolve, 0);
+          });
+
+          // A host framework can move the element within that task — React
+          // relocates streamed content out of the `<div hidden>` it was parsed
+          // in, which disconnects and reconnects it — and the reconnect runs
+          // this callback again. Bailing out leaves that second run to do the
+          // work, rather than mounting an element no longer in the document.
+          if (!this.isConnected) return;
+
+          adopted = this.$$svebAdoptStrandedTemplate();
+        }
+
+        this.$$svebClaimedSsrShadowRoot = adopted;
+      }
+
       const ssrRoot = this.$$svebClaimedSsrShadowRoot;
       const canHydrate =
         ssrRoot !== undefined &&
