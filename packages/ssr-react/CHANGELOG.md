@@ -1,5 +1,60 @@
 # @svebcomponents/ssr-react
 
+## 0.4.0
+
+### Minor Changes
+
+- 787a67e: Route dashed tags through the async wrapper in Server Components
+
+  `jsxImportSource` is one app-wide setting, so it could only ever name one
+  runtime — the synchronous one, which degrades an asynchronous element to
+  client-only rendering. Reaching the async wrapper meant importing
+  `@svebcomponents/ssr-react/rsc` and writing `<CustomElement tag="…">` by hand,
+  which is the ergonomics `jsxImportSource` exists to remove.
+
+  The JSX runtime entries now carry a `react-server` export condition, so an RSC
+  runtime resolves a runtime that routes tags through the async wrapper while
+  Client Components keep the synchronous one. A plain `<my-component />` in a
+  Server Component now server-renders even when its renderer is asynchronous.
+  The `/rsc` export is unchanged and still works for explicit use.
+
+### Patch Changes
+
+- 3721180: Fix server rendering under React Server Components
+
+  Both wrappers emitted the `<template shadowrootmode>` from a Server
+  Component. A Server Component's output is serialized into the Flight payload
+  and replayed in the browser, so the template was replayed too — against a DOM
+  where the HTML parser had already consumed it into a shadow root. React
+  reported the missing child as a hydration mismatch, discarded the
+  server-rendered DOM and re-created the template through DOM APIs, which
+  attaches no shadow root at all: the page lost both its shadow content and its
+  hydration.
+
+  The template is now emitted from a Client Component, which React runs in the
+  SSR pass and in the browser, so each side renders what belongs there. This
+  affects RSC hosts only; plain React SSR was already correct. During a client
+  transition there is no document parser, so the boundary renders the bare host
+  element and lets it mount from ordinary props. Values produced only inside
+  `SsrPrepare` remain document-rendered; pass them from the Server Component as
+  serializable props when the browser also needs them after a transition.
+
+- 8843f1d: Let bundlers drop the server renderer from client bundles
+
+  Neither package declared a `sideEffects` field, so a bundler had to assume
+  every module was impure and keep the whole graph — including `@lit-labs/ssr`
+  and parse5, which cannot run in a browser and were shipping to it.
+
+  `@svebcomponents/ssr` now lists the three modules that genuinely touch
+  `globalThis`, and `@svebcomponents/ssr-react` declares itself free of side
+  effects. In the repository's Next e2e app this cut the client chunks from
+  880 kB to 692 kB with no change to any output or API. Host adapters other than
+  React benefit from the same declaration.
+
+- Updated dependencies [3252405]
+- Updated dependencies [8843f1d]
+  - @svebcomponents/ssr@0.8.2
+
 ## 0.3.4
 
 ### Patch Changes

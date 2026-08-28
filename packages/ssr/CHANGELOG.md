@@ -1,5 +1,36 @@
 # @svebcomponents/ssr
 
+## 0.8.2
+
+### Patch Changes
+
+- 3252405: Recover server-rendered content when the parser refuses a declarative shadow root
+
+  The HTML parser only honours `<template shadowrootmode>` while the host has no
+  shadow root. When an element's definition has already loaded, the element
+  upgrades on its start tag and svelte's constructor calls `attachShadow` before
+  the template is read, so the parser refuses it and leaves it in the light DOM.
+  The component then threw its server-rendered content away and re-rendered from
+  scratch, and the leftover template stayed behind as a stray light-DOM child —
+  which React reports as a hydration mismatch, discarding the subtree.
+
+  This ordering occurs whenever a host parses serialized markup after the
+  element definition has loaded, including content streamed into a Suspense
+  boundary. Such elements now adopt the matching stranded template themselves,
+  so server-rendered hydration works there as it already did on first paint.
+
+- 8843f1d: Let bundlers drop the server renderer from client bundles
+
+  Neither package declared a `sideEffects` field, so a bundler had to assume
+  every module was impure and keep the whole graph — including `@lit-labs/ssr`
+  and parse5, which cannot run in a browser and were shipping to it.
+
+  `@svebcomponents/ssr` now lists the three modules that genuinely touch
+  `globalThis`, and `@svebcomponents/ssr-react` declares itself free of side
+  effects. In the repository's Next e2e app this cut the client chunks from
+  880 kB to 692 kB with no change to any output or API. Host adapters other than
+  React benefit from the same declaration.
+
 ## 0.8.1
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@svebcomponents/ssr-vue",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Server-render Svelte-built custom elements inside a Vue application.",
   "license": "MIT",
   "homepage": "https://svebcomponents.dev/packages/ssr-vue/",
