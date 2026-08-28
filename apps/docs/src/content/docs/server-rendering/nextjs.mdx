@@ -1,0 +1,124 @@
+---
+title: Next.js
+description: Server-render and hydrate svebcomponents custom elements in a Next.js App Router app.
+---
+
+Follow these steps to use svebcomponents with the Next.js App Router.
+
+## 1. Install the packages
+
+```bash
+pnpm add @svebcomponents/ssr @svebcomponents/ssr-react svelte
+```
+
+## 2. Configure JSX
+
+Point the JSX transform at the React adapter:
+
+```jsonc
+// tsconfig.json
+{
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "@svebcomponents/ssr-react",
+  },
+}
+```
+
+Do not add `@svebcomponents/ssr-react` to `serverExternalPackages`.
+
+## 3. Register your components
+
+Register the custom elements and their server renderers in
+`instrumentation.ts`:
+
+```ts
+// instrumentation.ts
+export async function register() {
+  await import("my-component-package");
+  await import("my-component-package/ssr");
+}
+```
+
+Register the custom elements in the browser from a Client Component:
+
+```tsx
+// app/RegisterElements.tsx
+"use client";
+
+import "my-component-package";
+
+export default function RegisterElements() {
+  return null;
+}
+```
+
+Render it once in the root layout:
+
+```tsx
+// app/layout.tsx
+import RegisterElements from "./RegisterElements";
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <RegisterElements />
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+## 4. Render a component
+
+Use its custom-element tag in a Server Component:
+
+```tsx
+export default function Page() {
+  return <my-component title="Hello" count={5} />;
+}
+```
+
+Async components also server-render from Server Components. Inside a Client
+Component, an async component renders in the browser instead.
+
+## Using `SsrPrepare` with client navigation
+
+If data created by `SsrPrepare` must also be available after a Next.js
+`<Link>` or router transition, load it in the Server Component and pass it as a
+serializable prop:
+
+```tsx
+export default async function Page() {
+  const prepared = await loadPreparedData();
+  return <my-component prepared={prepared} />;
+}
+```
+
+## Known browser message
+
+Chrome may print the following message when a component streams inside a
+`<Suspense>` boundary:
+
+```
+A second declarative shadow root cannot be created on a host.
+```
+
+No action is required; the component recovers and hydrates normally.
+
+## Requirements and limits
+
+- Use React 19.
+- Props passed from a Server Component must be serializable.
+- Slotted components mount instead of hydrating. See
+  [Hydration](/server-rendering/hydration/#limitations).
+
+For component-package setup, see
+[Async components and server data](/server-rendering/async/). For package
+exports, see the [`@svebcomponents/ssr-react` reference](/packages/ssr-react/).

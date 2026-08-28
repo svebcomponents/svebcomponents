@@ -27,7 +27,9 @@ entry on the server. Then write the element as JSX:
 ```
 
 See the [React setup guide](https://svebcomponents.dev/server-rendering/react/)
-for import placement in a server-rendered app.
+for import placement in a server-rendered app, or the
+[Next.js guide](https://svebcomponents.dev/server-rendering/nextjs/) for the
+App Router.
 
 ## Wrapper component
 
@@ -63,8 +65,9 @@ export default async function Page() {
 }
 ```
 
-Import `/rsc` from a Server Component. Client Components and plain React SSR
-use the synchronous wrapper. A promise-returning preparation hook needs `/rsc`.
+Plain dashed tags in a Server Component already support async rendering. Import
+`/rsc` only to use the wrapper explicitly. Client Components and plain React SSR
+use the synchronous wrapper.
 Enable `compilerOptions.experimental.async` in the component package when the
 Svelte component itself awaits during rendering.
 
@@ -83,6 +86,8 @@ Svelte component itself awaits during rendering.
 - The JSX runtimes route valid dashed tag names and exclude reserved SVG and
   MathML names.
 - The default wrapper renders async elements in the browser.
+- To use `SsrPrepare` data after a Next.js client transition, pass the data from
+  the Server Component as a serializable prop.
 - The `/rsc` wrapper cannot run inside a Client Component.
 - App code must load the component's browser entry and server renderer.
 
