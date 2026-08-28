@@ -1,0 +1,12 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // `next build` writes the server and client bundles this suite tests, and
+    // caching its `.next/cache` would carry a stale bundle across runs
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    }
+  }
+}

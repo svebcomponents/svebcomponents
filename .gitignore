@@ -22,6 +22,8 @@ coverage
 
 # Build Outputs
 dist
+.next
+next-env.d.ts
 
 
 # Debug
@@ -39,3 +41,7 @@ e2e/*/custom-elements*.d.ts
 
 # scratch dir used by the recipe type-check test
 packages/build/.recipe-check-*
+
+# rewritten by `next dev` on every run (next/dist/server/lib/generate-agent-files.js)
+e2e/ssr-react-next/AGENTS.md
+e2e/ssr-react-next/CLAUDE.md

@@ -1,0 +1,27 @@
+{
+  "name": "@svebcomponents/e2e.ssr-react-next",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "next build",
+    "test": "vitest run",
+    "test:dev": "vitest --watch"
+  },
+  "devDependencies": {
+    "@svebcomponents/e2e.ssr": "workspace:*",
+    "@svebcomponents/ssr": "workspace:*",
+    "@svebcomponents/ssr-react": "workspace:*",
+    "@svebcomponents/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "next": "catalog:",
+    "playwright": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "svelte": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

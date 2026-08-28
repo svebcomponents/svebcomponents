@@ -1,0 +1,100 @@
+import { chromium, type Browser, type Page } from "playwright";
+import { inject, test, expect, describe, beforeAll, afterAll } from "vitest";
+
+const baseUrl = inject("baseUrl");
+
+let browser: Browser;
+
+beforeAll(async () => {
+  browser = await chromium.launch();
+});
+
+afterAll(async () => {
+  await browser.close();
+});
+
+interface Diagnostics {
+  pageErrors: string[];
+  consoleErrors: string[];
+}
+
+/**
+ * Opens a route and waits for React to hydrate, collecting anything React
+ * complained about on the way.
+ *
+ * React reports a hydration mismatch by throwing a recoverable error and then
+ * silently re-rendering the subtree client-side. Every DOM assertion below
+ * would still pass on that re-rendered tree for most content, so the
+ * diagnostics are load-bearing: without them a mismatch reads as success.
+ */
+const open = async (
+  route: string,
+  readySelector = "sync-component, simple-component",
+): Promise<[Page, Diagnostics]> => {
+  const page = await browser.newPage();
+  const diagnostics: Diagnostics = { pageErrors: [], consoleErrors: [] };
+
+  page.on("pageerror", (error) => diagnostics.pageErrors.push(String(error)));
+  page.on("console", (message) => {
+    if (message.type() === "error") diagnostics.consoleErrors.push(message.text());
+  });
+
+  await page.goto(`${baseUrl}${route}`, { waitUntil: "networkidle" });
+  // networkidle only means the bundle arrived: a streamed boundary may still
+  // be showing its fallback, and hydration is concurrent even once it is not
+  await page.waitForSelector(readySelector, { state: "attached" });
+  await page.waitForTimeout(300);
+
+  return [page, diagnostics];
+};
+
+const inspect = (page: Page, tag: string) =>
+  page.evaluate((tag) => {
+    const element = document.querySelector(tag);
+    return {
+      hasShadowRoot: element?.shadowRoot != null,
+      heading: element?.shadowRoot?.querySelector("h1")?.textContent ?? null,
+      count: element?.shadowRoot?.querySelector("#count")?.textContent ?? null,
+      note: element?.shadowRoot?.querySelector("#note")?.textContent ?? null,
+      prepared: element?.shadowRoot?.querySelector("#prepared")?.textContent ?? null,
+      // a template left in the light DOM means the parser never adopted it,
+      // which is what a client-side re-render produces
+      strayTemplate: document.querySelector("template[shadowrootmode]") !== null,
+      lightDomChild: document.querySelector("#light-dom") !== null,
+    };
+  }, tag);
+
+describe.each([["/client-component", "sync-component", "Client Island"]])("%s", (route, tag, heading) => {
+  test("keeps the server-rendered shadow root and hydrates without complaint", async () => {
+    const [page, diagnostics] = await open(route);
+
+    const result = await inspect(page, tag);
+
+    expect(result.hasShadowRoot).toBe(true);
+    expect(result.heading).toBe(heading);
+    expect(result.strayTemplate).toBe(false);
+
+    expect(diagnostics.pageErrors).toEqual([]);
+    expect(diagnostics.consoleErrors).toEqual([]);
+
+    await page.close();
+  });
+});
+
+
+
+test("a streamed boundary with no custom element in it hydrates cleanly", async () => {
+  // the control: isolates a harness or Next problem from anything the
+  // wrappers emit, since every streamed route above asserts the same silence
+  const [page, diagnostics] = await open("/plain-streamed", "#streamed");
+
+  const text = await page.evaluate(
+    () => document.querySelector("#streamed")?.textContent,
+  );
+  expect(text).toBe("plain streamed content");
+  expect(diagnostics.pageErrors).toEqual([]);
+  expect(diagnostics.consoleErrors).toEqual([]);
+
+  await page.close();
+});
+

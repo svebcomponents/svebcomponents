@@ -1,0 +1,15 @@
+{
+  "extends": "@svebcomponents/typescript-config/base",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "@svebcomponents/ssr-react",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "allowJs": true,
+    "plugins": [{ "name": "next" }]
+  },
+  "include": ["app/**/*", "test/**/*", "*.ts", "next-env.d.ts"],
+  "exclude": ["node_modules", ".next"]
+}
