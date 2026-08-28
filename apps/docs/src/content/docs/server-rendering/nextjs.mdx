@@ -3,20 +3,17 @@ title: Next.js
 description: Server-render and hydrate svebcomponents custom elements in a Next.js App Router app.
 ---
 
-Next.js uses the [React adapter](/server-rendering/react/) without a bundler
-plugin. This page covers the parts that are specific to the App Router: where
-to register elements when there is no server entry, and which module graph each
-wrapper runs in.
+Follow these steps to use svebcomponents with the Next.js App Router.
 
-## Install
+## 1. Install the packages
 
 ```bash
 pnpm add @svebcomponents/ssr @svebcomponents/ssr-react svelte
 ```
 
-## Configure
+## 2. Configure JSX
 
-Point the automatic JSX transform at the adapter:
+Point the JSX transform at the React adapter:
 
 ```jsonc
 // tsconfig.json
@@ -28,14 +25,12 @@ Point the automatic JSX transform at the adapter:
 }
 ```
 
-Next compiles JSX with SWC and reads `jsxImportSource` from `tsconfig.json`.
-Keep `@svebcomponents/ssr-react` out of `serverExternalPackages`, which would
-resolve React outside the module graph the adapter is compiled into.
+Do not add `@svebcomponents/ssr-react` to `serverExternalPackages`.
 
-## Register elements on the server
+## 3. Register your components
 
-Next has no server entry file. Load the component package from
-`instrumentation.ts`, which runs once per server process:
+Register the custom elements and their server renderers in
+`instrumentation.ts`:
 
 ```ts
 // instrumentation.ts
@@ -45,14 +40,7 @@ export async function register() {
 }
 ```
 
-The browser entry registers the elements and the `/ssr` entry registers their
-server renderers. Both attach to `globalThis`, so the two server module graphs
-Next builds share one registration.
-
-## Register elements in the browser
-
-Next has no client entry file either. Import the browser entry from a Client
-Component and render it once, in the root layout:
+Register the custom elements in the browser from a Client Component:
 
 ```tsx
 // app/RegisterElements.tsx
@@ -64,6 +52,8 @@ export default function RegisterElements() {
   return null;
 }
 ```
+
+Render it once in the root layout:
 
 ```tsx
 // app/layout.tsx
@@ -85,12 +75,9 @@ export default function RootLayout({
 }
 ```
 
-Without this the browser never registers the elements. The page still shows
-server-rendered shadow content, and nothing on it becomes interactive.
+## 4. Render a component
 
-## Render
-
-Write the element as a plain dashed tag in a Server Component:
+Use its custom-element tag in a Server Component:
 
 ```tsx
 export default function Page() {
@@ -98,26 +85,13 @@ export default function Page() {
 }
 ```
 
-Server Components compile under the `react-server` export condition, which
-selects a JSX runtime that awaits the element renderer. A component that awaits
-while rendering, or an async server preparation hook, server-renders here with
-no extra import.
+Async components also server-render from Server Components. Inside a Client
+Component, an async component renders in the browser instead.
 
-Client Components use the synchronous wrapper, which cannot await. An
-asynchronous element inside one renders in the browser instead. Move it to a
-Server Component to server-render it.
+## Using `SsrPrepare` with client navigation
 
-## Client navigation
-
-A document request parses the declarative shadow template and the element
-hydrates it. A Next `<Link>` or router transition has no document parser: the
-React client boundary renders the bare custom element, which mounts from its
-ordinary props instead.
-
-This distinction matters only for values created inside `SsrPrepare`. Those
-values travel inside the server-rendered shadow template, so they are available
-after a document load but not after a client transition. If the browser needs a
-prepared value in both cases, load it in the Server Component and pass it as a
+If data created by `SsrPrepare` must also be available after a Next.js
+`<Link>` or router transition, load it in the Server Component and pass it as a
 serializable prop:
 
 ```tsx
@@ -127,50 +101,24 @@ export default async function Page() {
 }
 ```
 
-The component still works after a client transition; it mounts rather than
-hydrating. This keeps the RSC workaround inside the React adapter and avoids a
-renderer-specific property protocol in the shared SSR package.
+## Known browser message
 
-## Streaming
-
-An element inside a `<Suspense>` boundary reaches the browser after the shell.
-The browser parses that markup with the element already registered, so it
-upgrades the element before it reads the shadow template, and refuses to attach
-a second shadow root. Chrome reports this once per element:
+Chrome may print the following message when a component streams inside a
+`<Suspense>` boundary:
 
 ```
 A second declarative shadow root cannot be created on a host.
 ```
 
-The element recovers on its own: it adopts the refused template, hydrates from
-it, and removes it from the light DOM. Server-rendered content and serialized
-props survive. Nothing on the page can suppress the console message, because
-the browser writes it before any script runs.
+No action is required; the component recovers and hydrates normally.
 
-## Result
+## Requirements and limits
 
-Fetch a route and confirm the element carries a shadow template:
-
-```bash
-curl -s http://localhost:3000/ | grep 'template shadowrootmode'
-```
-
-Then load it in a browser and confirm `document.querySelector("my-component")
-.shadowRoot` is set and no hydration error appears in the console.
-
-## Limits
-
-- The adapter supports React 19, which Next 15 and later use.
-- Props on an element in a Server Component cross a Client Component boundary,
-  so they must be serializable.
-- Client transitions mount the custom element from its ordinary props. Values
-  created only inside `SsrPrepare` require a document load unless the Server
-  Component also passes them explicitly.
-- The async wrapper passes rendered shadow markup through the RSC payload as
-  well as the HTML. The synchronous wrapper does not.
+- Use React 19.
+- Props passed from a Server Component must be serializable.
 - Slotted components mount instead of hydrating. See
   [Hydration](/server-rendering/hydration/#limitations).
 
-Read [Async components and server data](/server-rendering/async/) for the
-package-side choices, and the
-[`@svebcomponents/ssr-react` reference](/packages/ssr-react/) for exports.
+For component-package setup, see
+[Async components and server data](/server-rendering/async/). For package
+exports, see the [`@svebcomponents/ssr-react` reference](/packages/ssr-react/).

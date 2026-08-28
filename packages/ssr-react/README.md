@@ -65,15 +65,11 @@ export default async function Page() {
 }
 ```
 
-Under an RSC runtime a plain dashed tag in a Server Component already reaches
-this wrapper. Import `/rsc` to use it explicitly. Client Components and plain
-React SSR use the synchronous wrapper.
+Plain dashed tags in a Server Component already support async rendering. Import
+`/rsc` only to use the wrapper explicitly. Client Components and plain React SSR
+use the synchronous wrapper.
 Enable `compilerOptions.experimental.async` in the component package when the
 Svelte component itself awaits during rendering.
-
-An RSC client transition mounts the element from its ordinary props rather
-than parsing its server-rendered shadow template. Pass data from the Server
-Component as serializable props when it must survive both navigation modes.
 
 ## Exports
 
@@ -84,18 +80,14 @@ Component as serializable props when it must survive both navigation modes.
 | `@svebcomponents/ssr-react/jsx-dev-runtime` | Development JSX runtime                   |
 | `@svebcomponents/ssr-react/rsc`             | Async wrapper for React Server Components |
 
-The JSX runtime entries carry a `react-server` export condition, so a Server
-Component routes dashed tags through the async wrapper without importing
-`/rsc`.
-
 ## Limits
 
 - Use React 19 and install Svelte in the server app.
 - The JSX runtimes route valid dashed tag names and exclude reserved SVG and
   MathML names.
 - The default wrapper renders async elements in the browser.
-- Values produced only by `SsrPrepare` are document-rendered; client
-  transitions need them passed as ordinary serializable props.
+- To use `SsrPrepare` data after a Next.js client transition, pass the data from
+  the Server Component as a serializable prop.
 - The `/rsc` wrapper cannot run inside a Client Component.
 - App code must load the component's browser entry and server renderer.
 
