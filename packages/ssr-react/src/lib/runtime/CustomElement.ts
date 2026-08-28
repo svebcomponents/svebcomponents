@@ -1,3 +1,19 @@
+"use client";
+
+// The directive above is a Client Component boundary, and the reason server
+// rendering works at all under React Server Components. An RSC function runs
+// *only* on the server: its output is serialized into the Flight payload and
+// the browser replays that, so a `BROWSER` branch inside a Server Component is
+// dead code. The client would replay the server's `<template shadowrootmode>`
+// element, which the HTML parser has already consumed into a shadow root, and
+// hydration would mismatch — React then discards the server DOM and re-creates
+// the template through DOM APIs, which do not attach a shadow root at all.
+//
+// Declaring the boundary makes React run this function twice, as it already
+// does in a plain React app: once in the SSR pass, which emits the template,
+// and once in the browser, which omits it. In a React app with no RSC runtime
+// the directive is inert.
+
 import { BROWSER } from "esm-env";
 import { createElement, type ReactElement, type ReactNode } from "react";
 

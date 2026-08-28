@@ -64,7 +64,11 @@ const inspect = (page: Page, tag: string) =>
     };
   }, tag);
 
-describe.each([["/client-component", "sync-component", "Client Island"]])("%s", (route, tag, heading) => {
+describe.each([
+  ["/rsc-sync", "sync-component", "RSC Sync"],
+  ["/rsc-async", "simple-component", "RSC Async"],
+  ["/client-component", "sync-component", "Client Island"],
+])("%s", (route, tag, heading) => {
   test("keeps the server-rendered shadow root and hydrates without complaint", async () => {
     const [page, diagnostics] = await open(route);
 
@@ -98,3 +102,73 @@ test("a streamed boundary with no custom element in it hydrates cleanly", async 
   await page.close();
 });
 
+test("the async element's prepared server data reaches the browser", async () => {
+  const [page] = await open("/rsc-async");
+
+  const result = await inspect(page, "simple-component");
+  expect(result.prepared).toBe("Prepared: adjacent server module");
+
+  await page.close();
+});
+
+test("a rich prop reaches a server component's element through hydration", async () => {
+  const [page] = await open("/rsc-sync");
+
+  const result = await inspect(page, "sync-component");
+  expect(result.note).toBe("rich prop survived");
+  expect(result.lightDomChild).toBe(true);
+
+  await page.close();
+});
+
+test("the hydrated element stays reactive to attribute updates", async () => {
+  const [page] = await open("/rsc-sync");
+
+  await page.evaluate(() => {
+    document.querySelector("sync-component")?.setAttribute("count", "9");
+  });
+  await page.waitForTimeout(100);
+
+  const result = await inspect(page, "sync-component");
+  expect(result.count).toBe("Count: number-9");
+
+  await page.close();
+});
+
+test("an App Router client transition mounts the element without a hydration error", async () => {
+  const [page, diagnostics] = await open("/", "#to-rsc-async");
+
+  // A value stored on window distinguishes a Next client transition from a
+  // document navigation, which would create a new global object.
+  await page.evaluate(() => {
+    (window as typeof window & { __navigationSentinel?: boolean })
+      .__navigationSentinel = true;
+  });
+  await page.click("#to-rsc-async");
+  await page.waitForURL(`${baseUrl}/rsc-async`);
+  await page.waitForSelector("simple-component", { state: "attached" });
+  await page.waitForTimeout(300);
+
+  expect(
+    await page.evaluate(
+      () =>
+        (window as typeof window & { __navigationSentinel?: boolean })
+          .__navigationSentinel,
+    ),
+  ).toBe(true);
+
+  const result = await inspect(page, "simple-component");
+  expect(result.hasShadowRoot).toBe(true);
+  expect(result.heading).toBe("RSC Async");
+  expect(result.strayTemplate).toBe(false);
+
+  // Client transitions do not parse the server's declarative shadow markup.
+  // The element mounts from its ordinary props, so preparation performed only
+  // by SsrPrepare remains a document-render feature; apps that need the value
+  // here must pass it from their Server Component as a serializable prop.
+  expect(result.prepared).toBe("Prepared: none");
+  expect(diagnostics.pageErrors).toEqual([]);
+  expect(diagnostics.consoleErrors).toEqual([]);
+
+  await page.close();
+});
