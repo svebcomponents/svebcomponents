@@ -1,5 +1,13 @@
 # @svebcomponents/build
 
+## 0.7.4
+
+### Patch Changes
+
+- 42bc693: Strip TypeScript syntax from `.svelte.ts` rune modules with Oxc before compiling them with Svelte.
+- Updated dependencies [42bc693]
+  - @svebcomponents/ssr@0.8.3
+
 ## 0.7.3
 
 ### Patch Changes

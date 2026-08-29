@@ -1,5 +1,12 @@
 # @svebcomponents/ssr-astro
 
+## 0.2.6
+
+### Patch Changes
+
+- Updated dependencies [42bc693]
+  - @svebcomponents/ssr@0.8.3
+
 ## 0.2.5
 
 ### Patch Changes
