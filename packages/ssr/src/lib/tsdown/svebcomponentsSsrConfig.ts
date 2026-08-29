@@ -8,6 +8,7 @@ import svelte from "rollup-plugin-svelte";
 import { pluginGenerateSsrEntry } from "../rollup/pluginGenerateSsrEntry.js";
 import { pluginOverrideSvelteSsrSlotImplementation } from "../rollup/pluginOverrideSvelteSsrSlotImplementation.js";
 import { pluginStripCustomElementOptions } from "../rollup/pluginStripCustomElementOptions.js";
+import { pluginStripSvelteModuleTypes } from "../rollup/pluginStripSvelteModuleTypes.js";
 import { extractComponentTag } from "../shared/resolveComponentTag.js";
 import {
   getExperimentalOptions,
@@ -129,6 +130,7 @@ const createSsrTsdownConfig = (
     // race and delete other builds' output. The CLI cleans once up front.
     clean: false,
     plugins: [
+      pluginStripSvelteModuleTypes(),
       pluginStripCustomElementOptions(),
       pluginOverrideSvelteSsrSlotImplementation(),
       svelte({
@@ -192,6 +194,7 @@ export const createHydrationHostTsdownConfig = (
     // shared output directories are cleaned once by the svebcomponents CLI
     clean: false,
     plugins: [
+      pluginStripSvelteModuleTypes(),
       svelte({
         emitCss: false,
         ...(svelteConfig?.extensions
@@ -211,3 +214,4 @@ export const createHydrationHostTsdownConfig = (
 };
 
 export default createSsrTsdownConfig;
+export { pluginStripSvelteModuleTypes };

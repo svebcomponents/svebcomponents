@@ -187,18 +187,23 @@ const pluginNames = (options: UserConfig): string[] => {
 
 const clientPipeline = [
   "svebcomponents:dedupe",
+  "svebcomponents:strip-svelte-module-types",
   "svebcomponents:auto-options",
   "svelte",
   "svebcomponents:guard-custom-element-define",
 ];
 const ssrPipeline = [
+  "svebcomponents:strip-svelte-module-types",
   "svebcomponents:strip-custom-element-options",
   "svebcomponents:override-svelte-ssr-slot-implementation",
   "svelte",
   "svebcomponents:generate-ssr-entry",
 ];
 // the server-compiled HydrationHost build accompanying each SSR config
-const hydrationHostPipeline = ["svelte"];
+const hydrationHostPipeline = [
+  "svebcomponents:strip-svelte-module-types",
+  "svelte",
+];
 
 /**
  * Asserts that `inferred` matches `expected` both in its serializable fields

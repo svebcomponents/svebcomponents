@@ -9,6 +9,7 @@ import {
   mergeCompilerOptions,
   type SvelteBuildConfig,
 } from "@svebcomponents/ssr/svelte-config";
+import { pluginStripSvelteModuleTypes } from "@svebcomponents/ssr/tsdown";
 
 interface SvebcomponentsOptions {
   /**
@@ -136,6 +137,7 @@ export const createTsdownConfig = (
     // construction.
     plugins: [
       pluginDedupe(["svelte", "esm-env"]),
+      pluginStripSvelteModuleTypes(),
       autoOptions({ hydratable }),
       svelte({
         emitCss: false,

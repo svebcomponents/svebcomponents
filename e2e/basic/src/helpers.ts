@@ -1,5 +1,9 @@
 import { kebabize } from "@svebcomponents/utils";
 
+export interface LabelOptions {
+  label: string;
+}
+
 export const formatLabel = (label: string): string => `Label: ${label}`;
 
 /**

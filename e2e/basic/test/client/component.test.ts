@@ -36,6 +36,12 @@ const checkRenderResult = async (component: Element, props: Props) => {
   const slug = shadowRoot.querySelector("#slug");
   assert(slug);
   expect(slug.textContent).toBe(props.slug);
+
+  // Compiled from a `.svelte.ts` dependency containing both an inline type
+  // import and a generic rune call (the regression from issue #176).
+  const issue176 = shadowRoot.querySelector("#issue-176");
+  assert(issue176);
+  expect(issue176.textContent).toBe("Label: Issue 176");
 };
 
 test("web component renders correctly in the browser", async () => {
