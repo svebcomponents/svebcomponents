@@ -139,3 +139,58 @@ test("does not inject anything when hydratable is off and there are no props", a
   const result = await autoOptions().transform(propless, svelteId);
   expect(result).toBe(null);
 });
+
+test("injects the imports after a generics attribute containing a `>`", async () => {
+  // regression: the injection point used to be found by scanning for the
+  // first `>` after `<script`, which lands inside a generics attribute whose
+  // value contains one — corrupting the attribute so the file no longer parses
+  const withGenerics = `<script lang="ts" generics="TData = DefaultDataPoint<'radar'>, TLabel = unknown">
+  let { title }: { title: string } = $props();
+</script>
+
+<h1>{title}</h1>
+`;
+  const result = await transform(withGenerics);
+  assert(result);
+
+  expect(result.code).toContain(
+    `generics="TData = DefaultDataPoint<'radar'>, TLabel = unknown"`,
+  );
+  expect(result.code).toContain("extend: (ceClass) =>");
+
+  const { compile } = await import("svelte/compiler");
+  expect(() =>
+    compile(result.code, {
+      customElement: true,
+      generate: "client",
+      filename: svelteId,
+    }),
+  ).not.toThrow();
+});
+
+test("injects the imports after a multiline script tag with generics", async () => {
+  const withGenerics = `<script
+  lang="ts"
+  generics="TData = DefaultDataPoint<'doughnut'>, TLabel = unknown"
+>
+  let { title }: { title: string } = $props();
+</script>
+
+<h1>{title}</h1>
+`;
+  const result = await transform(withGenerics);
+  assert(result);
+
+  expect(result.code).toContain(
+    `generics="TData = DefaultDataPoint<'doughnut'>, TLabel = unknown"`,
+  );
+
+  const { compile } = await import("svelte/compiler");
+  expect(() =>
+    compile(result.code, {
+      customElement: true,
+      generate: "client",
+      filename: svelteId,
+    }),
+  ).not.toThrow();
+});

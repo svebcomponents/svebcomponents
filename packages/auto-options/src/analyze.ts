@@ -1,5 +1,6 @@
 import { parse } from "svelte/compiler";
 import { walk } from "zimmerframe";
+import { findScriptContentStart } from "@svebcomponents/utils";
 import type {
   InferredSvelteOptionProps,
   TypeDeclaration,
@@ -170,8 +171,9 @@ export const analyzeComponent = (
       null,
     props,
     svelteOptions,
-    // the instance script's content starts right after its opening tag's `>`
-    scriptContentStart: instance ? code.indexOf(">", instance.start) + 1 : null,
+    scriptContentStart: instance
+      ? findScriptContentStart(code, instance)
+      : null,
     hasPropsDeclaration: propsDeclaration !== undefined,
     metadata: buildMetadata(
       code,

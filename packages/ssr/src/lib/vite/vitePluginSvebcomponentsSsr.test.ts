@@ -1,6 +1,7 @@
 import { expect, test, describe } from "vitest";
 import vitePluginSvebcomponentsSsr from "./vitePluginSvebcomponentsSsr";
 import type { Plugin, ResolvedConfig } from "vite";
+import { parse } from "svelte/compiler";
 
 type TransformFn = (
   code: string,
@@ -193,6 +194,44 @@ describe("vitePluginSvebcomponentsSsr", () => {
     expect(output).toContain('_tagName="my-element"');
     // The reserved name must not have been touched.
     expect(output).toContain("<font-face></font-face>");
+  });
+});
+
+describe("wrapper import injection", () => {
+  test("injects the import after a generics attribute containing a `>`", async () => {
+    // regression: the injection point used to be found by scanning for the
+    // first `>` after `<script`, which lands inside a generics attribute whose
+    // value contains one — corrupting the attribute so the file no longer parses
+    const output = await transform(
+      `<script lang="ts" generics="TData = DefaultDataPoint<'radar'>, TLabel = unknown">
+  let { data }: { data: TData } = $props();
+</script>
+<my-widget>{data}</my-widget>`,
+    );
+
+    expect(output).not.toBeNull();
+    expect(output).toContain(
+      `generics="TData = DefaultDataPoint<'radar'>, TLabel = unknown"`,
+    );
+    expect(output).toContain("import CustomElementWrapper from");
+    // the transformed component must still parse
+    expect(() => parse(output!, { modern: true })).not.toThrow();
+  });
+
+  test("injects the import after a multiline script tag with generics", async () => {
+    const output = await transform(
+      `<script
+  lang="ts"
+  generics="TData = DefaultDataPoint<'doughnut'>"
+>
+  let { data }: { data: TData } = $props();
+</script>
+<my-widget>{data}</my-widget>`,
+    );
+
+    expect(output).not.toBeNull();
+    expect(output).toContain(`generics="TData = DefaultDataPoint<'doughnut'>"`);
+    expect(() => parse(output!, { modern: true })).not.toThrow();
   });
 });
 

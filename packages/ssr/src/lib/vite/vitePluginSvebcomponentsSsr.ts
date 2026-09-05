@@ -3,6 +3,8 @@ import { parse, type AST } from "svelte/compiler";
 import { walk } from "zimmerframe";
 import MagicString from "magic-string";
 
+import { findScriptContentStart } from "@svebcomponents/utils";
+
 import {
   mayBeCustomElementTagName,
   isValidCustomElementTagName,
@@ -264,8 +266,10 @@ function vitePluginSvebcomponentsSsr(
       if (shouldAddImport) {
         const scriptNode = instance;
         if (scriptNode) {
-          const scriptTagEnd = code.indexOf(">", scriptNode.start);
-          magicString.appendLeft(scriptTagEnd + 1, importStatement());
+          magicString.appendLeft(
+            findScriptContentStart(code, scriptNode),
+            importStatement(),
+          );
         } else {
           magicString.prepend(`<script>\n${importStatement()}</script>\n`);
         }

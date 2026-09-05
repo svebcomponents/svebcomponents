@@ -69,3 +69,37 @@ export const mayBeCustomElementTagName = (tagName: string) =>
 export const isValidCustomElementTagName = (tagName: string) =>
   potentialCustomElementNameRegex.test(tagName) &&
   !reservedCustomElementNames.has(tagName);
+
+/**
+ * The subset of a parsed Svelte `<script>` node needed to locate where its
+ * content begins. Declared structurally so this module stays free of a
+ * dependency on `svelte/compiler`'s AST types.
+ */
+export interface ScriptTagSpan {
+  /** Offset of the opening `<` of the `<script>` tag. */
+  start: number;
+  /** The tag's attributes; only their end offsets matter here. */
+  attributes: readonly { end: number }[];
+}
+
+/**
+ * Returns the offset right after a `<script ...>` tag's closing `>` — the
+ * position at which injected statements belong.
+ *
+ * The scan starts after the tag's last attribute rather than at the tag
+ * itself, because an attribute value may contain a `>` of its own — Svelte's
+ * `generics` attribute routinely does
+ * (`generics="TData = DefaultDataPoint<'bar'>"`). Scanning from the tag would
+ * stop inside that value and inject into the middle of the attribute,
+ * producing a component that no longer parses.
+ */
+export const findScriptContentStart = (
+  code: string,
+  script: ScriptTagSpan,
+): number => {
+  const searchFrom = script.attributes.reduce(
+    (furthest, attribute) => Math.max(furthest, attribute.end),
+    script.start,
+  );
+  return code.indexOf(">", searchFrom) + 1;
+};
