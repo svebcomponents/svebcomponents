@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { camelizeKebabCase, isKebabCase, kebabize } from "./index";
+import {
+  camelizeKebabCase,
+  findScriptContentStart,
+  isKebabCase,
+  kebabize,
+} from "./index";
 
 describe("kebabize", () => {
   test("converts camelCase to kebab-case", () => {
@@ -86,5 +91,26 @@ describe("camelizeKebabCase", () => {
 
   test("returns an empty string for an empty input", () => {
     expect(camelizeKebabCase("")).toBe("");
+  });
+});
+
+describe("findScriptContentStart", () => {
+  test("returns the offset right after a plain script tag", () => {
+    const code = `<script>let a = 1;</script>`;
+    expect(findScriptContentStart(code, { start: 0, attributes: [] })).toBe(
+      "<script>".length,
+    );
+  });
+
+  test("skips past an attribute value containing a `>`", () => {
+    const attribute = `generics="T = Foo<'bar'>"`;
+    const code = `<script lang="ts" ${attribute}>let a = 1;</script>`;
+    const attributeEnd = code.indexOf(attribute) + attribute.length;
+    expect(
+      findScriptContentStart(code, {
+        start: 0,
+        attributes: [{ end: 17 }, { end: attributeEnd }],
+      }),
+    ).toBe(code.indexOf("let a"));
   });
 });
