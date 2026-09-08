@@ -1,5 +1,13 @@
 # @svebcomponents/auto-options
 
+## 0.3.1
+
+### Patch Changes
+
+- 5da5a4c: Inject imports after the whole `<script>` tag rather than at its first `>`. A `generics` attribute may contain a `>` of its own (`generics="TData = DefaultDataPoint<'bar'>"`), and the injection landed inside the attribute value, breaking the component with `CompileError: Expected token >`.
+- Updated dependencies [5da5a4c]
+  - @svebcomponents/utils@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes
