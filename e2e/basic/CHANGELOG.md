@@ -1,5 +1,12 @@
 # @svebcomponents/e2e.basic
 
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies [5da5a4c]
+  - @svebcomponents/utils@0.3.1
+
 ## 0.0.4
 
 ### Patch Changes
