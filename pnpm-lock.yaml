@@ -66,6 +66,9 @@ catalogs:
     astro:
       specifier: 5.18.2
       version: 5.18.2
+    degit:
+      specifier: 3.10.0
+      version: 3.10.0
     eslint:
       specifier: 9.39.5
       version: 9.39.5
@@ -687,6 +690,33 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.1.5(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@types/node@24.13.3)(@vitest/browser-playwright@4.1.10)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0))
+
+  packages/create:
+    devDependencies:
+      '@svebcomponents/eslint-config':
+        specifier: workspace:*
+        version: link:../../configs/eslint-config
+      '@svebcomponents/prettier-config':
+        specifier: workspace:*
+        version: link:../../configs/prettier-config
+      '@svebcomponents/typescript-config':
+        specifier: workspace:*
+        version: link:../../configs/typescript-config
+      '@svebcomponents/vitest-config':
+        specifier: workspace:*
+        version: link:../../configs/vitest-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      degit:
+        specifier: 'catalog:'
+        version: 3.10.0
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(@types/node@24.13.3)(@vitest/browser-playwright@4.1.10)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0))
@@ -3204,6 +3234,11 @@ packages:
 
   defu@6.1.7:
     resolution: {integrity: sha512-7z22QmUWiQ/2d0KkdYmANbRUVABpZ9SNYyH5vx6PZ+nE5bcC0l7uFvEfHlyld/HcGBFTL536ClDt3DEcSlEJAQ==}
+
+  degit@3.10.0:
+    resolution: {integrity: sha512-xlFPgJs8X/2wnWNsuV6siWVHRd2mSGUNHYkiJLZYa918Ma9rZT/mM3Y2Rz6juwz3tHTkfNAnlX7szD9OLbcYQg==}
+    engines: {node: '>=20.0.0'}
+    hasBin: true
 
   dequal@2.0.3:
     resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
@@ -7592,6 +7627,8 @@ snapshots:
   deepmerge@4.3.1: {}
 
   defu@6.1.7: {}
+
+  degit@3.10.0: {}
 
   dequal@2.0.3: {}
 

@@ -1,5 +1,26 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
-  "pinDigests": true
+  "pinDigests": true,
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "svebcomponents/template commit bundled by @svebcomponents/create",
+      "managerFilePatterns": ["/^packages/create/package\\.json$/"],
+      "matchStrings": [
+        "\"templateSource\": \"svebcomponents/template#(?<currentDigest>[0-9a-f]{40})\""
+      ],
+      "depNameTemplate": "svebcomponents/template",
+      "packageNameTemplate": "https://github.com/svebcomponents/template",
+      "currentValueTemplate": "main",
+      "datasourceTemplate": "git-refs"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "the template moves with every dependency bump; batch them weekly",
+      "matchDepNames": ["svebcomponents/template"],
+      "schedule": ["before 4am on monday"]
+    }
+  ]
 }
