@@ -1,0 +1,61 @@
+{
+  "name": "@svebcomponents/create",
+  "version": "0.0.1",
+  "description": "Templates for getting started with svebcomponents.",
+  "license": "MIT",
+  "homepage": "https://svebcomponents.dev/packages/create/",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/svebcomponents/svebcomponents.git",
+    "directory": "packages/create"
+  },
+  "scripts": {
+    "build": "node ./src/build.ts",
+    "check": "tsc --noEmit",
+    "lint": "pnpm /^lint:.*/",
+    "lint:eslint": "eslint .",
+    "lint:format": "prettier --check .",
+    "fix": "pnpm /^fix:.*/",
+    "fix:eslint": "eslint . --fix",
+    "fix:format": "prettier --write --ignore-unknown .",
+    "test": "vitest run",
+    "test:dev": "vitest --watch"
+  },
+  "createConfig": {
+    "templates": [
+      {
+        "name": "library",
+        "description": "Web component library built with svebcomponents, with a SvelteKit app for previewing your components",
+        "template": "./dist/templates/library",
+        "monorepo": true
+      }
+    ]
+  },
+  "templateSource": "svebcomponents/template#054b100d501368abe586c9d4726c4b4f86043619",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "devDependencies": {
+    "@svebcomponents/eslint-config": "workspace:*",
+    "@svebcomponents/prettier-config": "workspace:*",
+    "@svebcomponents/typescript-config": "workspace:*",
+    "@svebcomponents/vitest-config": "workspace:*",
+    "@types/node": "catalog:",
+    "degit": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "keywords": [
+    "svelte",
+    "vite+",
+    "vite-plus"
+  ]
+}
