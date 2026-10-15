@@ -3,6 +3,8 @@ title: Getting Started
 description: Build and run your first component package.
 ---
 
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
 `svebcomponents` can be retrofitted onto any project. The
 [starter template](https://github.com/svebcomponents/template) is the quickest
 way to get everything set up.
@@ -66,7 +68,11 @@ svebcomponents maps an export such as `./dist/client/CoolCounter.js` to
 
 ### Write the component
 
-Create `src/CoolCounter.svelte`:
+Create `src/CoolCounter.svelte`. Switch tabs to compare the same counter with
+svebcomponents and plain Svelte:
+
+<Tabs>
+  <TabItem label="After svebcomponents">
 
 ```svelte
 <svelte:options customElement="cool-counter" />
@@ -81,8 +87,42 @@ Create `src/CoolCounter.svelte`:
 </button>
 ```
 
-`<svelte:options>` is only used to declare the tag name. Attribute types are
-inferred automatically.
+`<svelte:options>` only declares the tag name. Attribute conversion and
+reflection are inferred automatically from the TypeScript prop type.
+
+  </TabItem>
+  <TabItem label="Before svebcomponents">
+
+```svelte {2-6}
+<svelte:options
+  customElement={{
+    tag: "cool-counter",
+    props: {
+      increments: { type: "Number", reflect: true },
+    },
+  }}
+/>
+
+<script lang="ts">
+  let { increments = 1 }: { increments?: number } = $props();
+  let count = $state(0);
+</script>
+
+<button onclick={() => (count += increments)}>
+  add {increments} to {count}
+</button>
+```
+
+Plain Svelte requires runtime attribute metadata alongside the TypeScript type.
+You maintain both declarations as props change. Without `type: "Number"`,
+`increments="5"` arrives as a string.
+
+  </TabItem>
+</Tabs>
+
+This comparison covers the component source. svebcomponents also handles the
+[package build](/guides/build/) and generates
+[consumer types](/guides/framework-types/) and `custom-elements.json`.
 
 ### Build it
 
